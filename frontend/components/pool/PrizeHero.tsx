@@ -9,13 +9,19 @@ import { DECIMALS, SYMBOL } from "@/lib/contracts";
 
 export function PrizeHero() {
   const { state } = usePoolState();
-  const { reveal, values, pending, errors } = usePublicReveal();
+  const { reveal, retry, values, pending, errors } = usePublicReveal();
   const now = useNow();
 
   const h = state?.prizeReserveHandle;
   useEffect(() => {
     if (h) void reveal([h]);
   }, [h, reveal]);
+  // A freshly-updated reserve can take the coprocessor a few seconds; retry on a timer.
+  useEffect(() => {
+    if (!h || !errors[h]) return;
+    const id = setTimeout(() => retry(h), 12_000);
+    return () => clearTimeout(id);
+  }, [h, errors, retry]);
   const prize = h ? values[h] : undefined;
 
   const phaseLabel =

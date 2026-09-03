@@ -47,7 +47,9 @@ export function usePublicReveal() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const reveal = useCallback(async (handles: (string | null | undefined)[]) => {
-    const want = handles.filter((h): h is string => !!h && !(h in values) && !pending[h]);
+    // Never auto-retry a handle that already failed (the relayer may still be
+    // processing it); callers use `retry` on a timer or a user action instead.
+    const want = handles.filter((h): h is string => !!h && !(h in values) && !pending[h] && !(h in errors));
     if (want.length === 0) return;
     setPending((p) => ({ ...p, ...Object.fromEntries(want.map((h) => [h, true])) }));
     try {
@@ -59,7 +61,12 @@ export function usePublicReveal() {
     } finally {
       setPending((p) => { const n = { ...p }; want.forEach((h) => delete n[h]); return n; });
     }
-  }, [values, pending]);
+  }, [values, pending, errors]);
 
-  return { reveal, values, pending, errors };
+  /** Clear a failed handle so the next `reveal` tries it again. */
+  const retry = useCallback((handle: string) => {
+    setErrors((e) => { const n = { ...e }; delete n[handle]; return n; });
+  }, []);
+
+  return { reveal, retry, values, pending, errors };
 }

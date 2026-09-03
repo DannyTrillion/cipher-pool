@@ -14,7 +14,7 @@ export function DrawHistory() {
   useEffect(() => {
     const done = draws.filter((d) => d.completedAt > 0n);
     if (done.length) void pub.reveal(done.flatMap((d) => [d.seed, d.prize]));
-  }, [draws, pub]);
+  }, [draws, pub.reveal]);
 
   if (isLoading) return <p className="text-sm text-ink-muted">Loading draws…</p>;
   if (draws.length === 0)

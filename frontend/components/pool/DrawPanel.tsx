@@ -26,7 +26,7 @@ export function DrawPanel() {
 
   useEffect(() => {
     if (draw?.completedAt && draw.completedAt > 0n) void pub.reveal([draw.seed, draw.prize]);
-  }, [draw?.seed, draw?.prize, draw?.completedAt, pub]);
+  }, [draw?.seed, draw?.prize, draw?.completedAt, pub.reveal]);
 
   const inProgress = state && state.phase !== Phase.Open;
   const due = state ? state.phase === Phase.Open && Number(state.nextDrawAt) <= now : false;
