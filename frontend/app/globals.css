@@ -1,0 +1,93 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --base: 9 10 12;
+  --surface: 15 16 20;
+  --raised: 22 24 29;
+  --well: 6 7 9;
+  --accent: 255 214 0; /* Zama yellow */
+  --cipher: 125 165 255;
+  --ok: 74 222 128;
+  --danger: 248 113 113;
+  --warn: 251 191 36;
+  --ink: 244 244 245;
+  --ink-muted: 161 161 170;
+  --ink-faint: 113 113 122;
+  --line: 255 255 255;
+  color-scheme: dark;
+}
+
+html,
+body {
+  background: rgb(var(--base));
+  color: rgb(var(--ink));
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background-image:
+    radial-gradient(1200px 600px at 50% -10%, rgb(var(--accent) / 0.08), transparent 60%),
+    radial-gradient(800px 400px at 90% 20%, rgb(var(--cipher) / 0.06), transparent 60%);
+  background-attachment: fixed;
+}
+
+.font-mono,
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Masked encrypted value: a shimmering cipher strip. */
+.cipher-mask {
+  background: linear-gradient(
+    90deg,
+    rgb(var(--cipher) / 0.16) 0%,
+    rgb(var(--cipher) / 0.34) 50%,
+    rgb(var(--cipher) / 0.16) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2.4s linear infinite;
+  border-radius: 6px;
+  color: transparent;
+  user-select: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.card {
+  @apply rounded-2xl border border-line bg-surface shadow-card;
+}
+.btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition
+    disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/60;
+}
+.btn-primary {
+  @apply btn bg-accent text-black hover:brightness-110 active:brightness-95 shadow-glow;
+}
+.btn-secondary {
+  @apply btn border border-line-strong bg-raised text-ink hover:bg-raised/70;
+}
+.btn-ghost {
+  @apply btn text-ink-muted hover:text-ink hover:bg-raised;
+}
+.input {
+  @apply w-full rounded-xl border border-line bg-well px-4 py-3 font-mono text-lg text-ink placeholder:text-ink-faint
+    focus:outline-none focus:ring-2 focus:ring-accent/50;
+}
+.label {
+  @apply text-xs font-medium uppercase tracking-wider text-ink-faint;
+}
+.pill {
+  @apply inline-flex items-center gap-1.5 rounded-full border border-line px-2.5 py-1 text-xs font-medium text-ink-muted;
+}

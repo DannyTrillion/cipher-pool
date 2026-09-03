@@ -1,0 +1,11 @@
+node_modules
+.env
+.env.local
+.next
+.vercel
+contracts/artifacts
+contracts/cache
+contracts/fhevmTemp
+contracts/typechain-types
+*.tsbuildinfo
+.DS_Store
