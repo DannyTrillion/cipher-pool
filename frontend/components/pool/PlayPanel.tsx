@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Wizard } from "@/components/pool/Wizard";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAccount, useConnect } from "wagmi";
 import { formatUnits, parseUnits } from "viem";
 import { usePoolState, useUserState, Phase } from "@/lib/hooks/usePoolData";
@@ -24,6 +24,8 @@ const TABS: { key: Tab; label: string; verb: string }[] = [
   { key: "unwrap", label: "Unwrap", verb: "Unwrap" },
   { key: "sponsor", label: "Add to prize", verb: "Add" },
 ];
+const MAIN_TABS = TABS.filter((t) => t.key === "deposit" || t.key === "withdraw" || t.key === "sponsor");
+const isConvert = (t: Tab) => t === "shield" || t === "unwrap";
 const CHIPS = ["25", "100", "250"];
 
 /** The play area: one amount, one big button, everything narrated in plain words. */
@@ -105,30 +107,49 @@ export function PlayPanel() {
         </div>
       </div>
       {mode === "new" ? (
-        <div className="mt-5"><Wizard /></div>
+        <div className="mt-5"><Wizard onSkip={() => pickMode("pro")} /></div>
       ) : (
       <>
       {isConnected && (
-        <div className="mt-4 flex justify-end">
-          <button className="btn-secondary text-xs" onClick={revealAll} disabled={!!busy || !user}>{busy ? "Loading…" : revealedAll ? "Refresh numbers" : "Show my numbers"}</button>
+        <div className="mt-4 flex items-center justify-between">
+          <div className="text-xs text-ink-faint">Your numbers are private. One signature shows them to you only.</div>
+          <button className="btn-secondary btn-sm" onClick={revealAll} disabled={!!busy || !user}>{busy ? "Loading…" : revealedAll ? "Refresh" : "Show all"}</button>
         </div>
       )}
 
-      {/* your numbers */}
-      <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      {/* your numbers: four cards, each can be shown on its own */}
+      <div className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
         {[
-          { l: "Your savings", v: user?.poolBalance ? poolBal : isConnected ? null : undefined, key: "position-balance" },
-          { l: "Prizes to claim", v: user?.claimable ? claimable : isConnected ? null : undefined },
-          { l: "cUSD in wallet", v: user?.walletBalance ? walletBal : isConnected ? null : undefined },
+          { l: "Your savings", v: user?.poolBalance ? poolBal : isConnected ? null : undefined, h: user?.poolBalance ?? null, c: POOL.address, k: "pool", anchor: "position-balance", tone: "accent" },
+          { l: "Prizes to claim", v: user?.claimable ? claimable : isConnected ? null : undefined, h: user?.claimable ?? null, c: POOL.address, k: "claim", tone: "mint" },
+          { l: "cUSD in wallet", v: user?.walletBalance ? walletBal : isConnected ? null : undefined, h: user?.walletBalance ?? null, c: TOKEN.address, k: "wallet", tone: "cipher" },
         ].map((x) => (
-          <div key={x.l} className="rounded-xl border border-line bg-black/20 px-3 py-2.5" data-anchor={x.key}>
-            <div className="text-[10px] uppercase tracking-[0.18em] text-ink-faint">{x.l}</div>
-            <div className="mt-1"><EncryptedValue value={x.v} revealed={x.v !== undefined && x.v !== null} size="sm" /></div>
-          </div>
+          <motion.div key={x.l} layout className="group relative rounded-xl border border-line bg-black/20 px-3 py-2.5" data-anchor={x.anchor}>
+            <div className="flex items-center justify-between">
+              <div className="text-[10px] uppercase tracking-[0.18em] text-ink-faint">{x.l}</div>
+              <span className={cn("h-1.5 w-1.5 rounded-full", x.tone === "accent" ? "bg-accent" : x.tone === "mint" ? "bg-mint" : "bg-cipher")} />
+            </div>
+            <motion.div key={x.v === undefined || x.v === null ? "masked" : x.v.toString()} initial={{ scale: 0.96, opacity: 0.6 }} animate={{ scale: 1, opacity: 1 }} className="mt-1">
+              <EncryptedValue value={x.v} revealed={x.v !== undefined && x.v !== null} size="sm" />
+            </motion.div>
+            {isConnected && x.h && x.v === undefined && (
+              <button className="mt-1 text-[11px] text-accent hover:underline disabled:text-ink-faint" disabled={!!busy} onClick={() => reveal(x.c, x.h, x.k)}>{busy === x.k ? "Loading…" : "Show"}</button>
+            )}
+            {isConnected && x.k === "wallet" && (
+              <div className="mt-1 flex gap-2 text-[11px]">
+                <button className="text-ink-muted hover:text-ink hover:underline" onClick={() => { setTab("shield"); setAmount(""); flow.reset(); sfx.click(); }}>Wrap tUSD</button>
+                <button className="text-ink-muted hover:text-ink hover:underline" onClick={() => { setTab("unwrap"); setAmount(""); flow.reset(); sfx.click(); }}>Unwrap</button>
+              </div>
+            )}
+          </motion.div>
         ))}
         <div className="rounded-xl border border-line bg-black/20 px-3 py-2.5">
-          <div className="text-[10px] uppercase tracking-[0.18em] text-ink-faint">tUSD in wallet · public</div>
+          <div className="flex items-center justify-between">
+            <div className="text-[10px] uppercase tracking-[0.18em] text-ink-faint">tUSD in wallet</div>
+            <span className="rounded-full border border-line px-1.5 text-[9px] uppercase tracking-wider text-ink-faint">public</span>
+          </div>
           <div className="mt-1 font-mono text-sm tabular">{isConnected && user ? `${formatUnits(user.tusdBalance, DECIMALS)} ${UNDERLYING_SYMBOL}` : "—"}</div>
+          {isConnected && user && user.tusdBalance > 0n && !user.walletBalance && <div className="mt-1 text-[11px] text-accent">Wrap this to start</div>}
         </div>
       </div>
       {isConnected && claimable !== undefined && claimable > 0n && (
@@ -153,16 +174,23 @@ export function PlayPanel() {
         </div>
       ) : (
         <>
-          {/* tabs */}
-          <div className="mt-5 flex items-center justify-between gap-3">
-            <div className="flex rounded-full bg-black/40 p-1">
-              {TABS.map((t) => (
-                <button key={t.key} className={cn("relative rounded-full px-3.5 py-1.5 text-[13px] font-medium transition", tab === t.key ? "text-black" : "text-ink-muted hover:text-ink")} onClick={() => { setTab(t.key); setAmount(""); flow.reset(); sfx.click(); }}>
-                  {tab === t.key && <motion.span layoutId="play-tab" className="absolute inset-0 rounded-full bg-accent" transition={{ type: "spring", stiffness: 500, damping: 40 }} />}
-                  <span className="relative">{t.label}</span>
-                </button>
-              ))}
-            </div>
+          {/* actions */}
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+            {isConvert(tab) ? (
+              <div className="flex items-center gap-2 text-sm">
+                <button className="btn-ghost btn-sm !px-2" onClick={() => { setTab("deposit"); setAmount(""); flow.reset(); sfx.click(); }} aria-label="Back to actions">←</button>
+                <span className="font-semibold">{tab === "shield" ? "Wrap tUSD into cUSD" : "Unwrap cUSD into tUSD"}</span>
+              </div>
+            ) : (
+              <div className="flex rounded-full bg-black/40 p-1">
+                {MAIN_TABS.map((t) => (
+                  <button key={t.key} className={cn("relative rounded-full px-3.5 py-1.5 text-[13px] font-medium transition", tab === t.key ? "text-black" : "text-ink-muted hover:text-ink")} onClick={() => { setTab(t.key); setAmount(""); flow.reset(); sfx.click(); }}>
+                    {tab === t.key && <motion.span layoutId="play-tab" className="absolute inset-0 rounded-full bg-accent" transition={{ type: "spring", stiffness: 500, damping: 40 }} />}
+                    <span className="relative">{t.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
             <button data-anchor="faucet" className="pill py-1.5 text-accent hover:bg-accent-faint disabled:text-ink-faint" onClick={claimFaucet} disabled={faucetFlow.state.status === "pending" || cooldown > 0} title="Free test tokens on Sepolia">
               {cooldown > 0 ? `More test tUSD in ${formatDuration(cooldown)}` : "Need test tUSD? Get 1,000"}
             </button>
@@ -170,7 +198,8 @@ export function PlayPanel() {
           <FlowStatus state={faucetFlow.state} className="mt-2" />
 
           {/* amount */}
-          <div className="mt-4">
+          <AnimatePresence mode="wait" initial={false}>
+          <motion.div key={tab} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.18 }} className="mt-4">
             <div className="relative">
               <input
                 ref={inputRef}
@@ -195,6 +224,9 @@ export function PlayPanel() {
               <input type="range" min={0} max={maxNum} step={maxNum / 100} value={Math.min(maxNum, Number(amount || 0))} onChange={(e) => setAmount(Number(e.target.value).toFixed(2).replace(/\.?0+$/, ""))} className="range mt-3 w-full" aria-label="Amount" />
             )}
             {tooMuch && <div className="mt-2 text-xs text-warn">That is more than you have. Only what you have will move.</div>}
+            {!tooMuch && value > 0n && poolBal !== undefined && (tab === "deposit" || tab === "withdraw") && (
+              <div className="mt-2 text-xs text-ink-muted">After this you will have <span className="font-mono text-ink">{formatUnits(tab === "deposit" ? poolBal + value : poolBal > value ? poolBal - value : 0n, DECIMALS)} cUSD</span> in the pool.</div>
+            )}
             <p className="mt-2 text-xs text-ink-faint">
               {tab === "shield" && "Turns your public tUSD into private cUSD, one for one. Two quick confirmations. After this, nobody can see your amounts."}
               {tab === "deposit" && "Your amount is scrambled in your browser before it is sent. The first time asks for one extra approval."}
@@ -202,7 +234,8 @@ export function PlayPanel() {
               {tab === "unwrap" && "Turns private cUSD back into public tUSD, one for one. Two confirmations, with a short wait in between while the network confirms the amount."}
               {tab === "sponsor" && "Goes straight into the next prize. It cannot be taken back."}
             </p>
-          </div>
+          </motion.div>
+          </AnimatePresence>
 
           <button data-anchor={tab === "shield" ? "shield" : "deposit"} className="btn-primary btn-lg shine mt-4 w-full" onClick={submit} disabled={(!open && pausable) || value === 0n || flow.state.status === "pending"}>
             {flow.state.status === "pending" ? "Working…" : buttonLabel}

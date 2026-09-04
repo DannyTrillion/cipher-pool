@@ -16,7 +16,7 @@ import { cn } from "@/lib/cn";
 import { sfx } from "@/lib/sound";
 
 /** Guided flow for new savers: five steps, each auto-completing from chain state. */
-export function Wizard() {
+export function Wizard({ onSkip }: { onSkip?: () => void } = {}) {
   const { isConnected } = useAccount();
   const { connect, connectors, isPending } = useConnect();
   const { state, refetch: refetchPool } = usePoolState();
@@ -32,6 +32,16 @@ export function Wizard() {
   const eligible = !!user?.poolBalance && !!state && user.lastTouchedEpoch !== state.epoch + 1n;
   const due = !!state && state.phase === Phase.Open && Number(state.nextDrawAt) <= now && Number(state.participantCount) > 0;
   const drawing = !!state && state.phase !== Phase.Open;
+
+  const ICON: Record<string, JSX.Element> = {
+    connect: <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="6" width="18" height="12" rx="3" /><path d="M16 12h.01M3 10h18" /></svg>,
+    faucet: <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 3v10M8 9l4 4 4-4" /><path d="M5 17a7 7 0 0 0 14 0" /></svg>,
+    shield: <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="5" y="10" width="14" height="10" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg>,
+    deposit: <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="13" r="7" /><path d="M12 3v6M9 6l3 3 3-3" /></svg>,
+    unlock: <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></svg>,
+    draw: <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>,
+  };
+  const SHORT: Record<string, string> = { connect: "Connect", faucet: "Get tUSD", shield: "Wrap", deposit: "Deposit", unlock: "Numbers", draw: "Draw" };
 
   const steps = [
     { key: "connect", title: "Connect a wallet", why: "Your wallet is your login. It is also the only key that can read your numbers.", done: isConnected },
@@ -52,22 +62,41 @@ export function Wizard() {
 
   return (
     <div>
-      {/* progress rail */}
-      <ol className="flex items-center gap-1.5" aria-label="Progress">
-        {steps.map((s, i) => (
-          <li key={s.key} className="flex flex-1 items-center gap-1.5">
-            <span className={cn("grid h-6 w-6 shrink-0 place-items-center rounded-full text-[11px] font-bold transition", s.done ? "bg-accent text-black" : i === current ? "border border-accent text-accent" : "border border-line text-ink-faint")}>{s.done ? "✓" : i + 1}</span>
-            {i < steps.length - 1 && <span className={cn("h-[2px] flex-1 rounded-full", s.done ? "bg-accent" : "bg-white/10")} />}
-          </li>
-        ))}
-      </ol>
+      {/* progress: labelled bar that fills as steps complete */}
+      <div>
+        <div className="flex items-center justify-between">
+          <div className="label">{allDone ? "All done" : `Step ${current + 1} of ${steps.length}`}</div>
+          {onSkip && <button className="text-[11px] text-ink-faint underline-offset-4 hover:text-ink hover:underline" onClick={onSkip}>I know this, skip the guide</button>}
+        </div>
+        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+          <motion.div className="h-full rounded-full bg-[linear-gradient(90deg,#8B9CFF,#FFD600)]" initial={false} animate={{ width: `${(steps.filter((x) => x.done).length / steps.length) * 100}%` }} transition={{ type: "spring", stiffness: 120, damping: 20 }} />
+        </div>
+        <ol className="mt-2 grid grid-cols-6 gap-1" aria-label="Steps">
+          {steps.map((x, i) => (
+            <li key={x.key} className={cn("flex flex-col items-center gap-1 text-[10px]", x.done ? "text-accent" : i === current ? "text-ink" : "text-ink-faint")}>
+              <span className={cn("grid h-6 w-6 place-items-center rounded-full border", x.done ? "border-accent bg-accent text-black" : i === current ? "border-accent" : "border-line")}>
+                {x.done ? (
+                  <motion.svg key="check" viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" initial={{ scale: 0.4, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 500, damping: 18 }}><path d="M5 12l5 5L20 7" /></motion.svg>
+                ) : (
+                  <span className="scale-75">{ICON[x.key]}</span>
+                )}
+              </span>
+              <span className="hidden sm:block">{SHORT[x.key]}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
 
       <AnimatePresence mode="wait">
         <motion.div key={allDone ? "done" : step.key} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.25 }} className="mt-5">
           {allDone ? (
             <>
-              <div className="label">You&apos;re all set</div>
-              <h3 className="mt-1 text-xl font-semibold">You&apos;re in.</h3>
+              <div className="flex items-center gap-3">
+                <motion.span initial={{ scale: 0.6, rotate: -10 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: "spring", stiffness: 400, damping: 16 }} className="grid h-10 w-10 place-items-center rounded-xl bg-accent text-black">
+                  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L20 7" /></svg>
+                </motion.span>
+                <h3 className="text-xl font-semibold">You&apos;re in.</h3>
+              </div>
               <p className="mt-2 text-sm text-ink-muted">Your money is in the pool and in the next draw. Check <span className="text-ink">Your results</span> after each draw. Switch to Experienced for full controls.</p>
               <div className="mt-4 grid grid-cols-2 gap-3">
                 <div className="rounded-xl border border-line bg-black/20 px-3 py-2.5"><div className="text-[10px] uppercase tracking-[0.18em] text-ink-faint">Your savings</div><div className="mt-1"><EncryptedValue value={poolBal} revealed={poolBal !== undefined} size="sm" /></div></div>
@@ -76,8 +105,10 @@ export function Wizard() {
             </>
           ) : (
             <>
-              <div className="label">Step {current + 1} of {steps.length}</div>
-              <h3 className="mt-1 text-xl font-semibold">{step.title}</h3>
+              <div className="flex items-center gap-3">
+                <span className="grid h-10 w-10 place-items-center rounded-xl border border-accent/40 bg-accent-faint text-accent">{ICON[step.key]}</span>
+                <h3 className="text-xl font-semibold">{step.title}</h3>
+              </div>
               <p className="mt-2 text-sm leading-relaxed text-ink-muted">{step.why}</p>
 
               <div className="mt-4">
