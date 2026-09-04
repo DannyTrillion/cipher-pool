@@ -1,11 +1,9 @@
 import { Hero } from "@/components/pool/Hero";
-import { PositionPanel } from "@/components/pool/PositionPanel";
-import { DrawPanel } from "@/components/pool/DrawPanel";
+import { PlayPanel } from "@/components/pool/PlayPanel";
+import { ResultsPanel } from "@/components/pool/ResultsPanel";
 import { AdminPanel } from "@/components/pool/AdminPanel";
-import { MyDraws } from "@/components/pool/MyDraws";
-import { HowStrip } from "@/components/pool/HowStrip";
-import { Badges } from "@/components/pool/Badges";
 import { SaversLedger } from "@/components/pool/SaversLedger";
+import { HowStrip } from "@/components/pool/HowStrip";
 import { FlyingCoins } from "@/components/fx/FlyingCoins";
 import { GlyphConfetti } from "@/components/fx/GlyphConfetti";
 
@@ -16,12 +14,10 @@ export default function Home() {
       <GlyphConfetti />
       <Hero />
       <div className="stagger space-y-8">
-        <Badges />
         <div className="grid gap-6 lg:grid-cols-2" id="position">
-          <PositionPanel />
-          <DrawPanel />
+          <PlayPanel />
+          <ResultsPanel />
         </div>
-        <MyDraws />
         <SaversLedger />
         <AdminPanel />
         <HowStrip />

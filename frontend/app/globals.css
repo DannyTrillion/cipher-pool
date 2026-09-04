@@ -196,6 +196,9 @@ body::before {
   @apply inline-flex items-center gap-1.5 rounded-full border border-line px-2.5 py-1 font-mono text-[11px] text-ink-muted;
   background: rgb(255 255 255 / 0.03);
 }
+.range { -webkit-appearance: none; appearance: none; height: 4px; border-radius: 999px; background: linear-gradient(90deg, rgb(var(--accent) / 0.6), rgb(var(--cipher) / 0.5)); outline: none; }
+.range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 999px; background: rgb(var(--accent)); box-shadow: 0 0 0 4px rgb(var(--accent) / 0.2), 0 4px 12px rgb(0 0 0 / 0.5); cursor: pointer; }
+.range::-moz-range-thumb { width: 18px; height: 18px; border: 0; border-radius: 999px; background: rgb(var(--accent)); cursor: pointer; }
 .menu-item {
   @apply block w-full rounded-lg px-2.5 py-2 text-left text-sm text-ink transition;
 }
