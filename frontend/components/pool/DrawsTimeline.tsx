@@ -166,6 +166,7 @@ function DrawCard({ draw, credit, prize, index, live }: { draw: DrawRecord; cred
               <>
                 <ReelReveal spinning={false} faces={facesFor(mine, slots, draw.tiers)} size={44} />
                 <span className="text-sm font-semibold text-accent">🏆 You won {formatAmount(mine, DECIMALS, { maxFractionDigits: 2 })} {SYMBOL}</span>
+                <button className="btn-primary text-xs" disabled={proofFlow.state.status === "pending"} onClick={() => proofFlow.run((s) => actions.claim(s), { successMessage: "Claimed. Everything you had won is in your wallet as cUSD." })}>Claim to wallet</button>
                 <button className="btn-ghost text-xs" disabled={proofFlow.state.status === "pending"} onClick={() => proofFlow.run((s) => actions.revealWin(draw.epoch, s), { successMessage: "Your win is now public for anyone to check." })}>Show the world</button>
                 <FlowStatus state={proofFlow.state} />
               </>

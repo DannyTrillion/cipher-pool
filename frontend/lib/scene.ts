@@ -10,6 +10,8 @@ export type SceneEvent =
   | { type: "deposit"; amount: bigint }
   | { type: "withdraw"; amount: bigint }
   | { type: "sponsor"; amount: bigint }
+  | { type: "shield"; amount: bigint }
+  | { type: "claim" }
   | { type: "drawStart" }
   | { type: "drawSweep"; pass: 1 | 2; cursor: number; total: number }
   | { type: "drawDone" }

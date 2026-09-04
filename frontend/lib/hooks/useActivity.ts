@@ -5,7 +5,7 @@ import { usePublicClient } from "wagmi";
 import type { AbiEvent } from "viem";
 import { POOL, CHAIN_ID } from "@/lib/contracts";
 
-export interface ActivityRow { id: string; kind: "deposit" | "withdraw" | "sponsor" | "drawStart" | "drawDone" | "harvest"; who?: `0x${string}`; epoch?: bigint; block: bigint; ts?: number }
+export interface ActivityRow { id: string; kind: "deposit" | "withdraw" | "sponsor" | "drawStart" | "drawDone" | "harvest" | "claim"; who?: `0x${string}`; epoch?: bigint; block: bigint; ts?: number }
 
 const LOOKBACK = 9_000n; // ~30h of Sepolia blocks; public RPCs cap log ranges around 10k
 
@@ -32,6 +32,7 @@ export function useActivity(limit = 12) {
           else if (name === "PrizeDonated") mapped.push({ ...base, kind: "sponsor", who: args.from as `0x${string}` });
           else if (name === "DrawStarted") mapped.push({ ...base, kind: "drawStart", epoch: args.epoch as bigint });
           else if (name === "DrawCompleted") mapped.push({ ...base, kind: "drawDone", epoch: args.epoch as bigint });
+          else if (name === "PrizeClaimed") mapped.push({ ...base, kind: "claim", who: args.user as `0x${string}` });
         }
         const recent = mapped.sort((a, b) => (a.block < b.block ? 1 : -1)).slice(0, limit);
         // timestamps for the visible rows only

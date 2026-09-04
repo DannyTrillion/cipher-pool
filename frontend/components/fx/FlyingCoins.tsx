@@ -35,6 +35,8 @@ export function FlyingCoins() {
         case "sponsor": sfx.whoosh(); spawn(wallet ?? center(anchorRect("deposit")), sphere, "prize", 4); break;
         case "withdraw": sfx.whoosh(); spawn(sphere, wallet, "cipher", 5); setTimeout(sfx.coin, 800); break;
         case "win": sfx.win(); spawn(sphere, center(anchorRect("position-balance")) ?? wallet, "prize", 8); break;
+        case "shield": sfx.lock(); spawn(center(anchorRect("shield")) ?? wallet, wallet, "cipher", 5); break;
+        case "claim": sfx.coin(); spawn(sphere, wallet, "prize", 6); break;
       }
     });
   }, []);

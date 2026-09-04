@@ -79,7 +79,7 @@ function PositionPane() {
   const { user } = useUserState(state?.epoch);
   const { reveal, get, busy } = useReveal();
   const poolBal = get(user?.poolBalance);
-  const winnings = get(user?.winnings);
+  const claimable = get(user?.claimable);
   return (
     <>
       <div className="flex items-center justify-between px-5 pt-4">
@@ -96,9 +96,9 @@ function PositionPane() {
           <div className="mt-1 text-[11px] text-ink-faint">Always yours to withdraw</div>
         </div>
         <div>
-          <div className="label">Prizes you&apos;ve won</div>
-          <div className="mt-1"><EncryptedValue value={isConnected ? (user?.winnings ? winnings : null) : undefined} revealed={winnings !== undefined} size="md" /></div>
-          <div className="mt-1 text-[11px] text-ink-faint">Added straight to your savings</div>
+          <div className="label">Prizes to claim</div>
+          <div className="mt-1"><EncryptedValue value={isConnected ? (user?.claimable ? claimable : null) : undefined} revealed={claimable !== undefined} size="md" /></div>
+          <div className="mt-1 text-[11px] text-ink-faint">Claim to your wallet any time</div>
         </div>
         <div className="col-span-2 rounded-xl border border-line px-3.5 py-3 text-[13px] leading-relaxed text-ink-muted">
           Your chance of winning equals your share of everyone&apos;s savings. Nobody, not even the pool, can see how much you saved.
@@ -106,7 +106,7 @@ function PositionPane() {
       </div>
       <div className="border-t border-line px-5 py-2.5 text-[12px] text-ink-faint">
         {isConnected && user?.poolBalance ? (
-          <button className="text-accent hover:underline" disabled={!!busy} onClick={() => { void reveal(POOL.address, user.poolBalance, "tile-pool"); void reveal(POOL.address, user.winnings, "tile-win"); }}>
+          <button className="text-accent hover:underline" disabled={!!busy} onClick={() => { void reveal(POOL.address, user.poolBalance, "tile-pool"); void reveal(POOL.address, user.claimable, "tile-claim"); }}>
             {busy ? "Unlocking…" : "Unlock my numbers (one signature)"}
           </button>
         ) : isConnected ? (

@@ -9,7 +9,7 @@ async function main() {
   const file = join(feDir, "deployment.json");
   const prev = existsSync(file) ? JSON.parse(readFileSync(file, "utf8")) : null;
   const zero = "0x0000000000000000000000000000000000000000";
-  const names = ["ConfidentialUSD", "MockYieldSource", "ConfidentialPrizePool"] as const;
+  const names = ["MockUSD", "ConfidentialUSD", "MockYieldSource", "ConfidentialPrizePool"] as const;
   const contracts: Record<string, unknown> = {};
   for (const n of names) {
     contracts[n] = { address: prev?.contracts?.[n]?.address ?? zero, abi: (await artifacts.readArtifact(n)).abi };
@@ -20,7 +20,7 @@ async function main() {
     deployedAt: prev?.deployedAt ?? null,
     deployer: prev?.deployer ?? zero,
     drawPeriod: prev?.drawPeriod ?? 600,
-    apyBps: prev?.apyBps ?? 500,
+    dripPerSecond: prev?.dripPerSecond ?? "2777",
     contracts,
   };
   writeFileSync(file, JSON.stringify(out, null, 2));

@@ -12,7 +12,7 @@ import { DrawButton, type DrawButtonState } from "@/components/pool/DrawButton";
 import { Identicon } from "@/components/layout/Identicon";
 import { useNow } from "@/components/ui/Countdown";
 import { formatAmount } from "@/lib/format";
-import { DECIMALS, SYMBOL } from "@/lib/contracts";
+import { DECIMALS, SYMBOL, DRIP_PER_HOUR } from "@/lib/contracts";
 
 /** The launch console: stakes on the left, the big button in the centre, the crowd on the right. */
 export function StatConsole() {
@@ -62,7 +62,7 @@ export function StatConsole() {
             <span className="font-mono text-lg text-ink-muted">{SYMBOL}</span>
           </div>
           <div className="mt-2 text-sm text-ink-muted">
-            Shared by <span className="text-ink">{state?.winnerSlots ?? 5} winners</span> every {state ? human(Number(state.drawPeriod)) : "…"}. Grows with {state ? `${(Number(state.apyBps) / 100).toFixed(1)}%` : "…"} yield on everyone&apos;s savings.
+            Shared by <span className="text-ink">{state?.winnerSlots ?? 5} winners</span> every {state ? human(Number(state.drawPeriod)) : "…"}. Grows by about {formatAmount(state ? state.dripPerSecond * 3600n : DRIP_PER_HOUR, DECIMALS, { maxFractionDigits: 0 })} {SYMBOL} an hour from simulated yield.
             {h && errors[h] && prize === undefined && " Relayer catching up…"}
           </div>
           <div className="mt-3 text-xs text-ink-faint">

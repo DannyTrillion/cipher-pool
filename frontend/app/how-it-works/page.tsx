@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { POOL, TOKEN, YIELD, etherscanAddr } from "@/lib/contracts";
+import { POOL, TOKEN, YIELD, TUSD, etherscanAddr } from "@/lib/contracts";
 import { DrawIllustration } from "@/components/pool/DrawIllustration";
 
 export const metadata = { title: "How it works — Cipher Pool" };
@@ -56,16 +56,16 @@ export default function HowItWorks() {
         ))}
       </ol>
 
-      <Section n="01" title="Your deposit is encrypted before it leaves your browser" lead="When you deposit, the app encrypts your amount with the network's FHE public key, bound to your address and the pool contract, and sends the ciphertext with a proof. The pool pulls the funds through a confidential ERC-7984 transfer and adds the encrypted amount to your encrypted balance. If you ask for more than you have, nothing moves — it never reverts, because a revert would leak your balance.">
+      <Section n="01" title="Your deposit is encrypted before it leaves your browser" lead="You start with a plain test ERC-20, tUSD. Approving and wrapping it turns it into confidential cUSD one to one; the tUSD stays locked in the wrapper, so every cUSD is backed. When you deposit, the app encrypts your amount with the network's FHE public key, bound to your address and the pool contract, and sends the ciphertext with a proof. The pool pulls the funds through a confidential ERC-7984 transfer and adds the encrypted amount to your encrypted balance. If you ask for more than you have, nothing moves — it never reverts, because a revert would leak your balance.">
         <Code>{`euint64 moved = asset.confidentialTransferFrom(msg.sender, address(this), requested);
 _balances[msg.sender] = FHE.add(_balances[msg.sender], moved);
 FHE.allowThis(_balances[msg.sender]);
 FHE.allow(_balances[msg.sender], msg.sender);   // only you can decrypt`}</Code>
       </Section>
 
-      <Section n="02" title="Yield builds the prize, homomorphically" lead="The pool never learns the total saved. The yield source receives the encrypted total and computes principal × APY × time as FHE operations, mints the result to the pool, and the pool adds it to an encrypted prize reserve. Only the prize reserve is made publicly readable, so the app can show what is up for grabs, like PoolTogether. Anyone can also sponsor the prize directly. On testnet the yield source is a simulator with a public APY; in production it is an adapter over a real vault behind the same one-function interface." />
+      <Section n="02" title="Yield builds the prize" lead="The pool never learns the total saved, so a testnet mock cannot compute APY on it without leaking it. Instead the yield source is an admin-funded drip: a public, fixed amount of tUSD per second is minted, wrapped into cUSD and handed to the pool's encrypted prize reserve. Only the prize reserve is made publicly readable, so the app can show what is up for grabs, like PoolTogether. Anyone can also sponsor the prize directly. In production the drip is replaced by an adapter that harvests real yield from a vault into the wrapper, behind the same one-function interface." />
 
-      <Section n="03" title="Winners are picked without decrypting anything" lead="Each draw pays a tiered set of prizes, by default one top prize of 40%, two of 20% and two of 10%. For every prize slot the contract draws an encrypted random number from the coprocessor and turns it into an encrypted ticket between zero and the total saved. It then walks the savers once, keeping an encrypted running total, and for each slot counts how many running totals sit below that slot's ticket. That count is the winner's index, still encrypted. In a second pass every saver is credited select(index == me, amount, 0): winners' balances grow, everyone else's grow by an encrypted zero, and from the outside every account was touched identically.">
+      <Section n="03" title="Winners are picked without decrypting anything" lead="Each draw pays a tiered set of prizes, by default one top prize of 40%, two of 20% and two of 10%. For every prize slot the contract draws an encrypted random number from the coprocessor and turns it into an encrypted ticket between zero and the total saved. It then walks the savers once, keeping an encrypted running total, and for each slot counts how many running totals sit below that slot's ticket. That count is the winner's index, still encrypted. In a second pass every saver is credited select(index == me, amount, 0): winners' balances grow, everyone else's grow by an encrypted zero, and from the outside every account was touched identically. Prizes land in each winner's encrypted claimable pot; claiming moves them to the wallet by confidential transfer, and anyone can call claim at constant cost, so a claim never reveals who won.">
         <DrawIllustration />
         <Code>{`for each slot k:
     seed_k   = FHE.randEuint64()                                  // on-chain randomness, public afterwards
@@ -116,7 +116,8 @@ for i in savers:                                                  // pass 2, bat
       <Section n="07" title="Contracts on Sepolia" lead="Everything runs on the Ethereum Sepolia testnet with Zama's FHEVM coprocessor. Tokens are test tokens with no value.">
         <ul className="space-y-1.5 font-mono text-sm">
           <li><a className="text-ink-muted hover:text-ink" href={etherscanAddr(POOL.address)} target="_blank" rel="noreferrer">Prize pool · {POOL.address}</a></li>
-          <li><a className="text-ink-muted hover:text-ink" href={etherscanAddr(TOKEN.address)} target="_blank" rel="noreferrer">cUSD (ERC-7984) · {TOKEN.address}</a></li>
+          <li><a className="text-ink-muted hover:text-ink" href={etherscanAddr(TUSD.address)} target="_blank" rel="noreferrer">tUSD test ERC-20 · {TUSD.address}</a></li>
+          <li><a className="text-ink-muted hover:text-ink" href={etherscanAddr(TOKEN.address)} target="_blank" rel="noreferrer">cUSD (ERC-7984 wrapper) · {TOKEN.address}</a></li>
           <li><a className="text-ink-muted hover:text-ink" href={etherscanAddr(YIELD.address)} target="_blank" rel="noreferrer">Yield source (mock) · {YIELD.address}</a></li>
         </ul>
       </Section>

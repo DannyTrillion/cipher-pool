@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { ethers, fhevm } from "hardhat";
 import { FhevmType } from "@fhevm/hardhat-plugin";
 import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
-import type { ConfidentialUSD, MockYieldSource, ConfidentialPrizePool } from "../typechain-types";
+import type { ConfidentialUSD, MockYieldSource, ConfidentialPrizePool, MockUSD } from "../typechain-types";
 
 const ONE = 1_000_000n; // 6 decimals
 const DRAW_PERIOD = 3600;
@@ -13,6 +13,7 @@ describe("ConfidentialPrizePool", function () {
   let alice: HardhatEthersSigner;
   let bob: HardhatEthersSigner;
   let carol: HardhatEthersSigner;
+  let tusd: MockUSD;
   let token: ConfidentialUSD;
   let yieldSource: MockYieldSource;
   let pool: ConfidentialPrizePool;
@@ -41,8 +42,21 @@ describe("ConfidentialPrizePool", function () {
     return fhevm.userDecryptEuint(FhevmType.euint64, h, poolAddr, user);
   }
 
+  async function claimable(user: HardhatEthersSigner): Promise<bigint> {
+    const h = await pool.claimableOf(user.address);
+    if (h === ethers.ZeroHash) return 0n;
+    return fhevm.userDecryptEuint(FhevmType.euint64, h, poolAddr, user);
+  }
+
+  /** tUSD faucet → approve → wrap into cUSD (1,000) */
+  async function fund(user: HardhatEthersSigner) {
+    await tusd.connect(user).faucet();
+    await tusd.connect(user).approve(tokenAddr, 1_000n * ONE);
+    await token.connect(user).wrap(user.address, 1_000n * ONE);
+  }
+
   async function fundAndDeposit(user: HardhatEthersSigner, amount: bigint) {
-    await token.connect(user).faucet();
+    await fund(user);
     await token.connect(user).setOperator(poolAddr, FAR_FUTURE);
     const enc = await encAmount(poolAddr, user, amount);
     await pool.connect(user).deposit(enc.handles[0], enc.inputProof);
@@ -71,23 +85,32 @@ describe("ConfidentialPrizePool", function () {
 
   beforeEach(async function () {
     if (!fhevm.isMock) this.skip();
-    token = await (await ethers.getContractFactory("ConfidentialUSD")).deploy();
+    tusd = await (await ethers.getContractFactory("MockUSD")).deploy();
+    token = await (await ethers.getContractFactory("ConfidentialUSD")).deploy(await tusd.getAddress());
     tokenAddr = await token.getAddress();
-    yieldSource = await (await ethers.getContractFactory("MockYieldSource")).deploy(tokenAddr, 500);
+    // drip: 10 cUSD per hour = 10e6 / 3600 ≈ 2777 units per second
+    yieldSource = await (await ethers.getContractFactory("MockYieldSource")).deploy(await tusd.getAddress(), tokenAddr, 2_777);
     pool = await (
       await ethers.getContractFactory("ConfidentialPrizePool")
     ).deploy(tokenAddr, await yieldSource.getAddress(), DRAW_PERIOD);
     poolAddr = await pool.getAddress();
-    await token.setMinter(await yieldSource.getAddress(), true);
+    await tusd.setMinter(await yieldSource.getAddress(), true);
     await yieldSource.setPool(poolAddr);
   });
 
-  describe("faucet", () => {
-    it("mints 1,000 cUSD and enforces the cooldown", async () => {
-      await token.connect(alice).faucet();
-      expect(await tokenBalance(alice)).to.eq(1_000n * ONE);
-      await expect(token.connect(alice).faucet()).to.be.revertedWithCustomError(token, "FaucetCooldown");
-      expect(await token.faucetCooldownRemaining(alice.address)).to.be.gt(0n);
+  describe("faucet + wrap", () => {
+    it("mints 1,000 tUSD, enforces the cooldown, and wraps into encrypted cUSD 1:1", async () => {
+      await tusd.connect(alice).faucet();
+      expect(await tusd.balanceOf(alice.address)).to.eq(1_000n * ONE);
+      await expect(tusd.connect(alice).faucet()).to.be.revertedWithCustomError(tusd, "FaucetCooldown");
+      expect(await tusd.faucetCooldownRemaining(alice.address)).to.be.gt(0n);
+
+      await expect(token.connect(alice).wrap(alice.address, 400n * ONE)).to.be.reverted; // no approval yet
+      await tusd.connect(alice).approve(tokenAddr, 400n * ONE);
+      await token.connect(alice).wrap(alice.address, 400n * ONE);
+      expect(await tokenBalance(alice)).to.eq(400n * ONE);
+      expect(await tusd.balanceOf(alice.address)).to.eq(600n * ONE);
+      expect(await tusd.balanceOf(tokenAddr)).to.eq(400n * ONE); // fully backed
     });
   });
 
@@ -106,7 +129,7 @@ describe("ConfidentialPrizePool", function () {
     });
 
     it("requires the pool to be an operator", async () => {
-      await token.connect(alice).faucet();
+      await fund(alice);
       const enc = await encAmount(poolAddr, alice, 10n * ONE);
       await expect(pool.connect(alice).deposit(enc.handles[0], enc.inputProof)).to.be.revertedWithCustomError(
         token,
@@ -115,7 +138,7 @@ describe("ConfidentialPrizePool", function () {
     });
 
     it("deposits nothing (without reverting) when the token balance is insufficient", async () => {
-      await token.connect(alice).faucet();
+      await fund(alice);
       await token.connect(alice).setOperator(poolAddr, FAR_FUTURE);
       const enc = await encAmount(poolAddr, alice, 5_000n * ONE);
       await pool.connect(alice).deposit(enc.handles[0], enc.inputProof);
@@ -161,7 +184,7 @@ describe("ConfidentialPrizePool", function () {
       await fundAndDeposit(bob, 700n * ONE);
 
       // Carol sponsors a 50 cUSD prize (does not join the pool).
-      await token.connect(carol).faucet();
+      await fund(carol);
       await token.connect(carol).setOperator(poolAddr, FAR_FUTURE);
       const donation = await encAmount(poolAddr, carol, 50n * ONE);
       await pool.connect(carol).donatePrize(donation.handles[0], donation.inputProof);
@@ -195,12 +218,19 @@ describe("ConfidentialPrizePool", function () {
       expect(a + b).to.eq(prize2);
       expect(a === 0n || b === 0n).to.eq(true);
 
-      // Winnings land in the encrypted pool balance and are withdrawable.
-      expect((await poolBalance(alice)) + (await poolBalance(bob))).to.eq(1_000n * ONE + prize2);
+      // Principal is untouched; the prize sits in the winner's encrypted claimable pot.
+      expect((await poolBalance(alice)) + (await poolBalance(bob))).to.eq(1_000n * ONE);
       const winner = a > 0n ? alice : bob;
-      const enc = await encAmount(poolAddr, winner, prize2);
-      await pool.connect(winner).withdraw(enc.handles[0], enc.inputProof);
+      const loser = winner === alice ? bob : alice;
+      expect(await claimable(winner)).to.eq(prize2);
+      expect(await claimable(loser)).to.eq(0n);
+
+      // Claim moves it to the wallet by confidential transfer. A loser can claim too (moves zero).
+      await pool.connect(winner).claimPrize();
+      await pool.connect(loser).claimPrize();
       expect(await tokenBalance(winner)).to.eq((winner === alice ? 700n : 300n) * ONE + prize2);
+      expect(await tokenBalance(loser)).to.eq((loser === alice ? 700n : 300n) * ONE);
+      expect(await claimable(winner)).to.eq(0n);
 
       // Reserve is drained (publicly verifiable), and the pool reopened.
       expect(await pool.phase()).to.eq(0n);
@@ -248,9 +278,9 @@ describe("ConfidentialPrizePool", function () {
       let aliceWins = 0n;
       let bobWins = 0n;
       const rounds = 8;
+      await fund(carol);
+      await token.connect(carol).setOperator(poolAddr, FAR_FUTURE);
       for (let i = 0; i < rounds; i++) {
-        await token.connect(carol).faucet().catch(() => {});
-        await token.connect(carol).setOperator(poolAddr, FAR_FUTURE);
         const d = await encAmount(poolAddr, carol, 1n * ONE);
         await pool.connect(carol).donatePrize(d.handles[0], d.inputProof);
         await ethers.provider.send("evm_increaseTime", [DRAW_PERIOD + 1]);
@@ -268,7 +298,7 @@ describe("ConfidentialPrizePool", function () {
       await fundAndDeposit(alice, 100n * ONE);
       await ethers.provider.send("evm_increaseTime", [DRAW_PERIOD + 1]);
       await runFullDraw(); // eligibility draw
-      await token.connect(bob).faucet();
+      await fund(bob);
       await token.connect(bob).setOperator(poolAddr, FAR_FUTURE);
       const d = await encAmount(poolAddr, bob, 10n * ONE);
       await pool.connect(bob).donatePrize(d.handles[0], d.inputProof);
@@ -290,7 +320,7 @@ describe("ConfidentialPrizePool", function () {
       await runFullDraw(); // eligibility draw: nobody eligible, prize (yield only) rolls over
 
       // Sponsor 100 cUSD via the deployer.
-      await token.faucet();
+      await fund(deployer);
       await token.setOperator(poolAddr, FAR_FUTURE);
       const d = await encAmount(poolAddr, deployer, 100n * ONE);
       await pool.donatePrize(d.handles[0], d.inputProof);
@@ -339,17 +369,26 @@ describe("ConfidentialPrizePool", function () {
       await expect(pool.setTiers([10_000], [1])).to.be.revertedWithCustomError(pool, "PoolNotOpen");
     });
 
-    it("accrues simulated yield on the encrypted principal", async () => {
+    it("drips simulated yield into the prize as backed cUSD", async () => {
       await fundAndDeposit(alice, 1_000n * ONE);
-      await ethers.provider.send("evm_increaseTime", [365 * 24 * 3600]);
+      const before = await tusd.balanceOf(tokenAddr);
+      await ethers.provider.send("evm_increaseTime", [3600]);
       await ethers.provider.send("evm_mine", []);
-      await pool.harvest();
-      // 5% APY on 1,000 for a year ≈ 50. Prize is public only once a draw starts,
-      // so start a draw and read the snapshot.
       await runFullDraw();
       const prize = await fhevm.publicDecryptEuint(FhevmType.euint64, (await pool.getDraw(1)).prize);
-      expect(prize).to.be.gte(50n * ONE);
-      expect(prize).to.be.lt(51n * ONE);
+      // ~10 cUSD per hour at 2,777 units/s (elapsed includes a few extra seconds)
+      expect(prize).to.be.gte(9_990_000n);
+      expect(prize).to.be.lt(10_100_000n);
+      // every dripped cUSD is backed by tUSD held in the wrapper
+      expect((await tusd.balanceOf(tokenAddr)) - before).to.eq(prize);
+    });
+
+    it("claimPrize is safe for anyone and never reverts for non-winners", async () => {
+      await fundAndDeposit(alice, 100n * ONE);
+      await pool.connect(alice).claimPrize(); // nothing won yet → moves encrypted zero
+      expect(await tokenBalance(alice)).to.eq(900n * ONE);
+      await pool.connect(bob).claimPrize(); // never deposited, never won
+      expect(await claimable(bob)).to.eq(0n);
     });
   });
 

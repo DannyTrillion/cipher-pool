@@ -23,8 +23,8 @@ export function Hero() {
           <span className="text-accent">Win</span> verifiably.
         </h1>
         <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-ink-muted sm:text-lg">
-          Deposit, keep every cent of your principal, and win the pool&apos;s yield through tiered draws. Your balance, your odds and
-          your winnings are ciphertext on-chain — even to the contract — and every draw is verifiable by anyone.
+          Shield a test ERC-20 into confidential cUSD, save it, keep every cent, and win the pool&apos;s yield through tiered draws. Your balance,
+          your odds and your winnings are ciphertext on-chain — even to the contract — and every draw is verifiable by anyone.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <a href="#play" className="btn-primary shine px-7 py-3 text-[15px]">Play</a>

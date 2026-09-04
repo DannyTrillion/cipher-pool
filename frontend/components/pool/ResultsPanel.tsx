@@ -44,6 +44,8 @@ export function ResultsPanel() {
   const myCredit = get(latestCredit);
   const latestPrize = latest ? pub.values[latest.prize] : undefined;
   const winnings = get(user?.winnings);
+  const claimable = get(user?.claimable);
+  const claimFlow = useActionFlow();
   const inProgress = !!state && state.phase !== Phase.Open;
 
   const steps = user
@@ -107,8 +109,9 @@ export function ResultsPanel() {
                 <div className="flex flex-wrap items-center gap-4">
                   <ReelReveal spinning={false} faces={facesFor(myCredit, latestPrize !== undefined ? slotAmounts(latestPrize, latest.tiers) : [], latest.tiers)} />
                   <motion.div initial={{ rotateX: 90, opacity: 0 }} animate={{ rotateX: 0, opacity: 1 }} transition={{ type: "spring", stiffness: 260, damping: 18, delay: 0.7 }} className="rounded-xl border border-accent/40 bg-accent-soft px-3 py-2 text-sm font-semibold text-accent shadow-[0_0_30px_rgb(255_214_0/0.25)]">
-                    🏆 You won <EncryptedValue value={myCredit} revealed size="sm" className="text-accent" /> — it&apos;s already in your savings.
+                    🏆 You won <EncryptedValue value={myCredit} revealed size="sm" className="text-accent" /> — waiting in your encrypted pot.
                   </motion.div>
+                  <button className="btn-primary text-xs" disabled={claimFlow.state.status === "pending"} onClick={() => claimFlow.run(async (s) => { await actions.claim(s); await reveal(POOL.address, user?.claimable ?? null, "claim"); }, { successMessage: "Claimed. Your prize is in your wallet as cUSD." })}>{claimFlow.state.status === "pending" ? "Claiming…" : "Claim to wallet"}</button>
                   <button className="btn-ghost text-xs" onClick={() => revealFlow.run((s) => actions.revealWin(latest.epoch, s), { successMessage: "Your win is now public for anyone to check." })} disabled={revealFlow.state.status === "pending"}>Show the world I won</button>
                 </div>
               ) : (
@@ -118,6 +121,10 @@ export function ResultsPanel() {
                 </div>
               )}
               <FlowStatus state={revealFlow.state} className="mt-2" />
+              <FlowStatus state={claimFlow.state} className="mt-2" />
+              {isConnected && claimable !== undefined && claimable > 0n && myCredit !== undefined && myCredit === 0n && (
+                <div className="mt-2 text-xs text-ink-muted">You still have {formatAmount(claimable, DECIMALS, { maxFractionDigits: 2 })} {SYMBOL} to claim from earlier draws.</div>
+              )}
             </div>
             <button className="mt-3 text-xs text-ink-faint underline-offset-4 hover:text-ink hover:underline" onClick={() => { setVerify((v) => !v); sfx.click(); }} aria-expanded={verify}>
               {verify ? "Hide verification" : "Verify this draw"}

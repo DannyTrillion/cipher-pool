@@ -1,7 +1,7 @@
 "use client";
 
 import { useAccount, useReadContract, useReadContracts } from "wagmi";
-import { POOL, TOKEN, YIELD, CHAIN_ID } from "@/lib/contracts";
+import { POOL, TOKEN, YIELD, TUSD, CHAIN_ID } from "@/lib/contracts";
 import { ZERO_HANDLE } from "@/lib/abis";
 
 export const Phase = { Open: 0, Selecting: 1, Awarding: 2 } as const;
@@ -19,7 +19,7 @@ export interface PoolState {
   nextDrawAt: bigint;
   isDrawDue: boolean;
   prizeReserveHandle: `0x${string}`;
-  apyBps: bigint;
+  dripPerSecond: bigint;
   owner: `0x${string}`;
   tiers: Tier[];
   winnerSlots: number;
@@ -44,7 +44,7 @@ export function usePoolState() {
       { ...POOL, chainId: CHAIN_ID, functionName: "nextDrawAt" },
       { ...POOL, chainId: CHAIN_ID, functionName: "isDrawDue" },
       { ...POOL, chainId: CHAIN_ID, functionName: "prizeReserve" },
-      { ...YIELD, chainId: CHAIN_ID, functionName: "apyBps" },
+      { ...YIELD, chainId: CHAIN_ID, functionName: "ratePerSecond" },
       { ...POOL, chainId: CHAIN_ID, functionName: "owner" },
       { ...POOL, chainId: CHAIN_ID, functionName: "getTiers" },
     ],
@@ -62,7 +62,7 @@ export function usePoolState() {
         nextDrawAt: d[6] as bigint,
         isDrawDue: d[7] as boolean,
         prizeReserveHandle: d[8] as `0x${string}`,
-        apyBps: d[9] as bigint,
+        dripPerSecond: d[9] as bigint,
         owner: d[10] as `0x${string}`,
         tiers: (d[11] as { shareBps: number; winners: number }[]).map((t) => ({ shareBps: Number(t.shareBps), winners: Number(t.winners) })),
         winnerSlots: (d[11] as { winners: number }[]).reduce((a, t) => a + Number(t.winners), 0),
@@ -143,7 +143,10 @@ export function useUserState(epoch: bigint | undefined) {
       { ...POOL, chainId: CHAIN_ID, functionName: "lastTouchedEpoch", args: [user] },
       { ...TOKEN, chainId: CHAIN_ID, functionName: "confidentialBalanceOf", args: [user] },
       { ...TOKEN, chainId: CHAIN_ID, functionName: "isOperator", args: [user, POOL.address] },
-      { ...TOKEN, chainId: CHAIN_ID, functionName: "faucetCooldownRemaining", args: [user] },
+      { ...TUSD, chainId: CHAIN_ID, functionName: "faucetCooldownRemaining", args: [user] },
+      { ...TUSD, chainId: CHAIN_ID, functionName: "balanceOf", args: [user] },
+      { ...TUSD, chainId: CHAIN_ID, functionName: "allowance", args: [user, TOKEN.address] },
+      { ...POOL, chainId: CHAIN_ID, functionName: "claimableOf", args: [user] },
     ],
     query: { enabled: !!address, refetchInterval: REFRESH },
   });
@@ -160,6 +163,9 @@ export function useUserState(epoch: bigint | undefined) {
           walletBalance: norm(d[5]),
           isOperator: d[6] as boolean,
           faucetCooldown: d[7] as bigint,
+          tusdBalance: d[8] as bigint,
+          tusdAllowance: d[9] as bigint,
+          claimable: norm(d[10]),
         }
       : undefined,
     refetch: q.refetch,

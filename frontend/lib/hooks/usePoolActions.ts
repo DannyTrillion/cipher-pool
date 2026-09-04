@@ -4,7 +4,7 @@ import { useCallback } from "react";
 import { useAccount, useConfig } from "wagmi";
 import { readContract } from "wagmi/actions";
 import { parseUnits } from "viem";
-import { POOL, TOKEN, CHAIN_ID, DECIMALS, etherscanTx } from "@/lib/contracts";
+import { POOL, TOKEN, TUSD, CHAIN_ID, DECIMALS, etherscanTx } from "@/lib/contracts";
 import { encryptUint64 } from "@/lib/fhevm/instance";
 import { useWriteAndWait } from "@/lib/hooks/useWriteAndWait";
 import { useToast } from "@/components/ui/Toast";
@@ -35,9 +35,43 @@ export function usePoolActions() {
     async (setStep: Step) => {
       need();
       setStep("Confirm the faucet transaction in your wallet…");
-      const hash = await write({ ...TOKEN, chainId: CHAIN_ID, functionName: "faucet", onSent: () => setStep("Minting 1,000 cUSD…") });
+      const hash = await write({ ...TUSD, chainId: CHAIN_ID, functionName: "faucet", onSent: () => setStep("Minting 1,000 tUSD…") });
       fire({ type: "faucet", amount: 1_000_000_000n });
-      txToast("Faucet claimed: 1,000 cUSD", hash);
+      txToast("Faucet claimed: 1,000 tUSD", hash);
+      return hash;
+    },
+    [address, write],
+  );
+
+  /** tUSD → cUSD: ERC-20 approval (if needed) then wrap. The wrapped amount becomes an encrypted balance. */
+  const shield = useCallback(
+    async (amount: string, setStep: Step) => {
+      const user = need();
+      const value = parseUnits(amount, DECIMALS);
+      if (value <= 0n) throw new Error("Enter an amount greater than zero.");
+      const allowance = (await readContract(config, { ...TUSD, chainId: CHAIN_ID, functionName: "allowance", args: [user, TOKEN.address] })) as bigint;
+      if (allowance < value) {
+        setStep("Approve the wrapper to take your tUSD…");
+        const h = await write({ ...TUSD, chainId: CHAIN_ID, functionName: "approve", args: [TOKEN.address, value], onSent: () => setStep("Confirming approval…") });
+        txToast("tUSD approved", h);
+      }
+      setStep("Confirm the wrap in your wallet…");
+      const hash = await write({ ...TOKEN, chainId: CHAIN_ID, functionName: "wrap", args: [user, value], onSent: () => setStep("Shielding into encrypted cUSD…") });
+      fire({ type: "shield", amount: value });
+      txToast(`Shielded ${amount} tUSD into cUSD`, hash);
+      return hash;
+    },
+    [address, write, config],
+  );
+
+  /** Claim everything won so far to the wallet (confidential transfer). Safe for anyone. */
+  const claim = useCallback(
+    async (setStep: Step) => {
+      need();
+      setStep("Confirm the claim in your wallet…");
+      const hash = await write({ ...POOL, chainId: CHAIN_ID, functionName: "claimPrize", onSent: () => setStep("Moving your prize to your wallet (encrypted)…") });
+      fire({ type: "claim" });
+      txToast("Prize claimed to your wallet", hash);
       return hash;
     },
     [address, write],
@@ -156,5 +190,5 @@ export function usePoolActions() {
     [address, write],
   );
 
-  return { faucet, deposit, withdraw, donate, harvest, runDraw, revealWin, ensureOperator };
+  return { faucet, shield, claim, deposit, withdraw, donate, harvest, runDraw, revealWin, ensureOperator };
 }

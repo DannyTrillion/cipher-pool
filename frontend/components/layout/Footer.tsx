@@ -53,7 +53,8 @@ export function Footer() {
           <div className="label">Contracts · Sepolia</div>
           <ul className="mt-3 divide-y divide-line text-sm">
             <AddressRow label="Prize pool" address={c.ConfidentialPrizePool.address} />
-            <AddressRow label="cUSD (ERC-7984)" address={c.ConfidentialUSD.address} />
+            <AddressRow label="tUSD (test ERC-20)" address={c.MockUSD.address} />
+            <AddressRow label="cUSD (ERC-7984 wrapper)" address={c.ConfidentialUSD.address} />
             <AddressRow label="Yield source (mock)" address={c.MockYieldSource.address} />
           </ul>
           <p className="mt-3 text-xs text-ink-faint">Testnet only. Tokens have no value. Prizes are paid in test cUSD.</p>

@@ -9,7 +9,8 @@ import { useReveal } from "@/lib/hooks/useReveal";
 import { useActionFlow } from "@/lib/useActionFlow";
 import { FlowStatus } from "@/components/ui/FlowStatus";
 import { EncryptedValue } from "@/components/ui/EncryptedValue";
-import { POOL, TOKEN } from "@/lib/contracts";
+import { POOL, TOKEN, DECIMALS, UNDERLYING_SYMBOL } from "@/lib/contracts";
+import { formatUnits } from "viem";
 import { formatDuration, useNow } from "@/components/ui/Countdown";
 import { cn } from "@/lib/cn";
 import { sfx } from "@/lib/sound";
@@ -34,16 +35,18 @@ export function Wizard() {
 
   const steps = [
     { key: "connect", title: "Connect a wallet", why: "Your wallet is your identity here. It also holds the only key that can read your numbers.", done: isConnected },
-    { key: "faucet", title: "Get 1,000 test cUSD", why: "This is play money on the Sepolia test network. It lets you try everything for free.", done: !!user?.walletBalance || !!user?.poolBalance },
+    { key: "faucet", title: "Get 1,000 test tUSD", why: "This is play money on the Sepolia test network — a plain ERC-20, like USDC. It lets you try everything for free.", done: (user?.tusdBalance ?? 0n) > 0n || !!user?.walletBalance || !!user?.poolBalance },
+    { key: "shield", title: "Shield it into cUSD", why: "Wrapping turns public tUSD into confidential cUSD, one to one. From here on, nobody can see your amounts.", done: !!user?.walletBalance || !!user?.poolBalance },
     { key: "deposit", title: "Make your first deposit", why: "Your amount is encrypted in your browser before it leaves. The pool never learns it.", done: !!user?.poolBalance },
     { key: "unlock", title: "Unlock your numbers", why: "One signature lets your wallet read your own balance. Nobody else can.", done: poolBal !== undefined },
-    { key: "draw", title: "Wait for the draw", why: "Every 10 minutes the pool picks winners in secret. Your savings are never at risk.", done: eligible && !!user?.wonInDraw },
+    { key: "draw", title: "Wait for the draw, then claim", why: "Every 10 minutes the pool picks winners in secret. Prizes wait in your encrypted pot until you claim them to your wallet. Your savings are never at risk.", done: eligible && !!user?.wonInDraw },
   ];
   const current = Math.max(0, steps.findIndex((s) => !s.done));
   const allDone = steps.every((s) => s.done);
   const step = steps[Math.min(current, steps.length - 1)];
 
-  const doFaucet = () => flow.run(async (s) => { await actions.faucet(s); await refetch(); }, { successMessage: "1,000 test cUSD is in your wallet." });
+  const doFaucet = () => flow.run(async (s) => { await actions.faucet(s); await refetch(); }, { successMessage: "1,000 test tUSD is in your wallet." });
+  const doShield = () => flow.run(async (s) => { await actions.shield(formatUnits(user?.tusdBalance ?? 0n, DECIMALS), s); await refetch(); }, { successMessage: "Shielded. Your cUSD balance is encrypted now." });
   const doDeposit = () => flow.run(async (s) => { await actions.deposit(amount, s); await Promise.all([refetch(), refetchPool()]); }, { successMessage: "Saved. Your deposit is encrypted on-chain." });
   const doUnlock = () => flow.run(async (s) => { s("Waiting for your signature…"); await reveal(POOL.address, user?.poolBalance ?? null, "pool"); await reveal(TOKEN.address, user?.walletBalance ?? null, "wallet"); }, { successMessage: "Unlocked. Only you can see these." });
 
@@ -85,8 +88,16 @@ export function Wizard() {
                 ))}
                 {step.key === "faucet" && (
                   <button data-anchor="faucet" className="btn-primary shine w-full py-3" disabled={flow.state.status === "pending" || Number(user?.faucetCooldown ?? 0n) > 0} onClick={doFaucet}>
-                    {Number(user?.faucetCooldown ?? 0n) > 0 ? `Try again in ${formatDuration(Number(user!.faucetCooldown))}` : flow.state.status === "pending" ? "Minting…" : "Get 1,000 test cUSD"}
+                    {Number(user?.faucetCooldown ?? 0n) > 0 ? `Try again in ${formatDuration(Number(user!.faucetCooldown))}` : flow.state.status === "pending" ? "Minting…" : "Get 1,000 test tUSD"}
                   </button>
+                )}
+                {step.key === "shield" && (
+                  <div className="space-y-3">
+                    <button data-anchor="shield" className="btn-primary shine w-full py-3" disabled={flow.state.status === "pending" || (user?.tusdBalance ?? 0n) === 0n} onClick={doShield}>
+                      {flow.state.status === "pending" ? "Working…" : `Shield ${formatUnits(user?.tusdBalance ?? 0n, DECIMALS)} ${UNDERLYING_SYMBOL} into cUSD`}
+                    </button>
+                    <p className="text-xs text-ink-faint">Two confirmations: an ERC-20 approval, then the wrap. Your tUSD stays locked in the wrapper, backing your cUSD one to one.</p>
+                  </div>
                 )}
                 {step.key === "deposit" && (
                   <div className="space-y-3">

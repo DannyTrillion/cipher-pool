@@ -12,6 +12,7 @@ const LABEL = {
   drawStart: { t: "Draw started", c: "bg-mint" },
   drawDone: { t: "Draw paid its prizes", c: "bg-mint" },
   harvest: { t: "yield harvested", c: "bg-ok" },
+  claim: { t: "claimed a prize", c: "bg-accent" },
 } as const;
 
 function ago(ts?: number) {

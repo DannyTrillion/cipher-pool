@@ -16,6 +16,9 @@ import {IYieldSource} from "./interfaces/IYieldSource.sol";
  *  - Users deposit an ERC-7984 confidential token. Deposits, balances, and
  *    winnings are encrypted end-to-end; only the holder can decrypt them.
  *  - Principal is withdrawable at any time (outside the short draw window).
+ *  - Prizes land in an encrypted claimable pot; `claimPrize` moves them to the
+ *    winner's wallet by confidential transfer. Anyone can call it (moving an
+ *    encrypted zero if they didn't win), so claiming leaks nothing.
  *  - Yield accrues into an encrypted prize reserve and is awarded through
  *    periodic draws. The pool itself never learns any balance.
  *  - Prizes are tiered like PoolTogether: each draw pays several winner slots
@@ -105,6 +108,7 @@ contract ConfidentialPrizePool is ZamaEthereumConfig, Ownable2Step, ReentrancyGu
     mapping(address => euint64) private _eligible; // balance at the start of `_lastTouchedEpoch`
     mapping(address => uint256) private _lastTouchedEpoch;
     mapping(address => euint64) private _winnings; // lifetime
+    mapping(address => euint64) private _claimable; // won, not yet claimed
     mapping(uint256 => mapping(address => euint64)) private _wonInDraw; // epoch => user => credit
 
     address[] private _participants;
@@ -125,6 +129,7 @@ contract ConfidentialPrizePool is ZamaEthereumConfig, Ownable2Step, ReentrancyGu
     event DrawAdvanced(uint256 indexed epoch, Phase phase, uint256 cursor);
     event DrawCompleted(uint256 indexed epoch);
     event WinRevealed(uint256 indexed epoch, address indexed user, euint64 credit);
+    event PrizeClaimed(address indexed user, euint64 amount);
     event DrawPeriodSet(uint256 drawPeriod);
     event YieldSourceSet(address yieldSource);
 
@@ -444,10 +449,10 @@ contract ConfidentialPrizePool is ZamaEthereumConfig, Ownable2Step, ReentrancyGu
                 credit = FHE.add(credit, FHE.select(isWinner, _slotAmount[k], zero));
             }
 
-            euint64 newBalance = FHE.add(_balances[user], credit);
-            _balances[user] = newBalance;
-            FHE.allowThis(newBalance);
-            FHE.allow(newBalance, user);
+            euint64 claimable = FHE.add(_claimable[user], credit);
+            _claimable[user] = claimable;
+            FHE.allowThis(claimable);
+            FHE.allow(claimable, user);
 
             euint64 lifetime = FHE.add(_winnings[user], credit);
             _winnings[user] = lifetime;
@@ -461,17 +466,15 @@ contract ConfidentialPrizePool is ZamaEthereumConfig, Ownable2Step, ReentrancyGu
         drawCursor = end;
 
         if (end == n) {
-            // Slots that found a winner (index < n) leave the reserve and join the
-            // principal (they are now part of winners' balances). Others roll over.
+            // Slots that found a winner (index < n) leave the reserve and sit in the
+            // winners' encrypted claimable pots until claimed. Others roll over.
             euint64 paid = zero;
             for (uint256 k = 0; k < slots; k++) {
                 ebool found = FHE.lt(_slotWinner[k], uint64(n));
                 paid = FHE.add(paid, FHE.select(found, _slotAmount[k], zero));
             }
             _prizeReserve = FHE.sub(_prizeReserve, paid);
-            _totalDeposits = FHE.add(_totalDeposits, paid);
             FHE.allowThis(_prizeReserve);
-            FHE.allowThis(_totalDeposits);
             FHE.makePubliclyDecryptable(_prizeReserve);
 
             _draws[epoch].completedAt = uint64(block.timestamp);
@@ -486,6 +489,28 @@ contract ConfidentialPrizePool is ZamaEthereumConfig, Ownable2Step, ReentrancyGu
 
     function isDrawComplete() external view returns (bool) {
         return phase == Phase.Open;
+    }
+
+    /**
+     * @notice Claim everything you have won so far to your wallet, as a
+     * confidential transfer. Anyone may call this at any time at constant cost:
+     * a non-winner simply moves an encrypted zero, so calling `claimPrize` never
+     * reveals whether you won. Decrypt `claimableOf` (EIP-712) first to know.
+     */
+    function claimPrize() external nonReentrant {
+        euint64 amount = _claimable[msg.sender];
+        if (!FHE.isInitialized(amount)) {
+            amount = FHE.asEuint64(0);
+        }
+        euint64 zero = FHE.asEuint64(0);
+        _claimable[msg.sender] = zero;
+        FHE.allowThis(zero);
+        FHE.allow(zero, msg.sender);
+
+        FHE.allowTransient(amount, address(asset));
+        euint64 moved = asset.confidentialTransfer(msg.sender, amount);
+        FHE.allow(moved, msg.sender);
+        emit PrizeClaimed(msg.sender, moved);
     }
 
     /**
@@ -510,6 +535,11 @@ contract ConfidentialPrizePool is ZamaEthereumConfig, Ownable2Step, ReentrancyGu
 
     function winningsOf(address user) external view returns (euint64) {
         return _winnings[user];
+    }
+
+    /// @notice Prizes won and not yet claimed (encrypted; only `user` can decrypt).
+    function claimableOf(address user) external view returns (euint64) {
+        return _claimable[user];
     }
 
     function wonInDraw(uint256 epoch_, address user) external view returns (euint64) {
