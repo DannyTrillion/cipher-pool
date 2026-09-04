@@ -6,7 +6,6 @@ import { usePublicReveal } from "@/lib/hooks/useReveal";
 import { Countdown, useNow } from "@/components/ui/Countdown";
 import { formatAmount } from "@/lib/format";
 import { DECIMALS, SYMBOL } from "@/lib/contracts";
-import { describeTiers } from "@/lib/tiers";
 
 export function PrizeHero() {
   const { state } = usePoolState();
@@ -57,7 +56,6 @@ export function PrizeHero() {
                   {t.winners} × {(t.shareBps / 100 / t.winners).toFixed(1).replace(/\.0$/, "")}%
                 </span>
               ))}
-              <span className="pill">{describeTiers(state.tiers)}</span>
             </div>
           )}
           {h && errors[h] && prize === undefined && (
