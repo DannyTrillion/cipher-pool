@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono, Syne } from "next/font/google";
+import { Inter, JetBrains_Mono, Syne, Caveat } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import { Header } from "@/components/layout/Header";
@@ -8,6 +8,7 @@ import { Footer } from "@/components/layout/Footer";
 const sans = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap" });
 const display = Syne({ subsets: ["latin"], weight: ["700", "800"], variable: "--font-display", display: "swap" });
+const hand = Caveat({ subsets: ["latin"], weight: ["500", "600"], variable: "--font-hand", display: "swap" });
 
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ||
@@ -28,7 +29,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${sans.variable} ${mono.variable} ${display.variable}`}>
+    <html lang="en" className={`${sans.variable} ${mono.variable} ${display.variable} ${hand.variable}`}>
       <body className="flex min-h-screen flex-col">
         <Providers>
           <Header />

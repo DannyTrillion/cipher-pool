@@ -18,6 +18,7 @@ const config: Config = {
           DEFAULT: "rgb(var(--cipher) / <alpha-value>)",
           soft: "rgb(var(--cipher) / 0.14)",
         },
+        mint: "rgb(var(--mint) / <alpha-value>)",
         ok: "rgb(var(--ok) / <alpha-value>)",
         danger: "rgb(var(--danger) / <alpha-value>)",
         warn: "rgb(var(--warn) / <alpha-value>)",
