@@ -34,21 +34,21 @@ export function Wizard() {
   const drawing = !!state && state.phase !== Phase.Open;
 
   const steps = [
-    { key: "connect", title: "Connect a wallet", why: "Your wallet is your identity here. It also holds the only key that can read your numbers.", done: isConnected },
-    { key: "faucet", title: "Get 1,000 test tUSD", why: "This is play money on the Sepolia test network — a plain ERC-20, like USDC. It lets you try everything for free.", done: (user?.tusdBalance ?? 0n) > 0n || !!user?.walletBalance || !!user?.poolBalance },
-    { key: "shield", title: "Shield it into cUSD", why: "Wrapping turns public tUSD into confidential cUSD, one to one. From here on, nobody can see your amounts.", done: !!user?.walletBalance || !!user?.poolBalance },
-    { key: "deposit", title: "Make your first deposit", why: "Your amount is encrypted in your browser before it leaves. The pool never learns it.", done: !!user?.poolBalance },
-    { key: "unlock", title: "Unlock your numbers", why: "One signature lets your wallet read your own balance. Nobody else can.", done: poolBal !== undefined },
-    { key: "draw", title: "Wait for the draw, then claim", why: "Every 10 minutes the pool picks winners in secret. Prizes wait in your encrypted pot until you claim them to your wallet. Your savings are never at risk.", done: eligible && !!user?.wonInDraw },
+    { key: "connect", title: "Connect a wallet", why: "Your wallet is your login. It is also the only key that can read your numbers.", done: isConnected },
+    { key: "faucet", title: "Get 1,000 test tUSD", why: "Free play money on the Sepolia test network. Nothing here is real money.", done: (user?.tusdBalance ?? 0n) > 0n || !!user?.walletBalance || !!user?.poolBalance },
+    { key: "shield", title: "Wrap it into cUSD", why: "Wrapping turns public tUSD into private cUSD, one for one. After this, nobody can see your amounts.", done: !!user?.walletBalance || !!user?.poolBalance },
+    { key: "deposit", title: "Make your first deposit", why: "Your amount is scrambled in your browser before it is sent. The pool never sees it.", done: !!user?.poolBalance },
+    { key: "unlock", title: "See your numbers", why: "One signature lets your wallet read your own balance. Nobody else can.", done: poolBal !== undefined },
+    { key: "draw", title: "Wait for the draw", why: "Every 10 minutes the pool picks winners in secret. If you win, the prize waits until you collect it. Your money is never at risk.", done: eligible && !!user?.wonInDraw },
   ];
   const current = Math.max(0, steps.findIndex((s) => !s.done));
   const allDone = steps.every((s) => s.done);
   const step = steps[Math.min(current, steps.length - 1)];
 
   const doFaucet = () => flow.run(async (s) => { await actions.faucet(s); await refetch(); }, { successMessage: "1,000 test tUSD is in your wallet." });
-  const doShield = () => flow.run(async (s) => { await actions.shield(formatUnits(user?.tusdBalance ?? 0n, DECIMALS), s); await refetch(); }, { successMessage: "Shielded. Your cUSD balance is encrypted now." });
-  const doDeposit = () => flow.run(async (s) => { await actions.deposit(amount, s); await Promise.all([refetch(), refetchPool()]); }, { successMessage: "Saved. Your deposit is encrypted on-chain." });
-  const doUnlock = () => flow.run(async (s) => { s("Waiting for your signature…"); await reveal(POOL.address, user?.poolBalance ?? null, "pool"); await reveal(TOKEN.address, user?.walletBalance ?? null, "wallet"); }, { successMessage: "Unlocked. Only you can see these." });
+  const doShield = () => flow.run(async (s) => { await actions.shield(formatUnits(user?.tusdBalance ?? 0n, DECIMALS), s); await refetch(); }, { successMessage: "Wrapped. Your cUSD is private now." });
+  const doDeposit = () => flow.run(async (s) => { await actions.deposit(amount, s); await Promise.all([refetch(), refetchPool()]); }, { successMessage: "Done. Your money is in the pool, scrambled." });
+  const doUnlock = () => flow.run(async (s) => { s("Waiting for your signature…"); await reveal(POOL.address, user?.poolBalance ?? null, "pool"); await reveal(TOKEN.address, user?.walletBalance ?? null, "wallet"); }, { successMessage: "Here they are. Only you can see these." });
 
   return (
     <div>
@@ -67,8 +67,8 @@ export function Wizard() {
           {allDone ? (
             <>
               <div className="label">You&apos;re all set</div>
-              <h3 className="mt-1 text-xl font-semibold">You&apos;re in the game.</h3>
-              <p className="mt-2 text-sm text-ink-muted">Your savings are encrypted and in the next draw. Check <span className="text-ink">Your results</span> after each draw, or switch to Experienced for the full controls.</p>
+              <h3 className="mt-1 text-xl font-semibold">You&apos;re in.</h3>
+              <p className="mt-2 text-sm text-ink-muted">Your money is in the pool and in the next draw. Check <span className="text-ink">Your results</span> after each draw. Switch to Experienced for full controls.</p>
               <div className="mt-4 grid grid-cols-2 gap-3">
                 <div className="rounded-xl border border-line bg-black/20 px-3 py-2.5"><div className="text-[10px] uppercase tracking-[0.18em] text-ink-faint">Your savings</div><div className="mt-1"><EncryptedValue value={poolBal} revealed={poolBal !== undefined} size="sm" /></div></div>
                 <div className="rounded-xl border border-line bg-black/20 px-3 py-2.5"><div className="text-[10px] uppercase tracking-[0.18em] text-ink-faint">Next draw</div><div className="mt-1 font-mono text-lg">{state ? (drawing ? "running" : due ? "ready" : formatDuration(Number(state.nextDrawAt) - now)) : "…"}</div></div>
@@ -94,9 +94,9 @@ export function Wizard() {
                 {step.key === "shield" && (
                   <div className="space-y-3">
                     <button data-anchor="shield" className="btn-primary btn-lg shine w-full" disabled={flow.state.status === "pending" || (user?.tusdBalance ?? 0n) === 0n} onClick={doShield}>
-                      {flow.state.status === "pending" ? "Working…" : `Shield ${formatUnits(user?.tusdBalance ?? 0n, DECIMALS)} ${UNDERLYING_SYMBOL} into cUSD`}
+                      {flow.state.status === "pending" ? "Working…" : `Wrap ${formatUnits(user?.tusdBalance ?? 0n, DECIMALS)} ${UNDERLYING_SYMBOL} into cUSD`}
                     </button>
-                    <p className="text-xs text-ink-faint">Two confirmations: an ERC-20 approval, then the wrap. Your tUSD stays locked in the wrapper, backing your cUSD one to one.</p>
+                    <p className="text-xs text-ink-faint">Two confirmations: an approval, then the wrap.</p>
                   </div>
                 )}
                 {step.key === "deposit" && (
@@ -107,22 +107,22 @@ export function Wizard() {
                       ))}
                     </div>
                     <button data-anchor="deposit" className="btn-primary btn-lg shine w-full" disabled={flow.state.status === "pending" || drawing} onClick={doDeposit}>
-                      {drawing ? "Paused while the draw runs" : flow.state.status === "pending" ? "Working…" : `Deposit ${amount} cUSD privately`}
+                      {drawing ? "Paused during the draw" : flow.state.status === "pending" ? "Working…" : `Put in ${amount} cUSD`}
                     </button>
-                    <p className="text-xs text-ink-faint">Two quick confirmations the first time: one lets the pool move your cUSD, one is the deposit itself.</p>
+                    <p className="text-xs text-ink-faint">Two confirmations the first time: one lets the pool move your cUSD, one is the deposit.</p>
                   </div>
                 )}
                 {step.key === "unlock" && (
-                  <button className="btn-primary btn-lg shine w-full" disabled={!!busy || flow.state.status === "pending"} onClick={doUnlock}>{busy ? "Unlocking…" : "Unlock my numbers"}</button>
+                  <button className="btn-primary btn-lg shine w-full" disabled={!!busy || flow.state.status === "pending"} onClick={doUnlock}>{busy ? "Loading…" : "Show my numbers"}</button>
                 )}
                 {step.key === "draw" && (
                   <div className="rounded-xl border border-line bg-black/20 p-4">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-ink-muted">{eligible ? "You're in the next draw." : "You'll be in the draw after next — money needs a full round in the pool first."}</span>
+                      <span className="text-sm text-ink-muted">{eligible ? "You're in the next draw." : "You will be in the draw after next. Money needs a full round in the pool first."}</span>
                       <span className="font-mono text-lg">{state ? (drawing ? "running" : due ? "ready" : formatDuration(Number(state.nextDrawAt) - now)) : "…"}</span>
                     </div>
                     {due && <a href="#console" className="btn-primary btn-lg btn-arrow shine mt-3 w-full">Go press the button</a>}
-                    {!due && !drawing && <p className="mt-3 text-xs text-ink-faint">When the countdown ends, anyone can press the big button above to run the draw. Then come back here for your result.</p>}
+                    {!due && !drawing && <p className="mt-3 text-xs text-ink-faint">When the countdown ends, anyone can press the big button above to run the draw. Then check Your results.</p>}
                   </div>
                 )}
               </div>

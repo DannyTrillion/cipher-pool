@@ -53,7 +53,7 @@ export function StatConsole() {
       <div className="grid items-center gap-8 md:grid-cols-[1.2fr_auto_1fr] md:gap-10">
         {/* stakes */}
         <div className="order-2 md:order-1">
-          <div className="label">Prize up for grabs · public</div>
+          <div className="label">Prize this round</div>
           <div className="mt-2 flex items-baseline gap-3">
             {prize !== undefined ? (
               <span className="display prize-glow text-5xl tabular sm:text-6xl">{formatAmount(prize, DECIMALS, { maxFractionDigits: 2 })}</span>
@@ -63,11 +63,11 @@ export function StatConsole() {
             <span className="font-mono text-lg text-ink-muted">{SYMBOL}</span>
           </div>
           <div className="mt-2 text-sm text-ink-muted">
-            Shared by <span className="text-ink">{state?.winnerSlots ?? 5} winners</span> every {state ? human(Number(state.drawPeriod)) : "…"}. Grows by about {formatAmount(state ? state.dripPerSecond * 3600n : DRIP_PER_HOUR, DECIMALS, { maxFractionDigits: 0 })} {SYMBOL} an hour from simulated yield.
-            {h && errors[h] && prize === undefined && " Relayer catching up…"}
+            Split between <span className="text-ink">{state?.winnerSlots ?? 5} winners</span> every {state ? human(Number(state.drawPeriod)) : "…"}. Grows about {formatAmount(state ? state.dripPerSecond * 3600n : DRIP_PER_HOUR, DECIMALS, { maxFractionDigits: 0 })} {SYMBOL} an hour from interest (simulated on testnet).
+            {h && errors[h] && prize === undefined && " Loading the latest figure…"}
           </div>
           <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-ink-faint">
-            <span>{due ? "The draw is ready. Anyone can run it." : drawing ? "Draw in progress — anyone can push it along." : "Deposits and withdrawals are open until the draw."}</span>
+            <span>{due ? "The draw is ready. Anyone can run it." : drawing ? "Draw in progress. Anyone can keep it going." : "You can put money in or take it out until the draw starts."}</span>
             <Link href="/draws" className="text-accent hover:underline">See all prizes →</Link>
           </div>
         </div>
@@ -89,7 +89,7 @@ export function StatConsole() {
             <div className="h-[176px] w-[176px] rounded-full bg-white/5" />
           )}
           {drawing && isConnected && flow.state.status !== "pending" && (
-            <button className="btn-mint btn-sm mt-6" onClick={run}>Continue the draw</button>
+            <button className="btn-mint btn-sm mt-6" onClick={run}>Keep the draw going</button>
           )}
         </div>
 
@@ -103,7 +103,7 @@ export function StatConsole() {
                 <span className="display text-xl tabular">{state ? n : "…"}</span>
                 <span className="flex -space-x-1.5">
                   {rows.slice(0, 4).map((r) => (
-                    <span key={r.address} className="rounded-md ring-2 ring-[rgb(var(--base))]" title="A saver — balance encrypted"><Identicon address={r.address} size={18} /></span>
+                    <span key={r.address} className="rounded-md ring-2 ring-[rgb(var(--base))]" title="A saver. Balance hidden."><Identicon address={r.address} size={18} /></span>
                   ))}
                   {total > 4 && <span className="grid h-[18px] w-[18px] place-items-center rounded-md bg-white/10 font-mono text-[9px] ring-2 ring-[rgb(var(--base))]">+{total - 4}</span>}
                 </span>

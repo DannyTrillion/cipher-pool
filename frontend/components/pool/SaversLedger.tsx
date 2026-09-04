@@ -59,10 +59,10 @@ export function SaversLedger() {
     setAttempt({ status: "trying" });
     try {
       await publicDecrypt([handle]);
-      setAttempt({ status: "refused", message: "The relayer returned nothing readable." });
+      setAttempt({ status: "refused", message: "Nothing readable came back." });
     } catch (e) {
       const raw = e instanceof Error ? e.message : String(e);
-      setAttempt({ status: "refused", message: raw.toLowerCase().includes("not allowed") || raw.toLowerCase().includes("not authorized") ? "Refused by the FHE access list — only the saver's wallet holds the key." : `Refused: ${raw.slice(0, 120)}` });
+      setAttempt({ status: "refused", message: raw.toLowerCase().includes("not allowed") || raw.toLowerCase().includes("not authorized") ? "Only the saver's wallet has the key." : `Refused: ${raw.slice(0, 120)}` });
       sfx.lock();
     }
   };
@@ -77,7 +77,7 @@ export function SaversLedger() {
         <div>
           <h2 className="display text-2xl sm:text-3xl">Everyone is listed. Nothing is readable.</h2>
           <p className="mt-2 max-w-xl text-sm text-ink-muted">
-            These are the live positions on Sepolia right now. Each pattern is drawn from the real ciphertext a saver&apos;s balance is stored as. Anyone can fetch it. Nobody but its owner can read it — not even the pool.
+            These are the real accounts in the pool right now. Each pattern is drawn from the scrambled balance stored on the blockchain. Anyone can fetch it. Only its owner can read it, not even the pool.
           </p>
         </div>
         <div className="rounded-2xl border border-line bg-black/25 px-4 py-3">
@@ -86,7 +86,7 @@ export function SaversLedger() {
             <span className="cipher-mask inline-block h-9 w-40 sm:h-10 sm:w-52" aria-label="Encrypted total" />
             <span className="font-mono text-sm text-ink-muted">{SYMBOL}</span>
           </div>
-          <div className="mt-1.5 text-xs text-ink-faint">Even the total is secret. Prizes are public; savings are not.</div>
+          <div className="mt-1.5 text-xs text-ink-faint">Even the total is secret. Prizes are public. Savings are not.</div>
         </div>
       </div>
 
@@ -117,20 +117,20 @@ export function SaversLedger() {
                   ) : (
                     <Cipherbar handle={r.handle} hot={isHot} />
                   )}
-                  <span className="font-mono text-[11px] uppercase tracking-wider text-ink-faint">{you && mine !== undefined ? "unlocked" : "encrypted"}</span>
+                  <span className="font-mono text-[11px] uppercase tracking-wider text-ink-faint">{you && mine !== undefined ? "shown" : "hidden"}</span>
                 </span>
               </motion.button>
               <AnimatePresence initial={false}>
                 {isOpen && (
                   <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
                     <div className="mb-3 rounded-xl border border-line bg-black/25 p-4">
-                      <div className="label">The real ciphertext handle</div>
+                      <div className="label">The scrambled balance, as stored</div>
                       <div className="mt-1 break-all font-mono text-xs text-ink-muted">{r.handle ?? "—"}</div>
                       <div className="mt-3 flex flex-wrap items-center gap-3">
                         {you && isConnected ? (
-                          <button className="btn-primary btn-sm" disabled={!!busy} onClick={() => reveal(POOL.address, myHandle, "ledger-me")}>{busy ? "Unlocking…" : mine !== undefined ? "Unlocked — only you could" : "Unlock mine"}</button>
+                          <button className="btn-primary btn-sm" disabled={!!busy} onClick={() => reveal(POOL.address, myHandle, "ledger-me")}>{busy ? "Loading…" : mine !== undefined ? "Shown. Only you could do that." : "Show mine"}</button>
                         ) : (
-                          <button className="btn-secondary btn-sm" disabled={attempt.status === "trying"} onClick={() => tryRead(r.handle)}>{attempt.status === "trying" ? "Asking the relayer…" : "Try to read it"}</button>
+                          <button className="btn-secondary btn-sm" disabled={attempt.status === "trying"} onClick={() => tryRead(r.handle)}>{attempt.status === "trying" ? "Trying…" : "Try to read it"}</button>
                         )}
                         <a className="text-xs text-ink-faint underline-offset-4 hover:text-ink hover:underline" href={etherscanAddr(r.address)} target="_blank" rel="noreferrer">Saver on Etherscan ↗</a>
                       </div>
@@ -138,7 +138,7 @@ export function SaversLedger() {
                         {attempt.status === "refused" && (
                           <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} className="mt-3 flex items-start gap-2 rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm">
                             <span>🔒</span>
-                            <span><span className="font-semibold">Refused.</span> {attempt.message} This request really went to the Zama relayer.</span>
+                            <span><span className="font-semibold">Refused.</span> {attempt.message} This was a real request to the network.</span>
                           </motion.div>
                         )}
                       </AnimatePresence>

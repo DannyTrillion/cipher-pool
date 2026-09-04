@@ -23,20 +23,19 @@ export function Hero() {
           <span className="text-accent">Win</span> verifiably.
         </h1>
         <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-ink-muted sm:text-lg">
-          Shield a test ERC-20 into confidential cUSD, save it, keep every cent, and win the pool&apos;s yield through tiered draws. Your balance,
-          your odds and your winnings are ciphertext on-chain — even to the contract — and every draw is verifiable by anyone.
+          Put money into a shared pool and keep all of it. Every 10 minutes the pool&apos;s interest goes to a few winners. Nobody can see how much you saved, not even the pool. Anyone can check that a draw was fair.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <a href="#play" className="btn-primary btn-lg btn-arrow shine min-w-[150px]">Play</a>
           <a href="#deposit" className="btn-glass btn-lg min-w-[150px]">Deposit</a>
         </div>
-        <Link href="/how-it-works" className="mt-4 inline-block text-xs text-ink-faint underline-offset-4 hover:text-ink hover:underline">How the blind draw works →</Link>
+        <Link href="/how-it-works" className="mt-4 inline-block text-xs text-ink-faint underline-offset-4 hover:text-ink hover:underline">How it works</Link>
       </div>
 
       {/* preview row — the world on the left, one fused game card on the right */}
       <div className="mt-24 grid gap-20 md:mt-32 md:grid-cols-[0.95fr_1.05fr] md:gap-12 lg:gap-16">
         <div className="relative">
-          <Annotation text="Everyone's savings, encrypted" className="absolute -top-14 left-1/2 z-10 w-max -translate-x-1/2 text-accent" tilt={-5} />
+          <Annotation text="Everyone's money, scrambled" className="absolute -top-14 left-1/2 z-10 w-max -translate-x-1/2 text-accent" tilt={-5} />
           {/* borderless: the sphere may spill outward (left and vertically), never into the card */}
           <div className="relative aspect-square md:absolute md:-left-24 md:right-0 md:-inset-y-8 md:aspect-auto">
             <CipherSphere className="absolute inset-0 h-full w-full" points={120 + savers * 24} orbs={state?.winnerSlots ?? 5} drawing={drawing} you={!!user?.poolBalance} />
@@ -44,7 +43,7 @@ export function Hero() {
           <div className="hidden md:block md:min-h-[380px]" />
         </div>
         <div className="relative">
-          <Annotation text="Your corner of the pool" className="absolute -top-14 left-1/2 z-10 w-max -translate-x-1/2 text-accent" tilt={4} />
+          <Annotation text="Your account" className="absolute -top-14 left-1/2 z-10 w-max -translate-x-1/2 text-accent" tilt={4} />
           <GameCard />
         </div>
       </div>

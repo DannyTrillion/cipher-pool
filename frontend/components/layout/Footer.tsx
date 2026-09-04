@@ -34,7 +34,7 @@ export function Footer() {
       <div className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[1.2fr_0.8fr_1.2fr]">
         <div>
           <Logo size={30} />
-          <p className="mt-3 max-w-xs text-sm text-ink-muted">A no-loss prize pool where nobody can see what you hold. Deposit, keep your principal, win the yield — all encrypted with Zama&apos;s FHEVM.</p>
+          <p className="mt-3 max-w-xs text-sm text-ink-muted">A shared savings pool where the interest is given out as prizes and nobody can see what you hold. Built with Zama&apos;s encryption.</p>
           <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-line px-3 py-1.5 text-xs text-ink-muted">
             <span className="h-1.5 w-1.5 rounded-full bg-accent" /> Built on Zama FHEVM · Developer Program Season 4
           </div>
@@ -57,12 +57,12 @@ export function Footer() {
             <AddressRow label="cUSD (ERC-7984 wrapper)" address={c.ConfidentialUSD.address} />
             <AddressRow label="Yield source (mock)" address={c.MockYieldSource.address} />
           </ul>
-          <p className="mt-3 text-xs text-ink-faint">Testnet only. Tokens have no value. Prizes are paid in test cUSD.</p>
+          <p className="mt-3 text-xs text-ink-faint">Test network only. The tokens have no real value.</p>
         </div>
       </div>
       <div className="border-t border-line">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-4 py-4 text-xs text-ink-faint sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <span>Deposits, balances, odds and winnings are ciphertext on-chain. Prizes and draw seeds are public so anyone can verify a draw.</span>
+          <span>Deposits, balances, odds and winnings are scrambled on the blockchain. Prizes and draw numbers are public so anyone can check a draw.</span>
           <span>MIT licensed</span>
         </div>
       </div>

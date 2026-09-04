@@ -6,13 +6,13 @@ import { truncateAddress } from "@/lib/format";
 import { cn } from "@/lib/cn";
 
 const LABEL = {
-  deposit: { t: "saved", c: "bg-accent" },
-  withdraw: { t: "withdrew", c: "bg-cipher" },
+  deposit: { t: "put money in", c: "bg-accent" },
+  withdraw: { t: "took money out", c: "bg-cipher" },
   sponsor: { t: "topped up the prize", c: "bg-mint" },
   drawStart: { t: "Draw started", c: "bg-mint" },
   drawDone: { t: "Draw paid its prizes", c: "bg-mint" },
   harvest: { t: "yield harvested", c: "bg-ok" },
-  claim: { t: "claimed a prize", c: "bg-accent" },
+  claim: { t: "collected a prize", c: "bg-accent" },
 } as const;
 
 function ago(ts?: number) {
@@ -40,7 +40,7 @@ export function ActivityFeed({ compact = false }: { compact?: boolean }) {
               <span className="flex min-w-0 items-center gap-2 truncate">
                 <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", LABEL[r.kind].c)} />
                 {r.who ? (
-                  <span className="truncate"><span className="font-mono text-ink-muted">{truncateAddress(r.who)}</span> {LABEL[r.kind].t} <span className="text-ink-faint">· amount encrypted</span></span>
+                  <span className="truncate"><span className="font-mono text-ink-muted">{truncateAddress(r.who)}</span> {LABEL[r.kind].t} <span className="text-ink-faint">(amount hidden)</span></span>
                 ) : (
                   <span className="truncate">{LABEL[r.kind].t}{r.epoch !== undefined ? ` #${r.epoch.toString()}` : ""}</span>
                 )}
@@ -49,7 +49,7 @@ export function ActivityFeed({ compact = false }: { compact?: boolean }) {
             </motion.li>
           ))}
         </AnimatePresence>
-        {!loading && rows.length === 0 && <li className="text-xs text-ink-faint">Quiet for now. The first deposit shows up here.</li>}
+        {!loading && rows.length === 0 && <li className="text-xs text-ink-faint">Nothing yet. Deposits and draws show up here.</li>}
         {loading && <li className="cipher-mask h-7 w-full" />}
       </ul>
     </div>

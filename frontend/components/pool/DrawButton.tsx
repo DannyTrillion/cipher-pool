@@ -82,7 +82,7 @@ export function DrawButton({
   const label =
     state === "live" ? "LIVE" : state === "busy" ? "…" : !connected ? "CONNECT" : state === "armed" ? (pressed ? "HOLD" : "RUN DRAW") : formatDuration(end - now);
   const sub =
-    state === "live" ? progressLabel ?? "drawing" : state === "busy" ? "confirm in wallet" : !connected ? "to run the draw" : state === "armed" ? (pressed ? "keep holding" : "hold to fire") : "until next draw";
+    state === "live" ? progressLabel ?? "drawing" : state === "busy" ? "confirm in wallet" : !connected ? "to run the draw" : state === "armed" ? (pressed ? "keep holding" : "hold to start") : "to next draw";
 
   const capColor = state === "live" ? "var(--mint)" : "var(--accent)";
   const lit = state === "armed" || state === "live";

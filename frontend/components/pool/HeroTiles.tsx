@@ -111,18 +111,18 @@ function PositionPane() {
           <div className="mt-1 text-[11px] text-ink-faint">Claim to your wallet any time</div>
         </div>
         <div className="col-span-2 rounded-xl border border-line px-3.5 py-3 text-[13px] leading-relaxed text-ink-muted">
-          Your chance of winning equals your share of everyone&apos;s savings. Nobody, not even the pool, can see how much you saved.
+          The more you save, the better your odds. Nobody can see how much you saved, not even the pool.
         </div>
       </div>
       <div className="border-t border-line px-5 py-2.5 text-[12px] text-ink-faint">
         {isConnected && user?.poolBalance ? (
           <button className="text-accent hover:underline" disabled={!!busy} onClick={() => { void reveal(POOL.address, user.poolBalance, "tile-pool"); void reveal(POOL.address, user.claimable, "tile-claim"); }}>
-            {busy ? "Unlocking…" : "Unlock my numbers (one signature)"}
+            {busy ? "Loading…" : "Show my numbers (one signature)"}
           </button>
         ) : isConnected ? (
-          "Deposit below to start saving."
+          "Put money in below to start."
         ) : (
-          "Connect a wallet to unlock your own numbers."
+          "Connect a wallet to see your numbers."
         )}
       </div>
     </>
@@ -162,7 +162,7 @@ function DrawPane() {
           <>
             <div className="label">{due ? "Next draw" : "Next draw in"}</div>
             <div className="mt-1 font-mono text-3xl tabular">{state ? (due ? "Ready" : formatDuration(Number(state.nextDrawAt) - now)) : "…"}</div>
-            <div className="mt-2 text-[13px] text-ink-muted">{slots} prizes every draw. Winners are picked in secret, on-chain. Nobody loses their savings.</div>
+            <div className="mt-2 text-[13px] text-ink-muted">{slots} prizes every draw. Winners are picked in secret. Nobody loses their money.</div>
           </>
         )}
         {draw && draw.completedAt > 0n && (
@@ -175,7 +175,7 @@ function DrawPane() {
           </div>
         )}
       </div>
-      <div className="border-t border-line px-5 py-2.5 text-[12px] text-ink-faint">Anyone can check every draw was fair.</div>
+      <div className="border-t border-line px-5 py-2.5 text-[12px] text-ink-faint">Anyone can check the draw was fair.</div>
     </>
   );
 }

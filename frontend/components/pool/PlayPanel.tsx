@@ -18,7 +18,7 @@ import { sfx } from "@/lib/sound";
 
 type Tab = "shield" | "deposit" | "withdraw" | "sponsor";
 const TABS: { key: Tab; label: string; verb: string }[] = [
-  { key: "shield", label: "Shield", verb: "Shield" },
+  { key: "shield", label: "Wrap", verb: "Wrap" },
   { key: "deposit", label: "Deposit", verb: "Deposit" },
   { key: "withdraw", label: "Withdraw", verb: "Withdraw" },
   { key: "sponsor", label: "Add to prize", verb: "Add" },
@@ -77,20 +77,20 @@ export function PlayPanel() {
       setAmount("");
       await Promise.all([refetch(), refetchPool()]);
       if (revealedAll || poolBal !== undefined) await revealAll();
-    }, { successMessage: tab === "shield" ? "Shielded. Your cUSD balance is now encrypted." : tab === "deposit" ? "Saved. Your deposit is encrypted on-chain." : tab === "withdraw" ? "Withdrawn. It's back in your wallet as cUSD." : "Added to the prize. Thank you!" });
+    }, { successMessage: tab === "shield" ? "Wrapped. Your cUSD is private now." : tab === "deposit" ? "Done. Your money is in the pool, scrambled." : tab === "withdraw" ? "Done. It is back in your wallet as cUSD." : "Added to the prize. Thank you!" });
   const claimFaucet = () =>
-    faucetFlow.run(async (setStep) => { await actions.faucet(setStep); await refetch(); }, { successMessage: "1,000 test tUSD is in your wallet. Shield it into cUSD to save." });
+    faucetFlow.run(async (setStep) => { await actions.faucet(setStep); await refetch(); }, { successMessage: "1,000 test tUSD is in your wallet. Wrap it into cUSD to use it." });
 
   const verb = TABS.find((t) => t.key === tab)!.verb;
   const unit = tab === "shield" ? UNDERLYING_SYMBOL : "cUSD";
-  const buttonLabel = !open && tab !== "shield" ? "Paused while the draw runs" : value > 0n ? `${verb} ${amount} ${unit}` : `${verb} ${unit}`;
+  const buttonLabel = !open && tab !== "shield" ? "Paused during the draw" : value > 0n ? `${verb} ${amount} ${unit}` : `${verb} ${unit}`;
 
   return (
     <section className="card min-w-0 overflow-hidden p-6 sm:p-7" id="deposit">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
         <div>
           <h2 className="display text-2xl">Play</h2>
-          <div className="mt-1 text-xs text-ink-faint">Save, win, withdraw. Everything about you stays encrypted.</div>
+          <div className="mt-1 text-xs text-ink-faint">Put money in, win prizes, take money out. Your numbers stay private.</div>
         </div>
         <div className="flex w-max rounded-full bg-black/40 p-1" role="tablist" aria-label="Experience">
           {(["new", "pro"] as const).map((m) => (
@@ -107,7 +107,7 @@ export function PlayPanel() {
       <>
       {isConnected && (
         <div className="mt-4 flex justify-end">
-          <button className="btn-secondary text-xs" onClick={revealAll} disabled={!!busy || !user}>{busy ? "Unlocking…" : revealedAll ? "Refresh numbers" : "Unlock my numbers"}</button>
+          <button className="btn-secondary text-xs" onClick={revealAll} disabled={!!busy || !user}>{busy ? "Loading…" : revealedAll ? "Refresh numbers" : "Show my numbers"}</button>
         </div>
       )}
 
@@ -129,8 +129,8 @@ export function PlayPanel() {
         </div>
       </div>
       {isConnected && claimable !== undefined && claimable > 0n && (
-        <button className="btn-mint btn-lg shine mt-3 w-full" disabled={flow.state.status === "pending"} onClick={() => flow.run(async (s) => { await actions.claim(s); await refetch(); await revealAll(); }, { successMessage: "Claimed. Your prize is in your wallet as cUSD." })}>
-          Claim {formatUnits(claimable, DECIMALS)} cUSD to my wallet
+        <button className="btn-mint btn-lg shine mt-3 w-full" disabled={flow.state.status === "pending"} onClick={() => flow.run(async (s) => { await actions.claim(s); await refetch(); await revealAll(); }, { successMessage: "Collected. Your prize is in your wallet as cUSD." })}>
+          Collect my {formatUnits(claimable, DECIMALS)} cUSD prize
         </button>
       )}
       {isConnected && user?.isParticipant && (
@@ -141,7 +141,7 @@ export function PlayPanel() {
 
       {!isConnected ? (
         <div className="mt-5">
-          <p className="text-sm leading-relaxed text-ink-muted">This is all anyone can see of you — including the pool itself. Connect to get test cUSD, save privately, and unlock your own numbers.</p>
+          <p className="text-sm leading-relaxed text-ink-muted">This is all anyone can see about you. Connect a wallet to get free test money, put some in, and see your own numbers.</p>
           {hasWallet ? (
             <button className="btn-primary btn-lg btn-arrow shine mt-4 w-full" disabled={isPending} onClick={() => { sfx.click(); connect({ connector: connectors[0] }); }}>{isPending ? "Connecting…" : "Connect wallet to play"}</button>
           ) : (
@@ -191,12 +191,12 @@ export function PlayPanel() {
             {maxNum !== undefined && maxNum > 0 && (
               <input type="range" min={0} max={maxNum} step={maxNum / 100} value={Math.min(maxNum, Number(amount || 0))} onChange={(e) => setAmount(Number(e.target.value).toFixed(2).replace(/\.?0+$/, ""))} className="range mt-3 w-full" aria-label="Amount" />
             )}
-            {tooMuch && <div className="mt-2 text-xs text-warn">That&apos;s more than you have. Anything above your balance simply won&apos;t move.</div>}
+            {tooMuch && <div className="mt-2 text-xs text-warn">That is more than you have. Only what you have will move.</div>}
             <p className="mt-2 text-xs text-ink-faint">
-              {tab === "shield" && "Turns public tUSD into encrypted cUSD 1:1 (an ERC-20 approval, then a wrap). From here on, nobody can see your amounts."}
-              {tab === "deposit" && "Encrypted in your browser before it touches the chain. First time includes a one-off approval."}
-              {tab === "withdraw" && "Take out any amount, any time the pool is open. Your money never went anywhere else."}
-              {tab === "sponsor" && "Goes straight into the prize for the next draw. It can't be withdrawn."}
+              {tab === "shield" && "Turns your public tUSD into private cUSD, one for one. Two quick confirmations. After this, nobody can see your amounts."}
+              {tab === "deposit" && "Your amount is scrambled in your browser before it is sent. The first time asks for one extra approval."}
+              {tab === "withdraw" && "Take out any amount whenever the pool is open."}
+              {tab === "sponsor" && "Goes straight into the next prize. It cannot be taken back."}
             </p>
           </div>
 

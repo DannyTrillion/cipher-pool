@@ -16,7 +16,7 @@ export function OddsMeter({ savers, slots }: { savers: number; slots: number }) 
       <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/10">
         <motion.div className="h-full rounded-full bg-[linear-gradient(90deg,#8B9CFF,#FFD600)]" initial={false} animate={{ width: `${pct}%` }} transition={{ type: "spring", stiffness: 120, damping: 20 }} />
       </div>
-      <div className="mt-1.5 text-[11px] text-ink-faint">If everyone saved the same: {savers} saver{savers === 1 ? "" : "s"}, {slots} prizes. Your real odds scale with your share — and stay private.</div>
+      <div className="mt-1.5 text-[11px] text-ink-faint">Rough guess, assuming everyone saved the same. Your real odds depend on your share and stay private.</div>
     </div>
   );
 }

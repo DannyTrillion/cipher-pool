@@ -62,7 +62,7 @@ export function ResultsPanel() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="display text-2xl">Your results</h2>
-          <div className="mt-1 text-xs text-ink-faint">Only you can see whether you won. Anyone can check the draw was fair.</div>
+          <div className="mt-1 text-xs text-ink-faint">Only you can see if you won. Anyone can check the draw was fair.</div>
         </div>
         {isConnected && steps.length > 0 && (
           <div className="hidden flex-wrap justify-end gap-1.5 sm:flex" aria-label="Your progress">
@@ -85,9 +85,9 @@ export function ResultsPanel() {
             </div>
             <div className="mt-3">
               {!isConnected ? (
-                <div className="text-sm text-ink-muted">Connect to see whether you won. Your result is encrypted — nobody else can read it.</div>
+                <div className="text-sm text-ink-muted">Connect to see if you won. Nobody else can see your result.</div>
               ) : !latestCredit ? (
-                <div className="text-sm text-ink-muted">You weren&apos;t in this draw. Save before the next one to take part.</div>
+                <div className="text-sm text-ink-muted">You were not in this draw. Put money in before the next one to take part.</div>
               ) : myCredit === undefined ? (
                 <div className="flex flex-wrap items-center gap-4">
                   <ReelReveal spinning={spinning} />
@@ -102,38 +102,38 @@ export function ResultsPanel() {
                       if (v === 0n) sfx.lose();
                     }}
                   >
-                    {spinning ? "Unlocking…" : "Did I win?"}
+                    {spinning ? "Checking…" : "Did I win?"}
                   </button>
                 </div>
               ) : myCredit > 0n ? (
                 <div className="flex flex-wrap items-center gap-4">
                   <ReelReveal spinning={false} faces={facesFor(myCredit, latestPrize !== undefined ? slotAmounts(latestPrize, latest.tiers) : [], latest.tiers)} />
                   <motion.div initial={{ rotateX: 90, opacity: 0 }} animate={{ rotateX: 0, opacity: 1 }} transition={{ type: "spring", stiffness: 260, damping: 18, delay: 0.7 }} className="rounded-xl border border-accent/40 bg-accent-soft px-3 py-2 text-sm font-semibold text-accent shadow-[0_0_30px_rgb(255_214_0/0.25)]">
-                    🏆 You won <EncryptedValue value={myCredit} revealed size="sm" className="text-accent" /> — waiting in your encrypted pot.
+                    You won <EncryptedValue value={myCredit} revealed size="sm" className="text-accent" />. Collect it below.
                   </motion.div>
-                  <button className="btn-mint btn-sm" disabled={claimFlow.state.status === "pending"} onClick={() => claimFlow.run(async (s) => { await actions.claim(s); await reveal(POOL.address, user?.claimable ?? null, "claim"); }, { successMessage: "Claimed. Your prize is in your wallet as cUSD." })}>{claimFlow.state.status === "pending" ? "Claiming…" : "Claim to wallet"}</button>
-                  <button className="btn-ghost text-xs" onClick={() => revealFlow.run((s) => actions.revealWin(latest.epoch, s), { successMessage: "Your win is now public for anyone to check." })} disabled={revealFlow.state.status === "pending"}>Show the world I won</button>
+                  <button className="btn-mint btn-sm" disabled={claimFlow.state.status === "pending"} onClick={() => claimFlow.run(async (s) => { await actions.claim(s); await reveal(POOL.address, user?.claimable ?? null, "claim"); }, { successMessage: "Collected. Your prize is in your wallet as cUSD." })}>{claimFlow.state.status === "pending" ? "Collecting…" : "Collect prize"}</button>
+                  <button className="btn-ghost text-xs" onClick={() => revealFlow.run((s) => actions.revealWin(latest.epoch, s), { successMessage: "Your win is now public." })} disabled={revealFlow.state.status === "pending"}>Announce my win</button>
                 </div>
               ) : (
                 <div className="flex flex-wrap items-center gap-4">
                   <ReelReveal spinning={false} faces={["none", "none", "none"]} />
-                  <motion.div initial={{ y: 6, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.7 }} className="text-sm text-ink-muted">Not this time — <span className="text-ok">your savings are untouched</span>. You&apos;re still in for the next draw.</motion.div>
+                  <motion.div initial={{ y: 6, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.7 }} className="text-sm text-ink-muted">Not this time. <span className="text-ok">Your money is untouched</span> and you are in the next draw.</motion.div>
                 </div>
               )}
               <FlowStatus state={revealFlow.state} className="mt-2" />
               <FlowStatus state={claimFlow.state} className="mt-2" />
               {isConnected && claimable !== undefined && claimable > 0n && myCredit !== undefined && myCredit === 0n && (
-                <div className="mt-2 text-xs text-ink-muted">You still have {formatAmount(claimable, DECIMALS, { maxFractionDigits: 2 })} {SYMBOL} to claim from earlier draws.</div>
+                <div className="mt-2 text-xs text-ink-muted">You still have {formatAmount(claimable, DECIMALS, { maxFractionDigits: 2 })} {SYMBOL} to collect from earlier draws.</div>
               )}
             </div>
             <button className="mt-3 text-xs text-ink-faint underline-offset-4 hover:text-ink hover:underline" onClick={() => { setVerify((v) => !v); sfx.click(); }} aria-expanded={verify}>
-              {verify ? "Hide verification" : "Verify this draw"}
+              {verify ? "Hide the numbers" : "Check this draw"}
             </button>
             <AnimatePresence initial={false}>
               {verify && (
                 <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
                   <div className="mt-3 rounded-lg border border-line p-3 font-mono text-[11px] text-ink-muted">
-                    <div className="mb-2 text-ink-faint">Each prize slot has its own on-chain random seed, published once the draw starts. The pool picks winners from these seeds over encrypted balances.</div>
+                    <div className="mb-2 text-ink-faint">Each prize has its own random number, published when the draw starts. Winners are picked from these numbers.</div>
                     <ul className="space-y-1">
                       {seeds.map((h, i) => {
                         const amt = latestPrize !== undefined ? slotAmounts(latestPrize, latest.tiers)[i] : undefined;

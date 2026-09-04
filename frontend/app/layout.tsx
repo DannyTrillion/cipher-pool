@@ -15,16 +15,16 @@ const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ||
   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
 
-const TITLE = "Cipher Pool — Confidential Prize Savings";
+const TITLE = "Cipher Pool: Private Prize Savings";
 const DESCRIPTION =
-  "A no-loss prize savings pool where deposits, balances and winnings stay encrypted end-to-end with the Zama Protocol. Deposit cUSD, keep your principal, win the yield.";
+  "A shared savings pool where the interest is given out as prizes. Nobody can see how much you saved, not even the pool. Built on Zama's encryption.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: TITLE,
   description: DESCRIPTION,
   icons: { icon: "/favicon.svg" },
-  openGraph: { title: TITLE, description: DESCRIPTION, siteName: "Cipher Pool", type: "website", url: SITE_URL, images: [{ url: "/og.png", width: 1200, height: 630, alt: "Cipher Pool — a padlock trophy over a sphere of encrypted deposits" }] },
+  openGraph: { title: TITLE, description: DESCRIPTION, siteName: "Cipher Pool", type: "website", url: SITE_URL, images: [{ url: "/og.png", width: 1200, height: 630, alt: "Cipher Pool: a padlock trophy over a sphere of scrambled deposits" }] },
   twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION, images: ["/og.png"] },
 };
 

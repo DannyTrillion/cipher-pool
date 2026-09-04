@@ -63,17 +63,17 @@ export function DrawsTimeline() {
       {/* building up now */}
       <div className="glass grid gap-6 p-6 sm:grid-cols-[1.4fr_1fr] sm:items-center sm:p-7">
         <div>
-          <div className="label">Prize building up now · public</div>
+          <div className="label">Prize building up now</div>
           <div className="mt-2 flex items-baseline gap-3">
             {building !== undefined ? <span className="display prize-glow text-5xl tabular sm:text-6xl">{formatAmount(building, DECIMALS, { maxFractionDigits: 2 })}</span> : <span className="cipher-mask inline-block h-12 w-44" />}
             <span className="font-mono text-lg text-ink-muted">{SYMBOL}</span>
           </div>
-          <div className="mt-2 text-sm text-ink-muted">Shared by {state?.winnerSlots ?? 5} winners at the next draw. Grows with simulated yield and sponsorships; every saver keeps their principal.</div>
+          <div className="mt-2 text-sm text-ink-muted">Split between {state?.winnerSlots ?? 5} winners at the next draw. Grows from interest (simulated on testnet) and sponsors. Nobody's money is at risk.</div>
         </div>
         <div className="rounded-2xl border border-line bg-black/20 p-4">
           <div className="label">{drawing ? "Draw running" : due ? "Draw ready" : "Next draw in"}</div>
           <div className="mt-1 font-mono text-3xl tabular">{!state ? "…" : drawing ? "LIVE" : due ? "now" : formatDuration(Number(state.nextDrawAt) - now)}</div>
-          <a href="/#console" className="btn-primary btn-arrow shine mt-3 w-full">{due ? "Go run the draw" : "Go to the button"}</a>
+          <a href="/#console" className="btn-primary btn-arrow shine mt-3 w-full">{due ? "Run the draw" : "Go to the button"}</a>
         </div>
       </div>
 
@@ -89,7 +89,7 @@ export function DrawsTimeline() {
             <span className={cn("absolute inline-flex h-full w-full animate-pulseRing rounded-full", drawing ? "bg-mint" : due ? "bg-accent" : "bg-ok")} />
             <span className={cn("relative inline-flex h-2.5 w-2.5 rounded-full", drawing ? "bg-mint" : due ? "bg-accent" : "bg-ok")} />
           </span>
-          <span className="font-medium">{!state ? "Loading…" : drawing ? "A draw is running right now" : due ? "The next draw is ready to run" : `Next draw in ${formatDuration(Number(state.nextDrawAt) - now)}`}</span>
+          <span className="font-medium">{!state ? "Loading…" : drawing ? "A draw is running now" : due ? "The next draw is ready to run" : `Next draw in ${formatDuration(Number(state.nextDrawAt) - now)}`}</span>
         </div>
         <div className="flex items-center gap-3">
           <a href="/#console" className="btn-glass btn-sm">Go to the button</a>
@@ -176,35 +176,35 @@ function DrawCard({ draw, credit, prize, index, live }: { draw: DrawRecord; cred
         {isConnected && done && (
           <div className="mt-4 flex flex-wrap items-center gap-4 rounded-xl border border-line bg-black/20 p-3">
             {!credit ? (
-              <span className="text-sm text-ink-faint">You weren&apos;t in this draw.</span>
+              <span className="text-sm text-ink-faint">You were not in this draw.</span>
             ) : mine === undefined ? (
               <>
                 <ReelReveal spinning={spinning} size={44} />
-                <button className="btn-secondary text-xs" disabled={!!busy || spinning} onClick={async () => { sfx.click(); setSpinning(true); const v = await reveal(POOL.address, credit, `d-${draw.epoch}`); setSpinning(false); if (v !== null && v !== undefined) { fire(v > 0n ? { type: "win", amount: v } : { type: "lose" }); if (v === 0n) sfx.lose(); } }}>{spinning ? "Unlocking…" : "Did I win this one?"}</button>
+                <button className="btn-secondary text-xs" disabled={!!busy || spinning} onClick={async () => { sfx.click(); setSpinning(true); const v = await reveal(POOL.address, credit, `d-${draw.epoch}`); setSpinning(false); if (v !== null && v !== undefined) { fire(v > 0n ? { type: "win", amount: v } : { type: "lose" }); if (v === 0n) sfx.lose(); } }}>{spinning ? "Checking…" : "Did I win this one?"}</button>
               </>
             ) : mine > 0n ? (
               <>
                 <ReelReveal spinning={false} faces={facesFor(mine, slots, draw.tiers)} size={44} />
-                <span className="text-sm font-semibold text-accent">🏆 You won {formatAmount(mine, DECIMALS, { maxFractionDigits: 2 })} {SYMBOL}</span>
-                <button className="btn-mint btn-sm" disabled={proofFlow.state.status === "pending"} onClick={() => proofFlow.run((s) => actions.claim(s), { successMessage: "Claimed. Everything you had won is in your wallet as cUSD." })}>Claim to wallet</button>
-                <button className="btn-ghost text-xs" disabled={proofFlow.state.status === "pending"} onClick={() => proofFlow.run((s) => actions.revealWin(draw.epoch, s), { successMessage: "Your win is now public for anyone to check." })}>Show the world</button>
+                <span className="text-sm font-semibold text-accent">You won {formatAmount(mine, DECIMALS, { maxFractionDigits: 2 })} {SYMBOL}</span>
+                <button className="btn-mint btn-sm" disabled={proofFlow.state.status === "pending"} onClick={() => proofFlow.run((s) => actions.claim(s), { successMessage: "Collected. Everything you had won is in your wallet as cUSD." })}>Collect prize</button>
+                <button className="btn-ghost text-xs" disabled={proofFlow.state.status === "pending"} onClick={() => proofFlow.run((s) => actions.revealWin(draw.epoch, s), { successMessage: "Your win is now public for anyone to check." })}>Announce</button>
                 <FlowStatus state={proofFlow.state} />
               </>
             ) : (
               <>
                 <ReelReveal spinning={false} faces={["none", "none", "none"]} size={44} />
-                <span className="text-sm text-ink-muted">Not this one — your savings were untouched.</span>
+                <span className="text-sm text-ink-muted">Not this one. Your money was untouched.</span>
               </>
             )}
           </div>
         )}
 
-        <button className="mt-4 text-xs text-ink-faint underline-offset-4 hover:text-ink hover:underline" onClick={() => { setOpen((o) => !o); sfx.click(); }} aria-expanded={open}>{open ? "Hide verification" : "Verify this draw"}</button>
+        <button className="mt-4 text-xs text-ink-faint underline-offset-4 hover:text-ink hover:underline" onClick={() => { setOpen((o) => !o); sfx.click(); }} aria-expanded={open}>{open ? "Hide the numbers" : "Check this draw"}</button>
         <AnimatePresence initial={false}>
           {open && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
               <div className="mt-3 rounded-lg border border-line p-3 font-mono text-[11px] text-ink-muted">
-                <div className="mb-2 text-ink-faint">One on-chain random seed per prize slot, published when the draw started. Winners were picked from these over encrypted balances — nobody learned who.</div>
+                <div className="mb-2 text-ink-faint">One random number per prize, published when the draw started. Winners were picked from these numbers. Nobody learned who.</div>
                 <ul className="space-y-1">
                   {seeds.map((h, i) => (
                     <li key={h} className="flex gap-3"><span className="w-20 shrink-0 text-ink-faint">{slots[i] !== undefined ? `${formatAmount(slots[i], DECIMALS, { maxFractionDigits: 2 })} ${SYMBOL}` : `slot ${i + 1}`}</span><span className="truncate">{pub.values[h] !== undefined ? pub.values[h].toString() : <span className="cipher-mask">••••••••••</span>}</span></li>

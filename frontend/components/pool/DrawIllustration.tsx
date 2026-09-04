@@ -28,10 +28,10 @@ export function DrawIllustration() {
     <div className="glass p-5 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <div className="label">Try it · made-up numbers</div>
+          <div className="label">Try it (made-up numbers)</div>
           <div className="mt-1 text-sm text-ink-muted">Drag the ticket. The winner is the first saver whose running total passes it. Bigger savers cover more of the line, so they win more often.</div>
         </div>
-        <button className="pill" onClick={() => setHidden((h) => !h)}>{hidden ? "Show the numbers" : "Hide the numbers (as the pool sees them)"}</button>
+        <button className="pill" onClick={() => setHidden((h) => !h)}>{hidden ? "Show the numbers" : "Hide the numbers, as the pool sees them"}</button>
       </div>
 
       <div className="relative mt-5">
@@ -54,7 +54,7 @@ export function DrawIllustration() {
           <div className="mt-0.5 font-semibold text-accent">{SAVERS[winner]?.name ?? "—"} <span className="font-normal text-ink-muted">· chance ≈ {Math.round((SAVERS[winner].amount / total) * 100)}%</span></div>
         </div>
         <div className="rounded-xl border border-line bg-black/20 p-3 text-sm text-ink-muted">
-          In the real pool, every bar and the total are ciphertext. The contract only learns <span className="text-ink">how many running totals are below the ticket</span> — and even that stays encrypted.
+          In the real pool, every bar and the total are scrambled. The contract only learns <span className="text-ink">how many running totals are below the ticket</span>, and even that stays scrambled.
         </div>
       </div>
     </div>

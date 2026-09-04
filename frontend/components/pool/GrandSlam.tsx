@@ -23,7 +23,7 @@ export function GrandSlam() {
   const due = !!state && !drawing && Number(state.nextDrawAt) <= now && Number(state.participantCount) > 0;
   const n = Number(state?.participantCount ?? 0n);
 
-  const status = !state ? "Loading the pool…" : drawing ? (state.phase === Phase.Selecting ? "Draw running · picking winners in secret" : "Draw running · paying prizes in secret") : due ? "Draw ready · press the button to run it" : `Pool open · next draw in ${formatDuration(Number(state.nextDrawAt) - now)}`;
+  const status = !state ? "Loading the pool…" : drawing ? (state.phase === Phase.Selecting ? "Draw running: picking winners in secret" : "Draw running: paying prizes in secret") : due ? "Draw ready. Press the button to run it" : `Pool open. Next draw in ${formatDuration(Number(state.nextDrawAt) - now)}`;
 
   return (
     <section id="play" className={cn("relative scroll-mt-20 rounded-[28px] p-[1px] transition-colors", drawing ? "bg-[linear-gradient(120deg,rgb(94_234_212/0.5),rgb(255_214_0/0.4),rgb(139_156_255/0.5))]" : "bg-[linear-gradient(120deg,rgb(255_214_0/0.25),rgb(255_255_255/0.06),rgb(139_156_255/0.25))]")} aria-label="Play">
@@ -39,7 +39,7 @@ export function GrandSlam() {
           </div>
           <div className="flex items-center gap-4 font-mono text-xs text-ink-muted">
             <span>{n} saver{n === 1 ? "" : "s"}</span>
-            <span className="text-ink">{prize !== undefined ? `${formatAmount(prize, DECIMALS, { maxFractionDigits: 2 })} ${SYMBOL} up for grabs` : "…"}</span>
+            <span className="text-ink">{prize !== undefined ? `${formatAmount(prize, DECIMALS, { maxFractionDigits: 2 })} ${SYMBOL} in the prize` : "…"}</span>
             <span className="hidden sm:inline">{state?.winnerSlots ?? 5} prizes per draw</span>
           </div>
         </div>
