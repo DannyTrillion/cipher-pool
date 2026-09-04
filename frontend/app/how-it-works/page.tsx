@@ -10,6 +10,8 @@ export default function HowItWorks() {
   return (
     <article className="prose-invert mx-auto max-w-3xl space-y-10">
       <header>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/hero-render.jpg" alt="" className="mb-8 w-full rounded-3xl border border-line object-cover shadow-card" style={{ aspectRatio: "16/7", objectPosition: "50% 40%" }} />
         <h1 className="display text-4xl sm:text-5xl">How Cipher Pool works</h1>
         <p className="mt-2 text-ink-muted">
           A confidential, no-loss prize savings pool. Same game as PoolTogether — deposit, keep your principal, the pool&apos;s yield
