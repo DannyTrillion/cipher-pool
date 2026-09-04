@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useAccount } from "wagmi";
+import { useAccount, useConnect } from "wagmi";
 import { formatUnits } from "viem";
 import { usePoolState, useUserState, Phase } from "@/lib/hooks/usePoolData";
 import { usePoolActions } from "@/lib/hooks/usePoolActions";
@@ -15,6 +15,18 @@ import { cn } from "@/lib/cn";
 import { formatDuration } from "@/components/ui/Countdown";
 
 type Tab = "deposit" | "withdraw" | "sponsor";
+
+function ConnectInline() {
+  const { connect, connectors, isPending } = useConnect();
+  const hasWallet = typeof window !== "undefined" && !!(window as unknown as { ethereum?: unknown }).ethereum && connectors.length > 0;
+  return hasWallet ? (
+    <button className="btn-primary shine mt-5 w-full" disabled={isPending} onClick={() => connect({ connector: connectors[0] })}>
+      {isPending ? "Connecting…" : "Connect wallet to start"}
+    </button>
+  ) : (
+    <a className="btn-primary shine mt-5 w-full" href="https://metamask.io/download/" target="_blank" rel="noreferrer">Install a wallet to start</a>
+  );
+}
 
 export function PositionPanel() {
   const { isConnected } = useAccount();

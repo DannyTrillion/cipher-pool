@@ -138,7 +138,7 @@ export function CipherSphere({
           const dx = p.x - q.x, dy = p.y - q.y;
           const d2 = dx * dx + dy * dy;
           if (d2 > maxD * maxD) continue;
-          const al = (1 - Math.sqrt(d2) / maxD) * 0.16 * ((p.z + q.z) / 2 + 0.6);
+          const al = (1 - Math.sqrt(d2) / maxD) * 0.24 * ((p.z + q.z) / 2 + 0.6);
           ctx.strokeStyle = `rgba(139,156,255,${al.toFixed(3)})`;
           ctx.beginPath();
           ctx.moveTo(p.x, p.y);
@@ -151,7 +151,7 @@ export function CipherSphere({
       for (const p of proj) {
         const depth = (p.z + 1) / 2; // 0 back → 1 front
         const gold = seeds[p.i] < 0.14;
-        const size = (gold ? 2.4 : 1.6) * p.sc * (0.6 + depth * 0.8);
+        const size = (gold ? 2.8 : 1.9) * p.sc * (0.6 + depth * 0.8);
         const alpha = 0.18 + depth * 0.82;
         ctx.fillStyle = gold ? `rgba(255,214,0,${alpha})` : `rgba(160,176,255,${alpha * 0.9})`;
         ctx.beginPath();
