@@ -6,12 +6,12 @@ import { CipherMachine } from "@/components/fx/CipherMachine";
 /** Full-bleed illustrated header in the spirit of PoolTogether's hero, FHE edition. */
 export function HeroBand() {
   return (
-    <section className="relative isolate -mx-4 -mt-6 overflow-hidden border-b border-line sm:-mx-6" aria-label="Cipher Pool">
+    <section className="relative isolate -mt-6 w-screen left-1/2 -translate-x-1/2 overflow-hidden border-b border-line" aria-label="Cipher Pool">
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(900px_400px_at_20%_30%,rgb(var(--accent)/0.10),transparent_60%),radial-gradient(700px_360px_at_80%_60%,rgb(var(--cipher)/0.10),transparent_60%)]" />
       {/* The machine lives in the right two-thirds on wide screens and fades into the copy column. */}
-      <div className="pointer-events-none absolute inset-y-0 right-0 -z-[5] hidden w-[68%] md:block">
+      <div className="pointer-events-none absolute inset-y-0 right-0 -z-[5] hidden w-[64%] md:block">
         <CipherMachine className="h-full w-full opacity-90" />
-        <div className="absolute inset-y-0 left-0 w-40 bg-gradient-to-r from-[rgb(var(--base))] to-transparent" />
+        <div className="absolute inset-y-0 left-0 w-56 bg-gradient-to-r from-[rgb(var(--base))] via-[rgb(var(--base)/0.6)] to-transparent" />
       </div>
       <div className="mx-auto flex min-h-[340px] w-full max-w-6xl flex-col justify-center px-4 py-12 sm:px-6 md:min-h-[400px]">
         <div className="max-w-xl animate-floatIn">

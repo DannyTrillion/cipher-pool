@@ -60,8 +60,8 @@ export function CipherMachine({ className = "" }: { className?: string }) {
   return (
     <svg
       className={className}
-      viewBox="0 0 1600 640"
-      preserveAspectRatio="xMinYMid slice"
+      viewBox="300 70 1360 500"
+      preserveAspectRatio="xMaxYMid meet"
       aria-hidden="true"
       focusable="false"
     >
