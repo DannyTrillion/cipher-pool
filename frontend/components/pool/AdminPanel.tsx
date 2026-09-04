@@ -16,7 +16,7 @@ export function AdminPanel() {
   const write = useWriteAndWait();
   const flow = useActionFlow();
   const [period, setPeriod] = useState("");
-  const [apy, setApy] = useState("");
+  const [drip, setDrip] = useState("");
   const [tiers, setTiers] = useState("");
   if (!state || !address || !sameAddress(address, state.owner)) return null;
 
@@ -29,8 +29,8 @@ export function AdminPanel() {
           <button className="btn-secondary" disabled={!period} onClick={() => flow.run(async (s) => { s("Confirm…"); await write({ ...POOL, chainId: CHAIN_ID, functionName: "setDrawPeriod", args: [BigInt(period)] }); await refetch(); }, { successMessage: "Draw period updated." })}>Set</button>
         </div>
         <div className="flex gap-2">
-          <input className="input !text-sm" placeholder={`APY bps · now ${state.apyBps}`} value={apy} onChange={(e) => setApy(e.target.value.replace(/\D/g, ""))} />
-          <button className="btn-secondary" disabled={!apy} onClick={() => flow.run(async (s) => { s("Confirm…"); await write({ ...YIELD, chainId: CHAIN_ID, functionName: "setApy", args: [BigInt(apy)] }); await refetch(); }, { successMessage: "APY updated." })}>Set</button>
+          <input className="input !text-sm" placeholder={`Prize drip · tUSD units/sec · now ${state.dripPerSecond}`} value={drip} onChange={(e) => setDrip(e.target.value.replace(/\D/g, ""))} />
+          <button className="btn-secondary" disabled={!drip} onClick={() => flow.run(async (s) => { s("Confirm…"); await write({ ...YIELD, chainId: CHAIN_ID, functionName: "setRate", args: [BigInt(drip)] }); await refetch(); }, { successMessage: "Prize drip updated." })}>Set</button>
         </div>
       </div>
       <div className="mt-3 flex gap-2">
