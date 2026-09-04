@@ -37,7 +37,7 @@ export function MyDraws() {
   const allRevealed = done.every((_d, i) => !credits[i] || get(credits[i]) !== undefined);
 
   return (
-    <section className="card card-hover p-6">
+    <section className="card card-hover p-6 sm:p-7">
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="label">Your draws</div>

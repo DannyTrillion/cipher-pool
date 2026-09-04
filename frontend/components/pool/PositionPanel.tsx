@@ -71,7 +71,7 @@ export function PositionPanel() {
 
   if (!isConnected) {
     return (
-      <section className="card card-hover p-6">
+      <section className="card card-hover p-6 sm:p-7">
         <div className="label">Your position</div>
         <p className="mt-2 text-sm text-ink-muted">Connect a wallet on Sepolia to deposit. Your balance is encrypted — only you can reveal it.</p>
       </section>

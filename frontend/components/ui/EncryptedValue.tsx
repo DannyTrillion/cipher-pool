@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/cn";
 import { formatAmount } from "@/lib/format";
+import { DecryptText } from "@/components/fx/DecryptText";
 
 /**
  * Renders an encrypted amount: a shimmering cipher strip until revealed, then
@@ -39,8 +40,8 @@ export function EncryptedValue({
     );
   }
   return (
-    <span className={cn("animate-reveal font-mono tabular", sizes[size], className)}>
-      {formatAmount(value, decimals)} <span className="text-[0.55em] text-ink-muted">{symbol}</span>
+    <span className={cn("font-mono tabular", sizes[size], className)}>
+      <DecryptText text={formatAmount(value, decimals)} duration={650} /> <span className="text-[0.55em] text-ink-muted">{symbol}</span>
     </span>
   );
 }

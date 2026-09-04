@@ -59,7 +59,7 @@ export function DrawPanel() {
   const amounts = draw && prize !== undefined ? slotAmounts(prize, draw.tiers) : [];
 
   return (
-    <section className="card card-hover p-6">
+    <section className="card card-hover p-6 sm:p-7">
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="label">Draw</div>

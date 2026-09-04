@@ -34,7 +34,7 @@ export function Header() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-canvas/80 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-line/60 bg-canvas/40 backdrop-blur-xl">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-2.5">
@@ -45,7 +45,7 @@ export function Header() {
                 <path d="M10 11V9.5a2 2 0 0 1 4 0V11" />
               </svg>
             </span>
-            <span className="text-base font-semibold tracking-tight">Cipher Pool</span>
+            <span className="display text-[17px]">Cipher Pool</span>
             <span className="pill hidden sm:inline-flex">Sepolia</span>
           </Link>
           <nav className="hidden items-center gap-1 md:flex">
