@@ -10,7 +10,7 @@ import { DecryptText } from "@/components/fx/DecryptText";
 import { RadialCountdown } from "@/components/ui/RadialCountdown";
 import { TierOrbits } from "@/components/pool/TierOrbits";
 import { Annotation } from "@/components/fx/Annotation";
-import { PositionTile, DrawTile } from "@/components/pool/HeroTiles";
+import { GameCard } from "@/components/pool/HeroTiles";
 import { formatAmount } from "@/lib/format";
 import { DECIMALS, SYMBOL } from "@/lib/contracts";
 
@@ -49,28 +49,24 @@ export function Hero() {
         </div>
       </div>
 
-      {/* preview row — the product, annotated */}
-      <div className="mt-16 grid gap-20 md:grid-cols-[1.05fr_0.9fr_0.9fr] md:gap-5">
+      {/* preview row — the world on the left, one fused game card on the right */}
+      <div className="mt-24 grid gap-20 md:mt-32 md:grid-cols-[0.95fr_1.05fr] md:gap-12 lg:gap-16">
         <div className="relative">
-          <Annotation text="Encrypted pool" className="absolute -top-14 left-1/2 z-10 -translate-x-1/2 text-accent" tilt={-5} />
-          {/* borderless: the sphere is the world the tiles sit beside; it may spill past its column */}
-          <div className="relative aspect-square md:absolute md:-inset-x-16 md:-inset-y-10 md:aspect-auto">
+          <Annotation text="Everyone's savings, encrypted" className="absolute -top-14 left-1/2 z-10 w-max -translate-x-1/2 text-accent" tilt={-5} />
+          {/* borderless: the sphere may spill outward (left and vertically), never into the card */}
+          <div className="relative aspect-square md:absolute md:-left-24 md:right-0 md:-inset-y-8 md:aspect-auto">
             <CipherSphere className="absolute inset-0 h-full w-full" points={120 + savers * 24} orbs={state?.winnerSlots ?? 5} drawing={drawing} you={!!user?.poolBalance} />
           </div>
           <div className="hidden md:block md:min-h-[380px]" />
         </div>
         <div className="relative">
-          <Annotation text="Your position" className="absolute -top-14 left-1/2 -translate-x-1/2 text-accent" tilt={4} />
-          <PositionTile />
-        </div>
-        <div className="relative">
-          <Annotation text="Blind draw" className="absolute -top-14 left-1/2 -translate-x-1/2 text-accent" tilt={-3} />
-          <DrawTile />
+          <Annotation text="Your corner of the pool" className="absolute -top-14 left-1/2 z-10 w-max -translate-x-1/2 text-accent" tilt={4} />
+          <GameCard />
         </div>
       </div>
 
       {/* stat rail — unchanged */}
-      <div className="glass mt-8 grid grid-cols-1 gap-6 p-5 sm:grid-cols-2 sm:p-6 lg:grid-cols-[1.6fr_auto_auto_auto] lg:items-center lg:gap-10 [&>*]:min-w-0">
+      <div className="glass mt-12 grid grid-cols-1 gap-6 p-5 sm:grid-cols-2 sm:p-6 lg:grid-cols-[1.6fr_auto_auto_auto] lg:items-center lg:gap-10 [&>*]:min-w-0">
         <div className="sm:col-span-2 lg:col-span-1">
           <div className="label">Prize up for grabs · public</div>
           <div className="mt-2 flex items-baseline gap-3">
