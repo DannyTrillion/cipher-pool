@@ -7,7 +7,6 @@ import { usePublicReveal } from "@/lib/hooks/useReveal";
 import { usePoolActions } from "@/lib/hooks/usePoolActions";
 import { useActionFlow } from "@/lib/useActionFlow";
 import { useCountUp } from "@/lib/hooks/useCountUp";
-import { DecryptText } from "@/components/fx/DecryptText";
 import { FlowStatus } from "@/components/ui/FlowStatus";
 import { DrawButton, type DrawButtonState } from "@/components/pool/DrawButton";
 import { Identicon } from "@/components/layout/Identicon";
@@ -49,14 +48,14 @@ export function StatConsole() {
     }, { successMessage: "Draw complete. Prizes are in the winners' savings." });
 
   return (
-    <section className="glass mt-12 p-5 sm:p-7" aria-label="Prize console">
+    <section id="console" className="glass mt-12 scroll-mt-24 p-5 sm:p-7" aria-label="Prize console">
       <div className="grid items-center gap-8 md:grid-cols-[1.2fr_auto_1fr] md:gap-10">
         {/* stakes */}
         <div className="order-2 md:order-1">
           <div className="label">Prize up for grabs · public</div>
           <div className="mt-2 flex items-baseline gap-3">
             {prize !== undefined ? (
-              <DecryptText text={formatAmount(prize, DECIMALS, { maxFractionDigits: 2 })} className="display prize-glow text-5xl tabular sm:text-6xl" duration={700} />
+              <span className="display prize-glow text-5xl tabular sm:text-6xl">{formatAmount(prize, DECIMALS, { maxFractionDigits: 2 })}</span>
             ) : (
               <span className="cipher-mask inline-block h-12 w-44 sm:h-14 sm:w-56" aria-label="Loading prize" />
             )}

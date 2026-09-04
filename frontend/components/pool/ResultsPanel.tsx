@@ -12,6 +12,9 @@ import { FlowStatus } from "@/components/ui/FlowStatus";
 import { formatAmount } from "@/lib/format";
 import { DECIMALS, POOL, SYMBOL, etherscanAddr } from "@/lib/contracts";
 import { slotAmounts } from "@/lib/tiers";
+import { ReelReveal, facesFor } from "@/components/fx/ReelReveal";
+import { OddsMeter } from "@/components/pool/OddsMeter";
+import { ActivityFeed } from "@/components/pool/ActivityFeed";
 import { fire } from "@/lib/scene";
 import { sfx } from "@/lib/sound";
 import { cn } from "@/lib/cn";
@@ -31,6 +34,7 @@ export function ResultsPanel() {
   const actions = usePoolActions();
   const revealFlow = useActionFlow();
   const [verify, setVerify] = useState(false);
+  const [spinning, setSpinning] = useState(false);
 
   useEffect(() => { if (done.length) void pub.reveal(done.map((d) => d.prize)); }, [done, pub.reveal]);
   useEffect(() => { if (verify && seeds.length) void pub.reveal(seeds); }, [verify, seeds, pub.reveal]);
@@ -52,7 +56,7 @@ export function ResultsPanel() {
     : [];
 
   return (
-    <section className="card card-hover p-6 sm:p-7">
+    <section className="card p-6 sm:p-7">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="display text-2xl">Your results</h2>
@@ -83,27 +87,35 @@ export function ResultsPanel() {
               ) : !latestCredit ? (
                 <div className="text-sm text-ink-muted">You weren&apos;t in this draw. Save before the next one to take part.</div>
               ) : myCredit === undefined ? (
-                <button
-                  className="btn-primary shine"
-                  disabled={!!busy}
-                  onClick={async () => {
-                    sfx.click(); fire({ type: "reveal" });
-                    const v = await reveal(POOL.address, latestCredit, "won");
-                    if (v !== null && v !== undefined) fire(v > 0n ? { type: "win", amount: v } : { type: "lose" });
-                    if (v === 0n) sfx.lose();
-                  }}
-                >
-                  {busy === "won" ? "Unlocking…" : "Did I win?"}
-                </button>
+                <div className="flex flex-wrap items-center gap-4">
+                  <ReelReveal spinning={spinning} />
+                  <button
+                    className="btn-primary shine px-6 py-3"
+                    disabled={!!busy || spinning}
+                    onClick={async () => {
+                      sfx.click(); fire({ type: "reveal" }); setSpinning(true);
+                      const v = await reveal(POOL.address, latestCredit, "won");
+                      setSpinning(false);
+                      if (v !== null && v !== undefined) fire(v > 0n ? { type: "win", amount: v } : { type: "lose" });
+                      if (v === 0n) sfx.lose();
+                    }}
+                  >
+                    {spinning ? "Unlocking…" : "Did I win?"}
+                  </button>
+                </div>
               ) : myCredit > 0n ? (
-                <div className="flex flex-wrap items-center gap-3">
-                  <motion.div initial={{ rotateX: 90, opacity: 0 }} animate={{ rotateX: 0, opacity: 1 }} transition={{ type: "spring", stiffness: 260, damping: 18 }} className="rounded-xl border border-accent/40 bg-accent-soft px-3 py-2 text-sm font-semibold text-accent shadow-[0_0_30px_rgb(255_214_0/0.25)]">
+                <div className="flex flex-wrap items-center gap-4">
+                  <ReelReveal spinning={false} faces={facesFor(myCredit, latestPrize !== undefined ? slotAmounts(latestPrize, latest.tiers) : [], latest.tiers)} />
+                  <motion.div initial={{ rotateX: 90, opacity: 0 }} animate={{ rotateX: 0, opacity: 1 }} transition={{ type: "spring", stiffness: 260, damping: 18, delay: 0.7 }} className="rounded-xl border border-accent/40 bg-accent-soft px-3 py-2 text-sm font-semibold text-accent shadow-[0_0_30px_rgb(255_214_0/0.25)]">
                     🏆 You won <EncryptedValue value={myCredit} revealed size="sm" className="text-accent" /> — it&apos;s already in your savings.
                   </motion.div>
                   <button className="btn-ghost text-xs" onClick={() => revealFlow.run((s) => actions.revealWin(latest.epoch, s), { successMessage: "Your win is now public for anyone to check." })} disabled={revealFlow.state.status === "pending"}>Show the world I won</button>
                 </div>
               ) : (
-                <motion.div initial={{ y: 6, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="text-sm text-ink-muted">Not this time — <span className="text-ok">your savings are untouched</span>. You&apos;re still in for the next draw.</motion.div>
+                <div className="flex flex-wrap items-center gap-4">
+                  <ReelReveal spinning={false} faces={["none", "none", "none"]} />
+                  <motion.div initial={{ y: 6, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.7 }} className="text-sm text-ink-muted">Not this time — <span className="text-ok">your savings are untouched</span>. You&apos;re still in for the next draw.</motion.div>
+                </div>
               )}
               <FlowStatus state={revealFlow.state} className="mt-2" />
             </div>
@@ -134,6 +146,21 @@ export function ResultsPanel() {
           </>
         )}
       </div>
+
+      {/* odds + recent results */}
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <OddsMeter savers={Number(state?.participantCount ?? 0n)} slots={state?.winnerSlots ?? 5} />
+        <div className="rounded-xl border border-line bg-black/20 px-3.5 py-3">
+          <div className="text-[10px] uppercase tracking-[0.18em] text-ink-faint">Recent draws</div>
+          <ul className="mt-2 space-y-1 font-mono text-xs">
+            {done.slice(0, 4).map((d) => (
+              <li key={d.epoch.toString()} className="flex items-center justify-between"><span className="text-ink-muted">#{d.epoch.toString()}</span><span>{pub.values[d.prize] !== undefined ? `${formatAmount(pub.values[d.prize], DECIMALS, { maxFractionDigits: 2 })} ${SYMBOL}` : "…"} <span className="text-ink-faint">· {d.winnerSlots} winners</span></span></li>
+            ))}
+            {done.length === 0 && <li className="text-ink-faint">none yet</li>}
+          </ul>
+        </div>
+      </div>
+      <div className="mt-4"><ActivityFeed compact /></div>
 
       {/* past draws */}
       {isConnected && done.length > 1 && (

@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Wizard } from "@/components/pool/Wizard";
 import { motion } from "framer-motion";
 import { useAccount, useConnect } from "wagmi";
 import { formatUnits, parseUnits } from "viem";
@@ -35,6 +36,18 @@ export function PlayPanel() {
   const faucetFlow = useActionFlow();
   const [tab, setTab] = useState<Tab>("deposit");
   const [amount, setAmount] = useState("");
+  const [mode, setMode] = useState<"new" | "pro">("new");
+  const inputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    try { const m = localStorage.getItem("cipherpool.mode"); if (m === "pro" || m === "new") setMode(m); } catch {}
+    const onHash = () => {
+      if (window.location.hash === "#deposit") { setMode("pro"); setTab("deposit"); setTimeout(() => inputRef.current?.focus(), 400); }
+    };
+    onHash();
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+  const pickMode = (m: "new" | "pro") => { setMode(m); sfx.click(); try { localStorage.setItem("cipherpool.mode", m); } catch {} };
 
   const open = state?.phase === Phase.Open;
   const poolBal = get(user?.poolBalance);
@@ -70,18 +83,30 @@ export function PlayPanel() {
   const buttonLabel = !open ? "Paused while the draw runs" : value > 0n ? `${verb} ${amount} cUSD` : `${verb} cUSD`;
 
   return (
-    <section className="card card-hover p-6 sm:p-7" id="position">
+    <section className="card p-6 sm:p-7" id="deposit">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="display text-2xl">Play</h2>
           <div className="mt-1 text-xs text-ink-faint">Save, win, withdraw. Everything about you stays encrypted.</div>
         </div>
-        {isConnected ? (
-          <button className="btn-secondary text-xs" onClick={revealAll} disabled={!!busy || !user}>{busy ? "Unlocking…" : revealedAll ? "Refresh" : "Unlock my numbers"}</button>
-        ) : (
-          <span className="pill">what others see</span>
-        )}
+        <div className="flex rounded-full bg-black/40 p-1" role="tablist" aria-label="Experience">
+          {(["new", "pro"] as const).map((m) => (
+            <button key={m} role="tab" aria-selected={mode === m} className={cn("relative rounded-full px-3 py-1 text-[12px] font-medium transition", mode === m ? "text-black" : "text-ink-muted hover:text-ink")} onClick={() => pickMode(m)}>
+              {mode === m && <motion.span layoutId="mode-pill" className="absolute inset-0 rounded-full bg-accent" transition={{ type: "spring", stiffness: 500, damping: 40 }} />}
+              <span className="relative">{m === "new" ? "New here" : "Experienced"}</span>
+            </button>
+          ))}
+        </div>
       </div>
+      {mode === "new" ? (
+        <div className="mt-5"><Wizard /></div>
+      ) : (
+      <>
+      {isConnected && (
+        <div className="mt-4 flex justify-end">
+          <button className="btn-secondary text-xs" onClick={revealAll} disabled={!!busy || !user}>{busy ? "Unlocking…" : revealedAll ? "Refresh numbers" : "Unlock my numbers"}</button>
+        </div>
+      )}
 
       {/* your three numbers */}
       <div className="mt-5 grid grid-cols-3 gap-3">
@@ -133,6 +158,7 @@ export function PlayPanel() {
           <div className="mt-4">
             <div className="relative">
               <input
+                ref={inputRef}
                 inputMode="decimal"
                 className="input pr-20 text-2xl"
                 placeholder="0"
@@ -166,6 +192,8 @@ export function PlayPanel() {
           </button>
           <FlowStatus state={flow.state} className="mt-3" />
         </>
+      )}
+      </>
       )}
     </section>
   );

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePoolState, useUserState, Phase } from "@/lib/hooks/usePoolData";
 import { CipherSphere } from "@/components/fx/CipherSphere";
-import { DecryptText } from "@/components/fx/DecryptText";
 import { StatConsole } from "@/components/pool/StatConsole";
 import { Annotation } from "@/components/fx/Annotation";
 import { GameCard } from "@/components/pool/HeroTiles";
@@ -19,18 +18,19 @@ export function Hero() {
       {/* headline block — centred, Syne, yellow "Win" */}
       <div className="mx-auto max-w-3xl pt-10 text-center md:pt-16">
         <h1 className="display text-[1.9rem] leading-[1.0] xs:text-[2.1rem] sm:text-5xl md:text-[3.5rem]">
-          <DecryptText text="Save privately." duration={900} />
+          Save privately.
           <br />
-          <DecryptText text="Win" duration={700} delay={200} className="text-accent" /> <DecryptText text="verifiably." duration={900} delay={260} />
+          <span className="text-accent">Win</span> verifiably.
         </h1>
         <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-ink-muted sm:text-lg">
           Deposit, keep every cent of your principal, and win the pool&apos;s yield through tiered draws. Your balance, your odds and
           your winnings are ciphertext on-chain — even to the contract — and every draw is verifiable by anyone.
         </p>
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-5">
-          <a href="#position" className="btn-primary shine px-6 py-3 text-[15px]">Deposit privately</a>
-          <Link href="/how-it-works" className="text-sm text-ink-muted underline-offset-4 hover:text-ink hover:underline">How the blind draw works →</Link>
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          <a href="#play" className="btn-primary shine px-7 py-3 text-[15px]">Play</a>
+          <a href="#deposit" className="btn-glass px-7 py-3 text-[15px]">Deposit</a>
         </div>
+        <Link href="/how-it-works" className="mt-4 inline-block text-xs text-ink-faint underline-offset-4 hover:text-ink hover:underline">How the blind draw works →</Link>
       </div>
 
       {/* preview row — the world on the left, one fused game card on the right */}
