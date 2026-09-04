@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { openExplainer } from "@/components/guide/Explainer";
 import { usePoolState, useUserState, Phase } from "@/lib/hooks/usePoolData";
 import { CipherSphere } from "@/components/fx/CipherSphere";
 import { StatConsole } from "@/components/pool/StatConsole";
@@ -29,7 +30,10 @@ export function Hero() {
           <a href="#play" className="btn-primary btn-lg btn-arrow shine min-w-[150px]">Play</a>
           <a href="#deposit" className="btn-glass btn-lg min-w-[150px]">Deposit</a>
         </div>
-        <Link href="/how-it-works" className="mt-4 inline-block text-xs text-ink-faint underline-offset-4 hover:text-ink hover:underline">How it works</Link>
+        <div className="mt-4 flex items-center justify-center gap-4 text-xs">
+          <button className="text-accent underline-offset-4 hover:underline" onClick={openExplainer}>New here? What is this, in 60 seconds</button>
+          <Link href="/how-it-works" className="text-ink-faint underline-offset-4 hover:text-ink hover:underline">How it works</Link>
+        </div>
       </div>
 
       {/* preview row — the world on the left, one fused game card on the right */}
