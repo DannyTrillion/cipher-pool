@@ -196,6 +196,12 @@ body::before {
   @apply inline-flex items-center gap-1.5 rounded-full border border-line px-2.5 py-1 font-mono text-[11px] text-ink-muted;
   background: rgb(255 255 255 / 0.03);
 }
+.menu-item {
+  @apply block w-full rounded-lg px-2.5 py-2 text-left text-sm text-ink transition;
+}
+.menu-item:hover {
+  background: rgb(255 255 255 / 0.06);
+}
 .shine {
   position: relative;
   overflow: hidden;
