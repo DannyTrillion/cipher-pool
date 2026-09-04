@@ -57,17 +57,24 @@ export function CipherSphere({
     };
     window.addEventListener("mousemove", onMove, { passive: true });
 
-    // Fibonacci sphere, generated for the max we might show; we draw the first N.
+    // Fibonacci sphere with exactly N points spread over the whole surface
+    // (regenerated when N changes — the sequence runs pole to pole, so taking a
+    // prefix of a larger set would only give a cap).
     const MAX = 420;
-    const base: [number, number, number][] = [];
     const golden = Math.PI * (3 - Math.sqrt(5));
-    for (let i = 0; i < MAX; i++) {
-      const y = 1 - (i / (MAX - 1)) * 2;
-      const r = Math.sqrt(1 - y * y);
-      const t = golden * i;
-      base.push([Math.cos(t) * r, y, Math.sin(t) * r]);
-    }
-    const seeds = base.map((_, i) => ((i * 7919) % 100) / 100);
+    let base: [number, number, number][] = [];
+    let baseN = -1;
+    const rebuild = (n: number) => {
+      base = [];
+      for (let i = 0; i < n; i++) {
+        const y = 1 - (i / Math.max(1, n - 1)) * 2;
+        const r = Math.sqrt(Math.max(0, 1 - y * y));
+        const t = golden * i;
+        base.push([Math.cos(t) * r, y, Math.sin(t) * r]);
+      }
+      baseN = n;
+    };
+    const seeds = Array.from({ length: MAX }, (_, i) => ((i * 7919) % 100) / 100);
 
     let t0 = performance.now();
     let angle = 0;
@@ -103,6 +110,7 @@ export function CipherSphere({
       ctx.fillRect(0, 0, w, h);
 
       const n = Math.min(MAX, Math.max(60, Math.floor(s.points)));
+      if (n !== baseN) rebuild(n);
       const cosA = Math.cos(angle + ry), sinA = Math.sin(angle + ry);
       const cosX = Math.cos(rx), sinX = Math.sin(rx);
       const proj: { x: number; y: number; z: number; sc: number; i: number }[] = [];

@@ -45,8 +45,8 @@ export function Header() {
                 <path d="M10 11V9.5a2 2 0 0 1 4 0V11" />
               </svg>
             </span>
-            <span className="display text-[17px]">Cipher Pool</span>
-            <span className="pill hidden sm:inline-flex">Sepolia</span>
+            <span className="display whitespace-nowrap text-[17px]">Cipher Pool</span>
+            <span className="pill hidden md:inline-flex">Sepolia</span>
           </Link>
           <nav className="hidden items-center gap-1 md:flex">
             {NAV.map((n) => (
@@ -76,7 +76,7 @@ export function Header() {
             </button>
           ) : connectors.length === 0 || !hasInjected ? (
             <a className="btn-primary" href="https://metamask.io/download/" target="_blank" rel="noreferrer" title="No wallet detected">
-              Install a wallet
+              <span className="sm:hidden">Get a wallet</span><span className="hidden sm:inline">Install a wallet</span>
             </a>
           ) : (
             <button
@@ -84,7 +84,7 @@ export function Header() {
               disabled={isPending}
               onClick={() => connect({ connector: connectors[0] })}
             >
-              {isPending ? "Connecting…" : "Connect wallet"}
+              {isPending ? "Connecting…" : <><span className="sm:hidden">Connect</span><span className="hidden sm:inline">Connect wallet</span></>}
             </button>
           )}
         </div>

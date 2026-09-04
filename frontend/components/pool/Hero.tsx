@@ -30,7 +30,7 @@ export function Hero() {
   return (
     <section className="hero-bleed relative isolate overflow-hidden" aria-label="Cipher Pool">
       {/* working background: the live ciphertext sphere */}
-      <div className="pointer-events-none absolute inset-y-0 right-0 -z-10 w-full md:w-[62%]">
+      <div className="pointer-events-none absolute right-0 top-[38%] bottom-0 -z-10 w-full opacity-60 md:inset-y-0 md:w-[62%] md:opacity-100">
         <CipherSphere className="h-full w-full" points={120 + savers * 24} orbs={state?.winnerSlots ?? 5} drawing={drawing} />
         <div className="absolute inset-y-0 left-0 hidden w-72 bg-gradient-to-r from-[rgb(var(--base))] via-[rgb(var(--base)/0.7)] to-transparent md:block" />
         <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[rgb(var(--base))] to-transparent" />
@@ -40,7 +40,8 @@ export function Hero() {
         <div className="max-w-2xl">
           <div className="eyebrow">
             <span className="h-1.5 w-1.5 rounded-full bg-accent shadow-[0_0_12px_rgb(255_214_0/0.9)]" />
-            Confidential prize savings · Zama FHEVM · Sepolia
+            <span className="sm:hidden">Confidential prize savings</span>
+            <span className="hidden sm:inline">Confidential prize savings · Zama FHEVM · Sepolia</span>
           </div>
           <h1 className="display mt-5 text-[2.75rem] leading-[0.95] sm:text-6xl md:text-7xl">
             <DecryptText text="Save privately." duration={1100} />
