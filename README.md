@@ -18,7 +18,8 @@ Built for the **Zama Developer Program — Mainnet Season 4 Bounty Track** (Conf
 | **Draw** | Permissionless. After `drawPeriod`, anyone calls `startDraw()` then `advanceDraw(batch)` until complete — the app's hold-to-run button does this, or run `npm run keeper:sepolia`. | Launch console |
 | **Win** | Tiered prizes (default grand 40% ×1, 20% ×2, 10% ×2). Each slot gets its own `FHE.randEuint64()` seed; selection is a deposit-weighted walk over encrypted balances (below). Prizes land in each winner's **encrypted claimable pot**. | Results panel: reel reveal |
 | **Claim** | Decrypt `claimableOf(you)` (EIP-712) to learn you won, then `claimPrize()` moves it to your wallet by **confidential transfer**. Anyone can call claim at constant cost — non-winners move an encrypted zero — so claiming reveals nothing. | "Claim to wallet" |
-| **Withdraw** | `withdraw(externalEuint64, proof)` any time the pool is open. Principal is never at risk. Unwrap cUSD → tUSD via the wrapper's two-phase `unwrap` / `finalizeUnwrap`. | Withdraw tab |
+| **Withdraw** | `withdraw(externalEuint64, proof)` any time the pool is open. Principal is never at risk. | Withdraw tab |
+| **Unwrap** | Back to the original ERC-20: `cUSD.unwrap(you, you, encAmount, proof)` burns and publishes the burned amount; the app fetches the relayer's public decryption + proof and calls `finalizeUnwrap(requestId, amount, proof)`, which releases tUSD 1:1. | Unwrap tab |
 
 ## How winner selection works (all encrypted unless noted)
 

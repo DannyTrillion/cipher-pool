@@ -66,6 +66,14 @@ export async function encryptUint64(contract: `0x${string}`, user: `0x${string}`
   return { handle, inputProof };
 }
 
+/** Public decryption returning the relayer proof, for on-chain FHE.checkSignatures flows (e.g. finalizeUnwrap). */
+export async function publicDecryptWithProof(handle: string): Promise<{ value: bigint; proof: `0x${string}` }> {
+  const inst = await getFhevmInstance();
+  const res = await inst.publicDecrypt([handle]);
+  const v = (res.clearValues as Record<string, unknown>)[handle];
+  return { value: typeof v === "bigint" ? v : BigInt(v as string | number | boolean), proof: res.decryptionProof as `0x${string}` };
+}
+
 /** Public decryption of handles made publicly decryptable on-chain. */
 export async function publicDecrypt(handles: string[]): Promise<Record<string, bigint>> {
   const inst = await getFhevmInstance();

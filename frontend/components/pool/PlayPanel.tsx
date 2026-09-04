@@ -16,11 +16,12 @@ import { cn } from "@/lib/cn";
 import { formatDuration } from "@/components/ui/Countdown";
 import { sfx } from "@/lib/sound";
 
-type Tab = "shield" | "deposit" | "withdraw" | "sponsor";
+type Tab = "shield" | "deposit" | "withdraw" | "unwrap" | "sponsor";
 const TABS: { key: Tab; label: string; verb: string }[] = [
   { key: "shield", label: "Wrap", verb: "Wrap" },
   { key: "deposit", label: "Deposit", verb: "Deposit" },
   { key: "withdraw", label: "Withdraw", verb: "Withdraw" },
+  { key: "unwrap", label: "Unwrap", verb: "Unwrap" },
   { key: "sponsor", label: "Add to prize", verb: "Add" },
 ];
 const CHIPS = ["25", "100", "250"];
@@ -55,7 +56,7 @@ export function PlayPanel() {
   const walletBal = get(user?.walletBalance);
   const claimable = get(user?.claimable);
   const revealedAll = poolBal !== undefined && walletBal !== undefined && claimable !== undefined;
-  const max = tab === "withdraw" ? poolBal : tab === "shield" ? user?.tusdBalance : walletBal;
+  const max = tab === "withdraw" ? poolBal : tab === "shield" ? user?.tusdBalance : walletBal; // unwrap + deposit + sponsor draw from cUSD in wallet
   const maxNum = max !== undefined ? Number(formatUnits(max, DECIMALS)) : undefined;
   const value = useMemo(() => { try { return amount ? parseUnits(amount, DECIMALS) : 0n; } catch { return 0n; } }, [amount]);
   const tooMuch = max !== undefined && value > max;
@@ -73,17 +74,19 @@ export function PlayPanel() {
       if (tab === "shield") await actions.shield(amount, setStep);
       else if (tab === "deposit") await actions.deposit(amount, setStep);
       else if (tab === "withdraw") await actions.withdraw(amount, setStep);
+      else if (tab === "unwrap") await actions.unwrap(amount, setStep);
       else await actions.donate(amount, setStep);
       setAmount("");
       await Promise.all([refetch(), refetchPool()]);
       if (revealedAll || poolBal !== undefined) await revealAll();
-    }, { successMessage: tab === "shield" ? "Wrapped. Your cUSD is private now." : tab === "deposit" ? "Done. Your money is in the pool, scrambled." : tab === "withdraw" ? "Done. It is back in your wallet as cUSD." : "Added to the prize. Thank you!" });
+    }, { successMessage: tab === "shield" ? "Wrapped. Your cUSD is private now." : tab === "deposit" ? "Done. Your money is in the pool, scrambled." : tab === "withdraw" ? "Done. It is back in your wallet as cUSD." : tab === "unwrap" ? "Done. Your tUSD is back in your wallet." : "Added to the prize. Thank you!" });
   const claimFaucet = () =>
     faucetFlow.run(async (setStep) => { await actions.faucet(setStep); await refetch(); }, { successMessage: "1,000 test tUSD is in your wallet. Wrap it into cUSD to use it." });
 
   const verb = TABS.find((t) => t.key === tab)!.verb;
   const unit = tab === "shield" ? UNDERLYING_SYMBOL : "cUSD";
-  const buttonLabel = !open && tab !== "shield" ? "Paused during the draw" : value > 0n ? `${verb} ${amount} ${unit}` : `${verb} ${unit}`;
+  const pausable = tab === "deposit" || tab === "withdraw" || tab === "sponsor";
+  const buttonLabel = !open && pausable ? "Paused during the draw" : value > 0n ? `${verb} ${amount} ${unit}` : `${verb} ${unit}`;
 
   return (
     <section className="card min-w-0 overflow-hidden p-6 sm:p-7" id="deposit">
@@ -175,7 +178,7 @@ export function PlayPanel() {
                 className="input pr-20 text-2xl"
                 placeholder="0"
                 value={amount}
-                disabled={flow.state.status === "pending" || (!open && tab !== "shield")}
+                disabled={flow.state.status === "pending" || (!open && pausable)}
                 onChange={(e) => { const v = e.target.value.replace(/[^0-9.]/g, ""); if ((v.match(/\./g) ?? []).length > 1) return; setAmount(v); }}
               />
               <span className="absolute inset-y-0 right-4 flex items-center font-mono text-sm text-ink-muted">{tab === "shield" ? UNDERLYING_SYMBOL : "cUSD"}</span>
@@ -195,12 +198,13 @@ export function PlayPanel() {
             <p className="mt-2 text-xs text-ink-faint">
               {tab === "shield" && "Turns your public tUSD into private cUSD, one for one. Two quick confirmations. After this, nobody can see your amounts."}
               {tab === "deposit" && "Your amount is scrambled in your browser before it is sent. The first time asks for one extra approval."}
-              {tab === "withdraw" && "Take out any amount whenever the pool is open."}
+              {tab === "withdraw" && "Take out any amount whenever the pool is open. It comes back as cUSD. Use Unwrap to turn it back into tUSD."}
+              {tab === "unwrap" && "Turns private cUSD back into public tUSD, one for one. Two confirmations, with a short wait in between while the network confirms the amount."}
               {tab === "sponsor" && "Goes straight into the next prize. It cannot be taken back."}
             </p>
           </div>
 
-          <button data-anchor={tab === "shield" ? "shield" : "deposit"} className="btn-primary btn-lg shine mt-4 w-full" onClick={submit} disabled={(!open && tab !== "shield") || value === 0n || flow.state.status === "pending"}>
+          <button data-anchor={tab === "shield" ? "shield" : "deposit"} className="btn-primary btn-lg shine mt-4 w-full" onClick={submit} disabled={(!open && pausable) || value === 0n || flow.state.status === "pending"}>
             {flow.state.status === "pending" ? "Working…" : buttonLabel}
           </button>
           <FlowStatus state={flow.state} className="mt-3" />

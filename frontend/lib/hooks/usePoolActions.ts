@@ -2,7 +2,9 @@
 
 import { useCallback } from "react";
 import { useAccount, useConfig } from "wagmi";
-import { readContract } from "wagmi/actions";
+import { readContract, waitForTransactionReceipt, writeContract } from "wagmi/actions";
+import { decodeEventLog } from "viem";
+import { publicDecryptWithProof } from "@/lib/fhevm/instance";
 import { parseUnits } from "viem";
 import { POOL, TOKEN, TUSD, CHAIN_ID, DECIMALS, etherscanTx } from "@/lib/contracts";
 import { encryptUint64 } from "@/lib/fhevm/instance";
@@ -190,5 +192,41 @@ export function usePoolActions() {
     [address, write],
   );
 
-  return { faucet, shield, claim, deposit, withdraw, donate, harvest, runDraw, revealWin, ensureOperator };
+  /** Unwrap cUSD back to tUSD: burn (encrypted) → relayer public decrypt of the burned amount → finalize with the proof. */
+  const unwrap = useCallback(
+    async (amount: string, setStep: Step) => {
+      const user = need();
+      const value = parseUnits(amount, DECIMALS);
+      if (value <= 0n) throw new Error("Enter an amount greater than zero.");
+      setStep("Scrambling your amount in the browser…");
+      const { handle, inputProof } = await encryptUint64(TOKEN.address, user, value);
+      setStep("Confirm step 1 of 2 in your wallet: unwrap…");
+      const hash = await writeContract(config, { ...TOKEN, chainId: CHAIN_ID, functionName: "unwrap", args: [user, user, handle, inputProof] });
+      setStep("Unwrapping…");
+      const receipt = await waitForTransactionReceipt(config, { hash, chainId: CHAIN_ID });
+      if (receipt.status === "reverted") throw new Error("The unwrap transaction failed on-chain.");
+      let requestId: `0x${string}` | undefined;
+      for (const log of receipt.logs) {
+        try {
+          const ev = decodeEventLog({ abi: TOKEN.abi, data: log.data, topics: log.topics });
+          if (ev.eventName === "UnwrapRequested") { requestId = (ev.args as unknown as { unwrapRequestId: `0x${string}` }).unwrapRequestId; break; }
+        } catch { /* not ours */ }
+      }
+      if (!requestId) throw new Error("Could not find the unwrap request in the receipt.");
+      setStep("Waiting for the network to confirm the amount (up to a minute)…");
+      let clear: { value: bigint; proof: `0x${string}` } | undefined;
+      for (let i = 0; i < 15 && !clear; i++) {
+        try { clear = await publicDecryptWithProof(requestId); } catch { await new Promise((r) => setTimeout(r, 6000)); }
+      }
+      if (!clear) throw new Error("The network has not confirmed the amount yet. Try again in a minute.");
+      setStep("Confirm step 2 of 2 in your wallet: receive your tUSD…");
+      const hash2 = await write({ ...TOKEN, chainId: CHAIN_ID, functionName: "finalizeUnwrap", args: [requestId, clear.value, clear.proof], onSent: () => setStep("Sending your tUSD…") });
+      fire({ type: "withdraw", amount: value });
+      txToast(`Unwrapped ${amount} cUSD to tUSD`, hash2);
+      return hash2;
+    },
+    [address, write, config],
+  );
+
+  return { faucet, shield, claim, deposit, withdraw, donate, harvest, runDraw, revealWin, unwrap, ensureOperator };
 }
