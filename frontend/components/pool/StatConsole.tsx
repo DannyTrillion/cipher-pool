@@ -10,7 +10,6 @@ import { useCountUp } from "@/lib/hooks/useCountUp";
 import { DecryptText } from "@/components/fx/DecryptText";
 import { FlowStatus } from "@/components/ui/FlowStatus";
 import { DrawButton, type DrawButtonState } from "@/components/pool/DrawButton";
-import { TierOrbits } from "@/components/pool/TierOrbits";
 import { Identicon } from "@/components/layout/Identicon";
 import { useNow } from "@/components/ui/Countdown";
 import { formatAmount } from "@/lib/format";
@@ -93,28 +92,53 @@ export function StatConsole() {
           )}
         </div>
 
-        {/* crowd */}
-        <div className="order-3 md:justify-self-end">
-          <div className="label">Savers in this draw</div>
-          <div className="mt-2 flex items-center gap-3">
-            <span className="display text-4xl tabular">{state ? n : "…"}</span>
-            <div className="flex -space-x-1.5">
-              {rows.slice(0, 5).map((r) => (
-                <span key={r.address} className="rounded-md ring-2 ring-[rgb(var(--base))]" title="A saver — balance encrypted"><Identicon address={r.address} size={22} /></span>
-              ))}
-              {total > 5 && <span className="grid h-[22px] w-[22px] place-items-center rounded-md bg-white/10 font-mono text-[9px] ring-2 ring-[rgb(var(--base))]">+{total - 5}</span>}
+        {/* this draw, in plain rows */}
+        <div className="order-3 w-full md:max-w-[300px] md:justify-self-end">
+          <div className="label">This draw</div>
+          <dl className="mt-2 divide-y divide-line text-sm">
+            <div className="flex items-center justify-between gap-3 py-2.5">
+              <dt className="text-ink-muted">Savers taking part</dt>
+              <dd className="flex items-center gap-2">
+                <span className="display text-xl tabular">{state ? n : "…"}</span>
+                <span className="flex -space-x-1.5">
+                  {rows.slice(0, 4).map((r) => (
+                    <span key={r.address} className="rounded-md ring-2 ring-[rgb(var(--base))]" title="A saver — balance encrypted"><Identicon address={r.address} size={18} /></span>
+                  ))}
+                  {total > 4 && <span className="grid h-[18px] w-[18px] place-items-center rounded-md bg-white/10 font-mono text-[9px] ring-2 ring-[rgb(var(--base))]">+{total - 4}</span>}
+                </span>
+              </dd>
             </div>
-          </div>
-          <div className="mt-1 text-xs text-ink-faint">Draw #{state ? (state.epoch + 1n).toString() : "…"} · every balance encrypted</div>
-          {state && (
-            <div className="mt-3 inline-flex items-center gap-3 rounded-xl border border-line px-3 py-2" title={state.tiers.map((t) => `${t.winners} × ${(t.shareBps / 100 / t.winners).toFixed(0)}%`).join(" · ")}>
-              <TierOrbits tiers={state.tiers} size={44} />
-              <div className="text-xs">
-                <div className="text-ink">{state.winnerSlots} prizes per draw</div>
-                <div className="text-ink-faint">{state.tiers.map((t) => `${t.winners}×${(t.shareBps / 100 / t.winners).toFixed(0)}%`).join(" · ")}</div>
-              </div>
+            <div className="flex items-center justify-between gap-3 py-2.5">
+              <dt className="text-ink-muted">Prizes handed out</dt>
+              <dd className="display text-xl tabular">{state?.winnerSlots ?? "…"}</dd>
             </div>
-          )}
+            <div className="py-2.5">
+              <dt className="text-ink-muted">How the prize is split</dt>
+              {state && (
+                <dd className="mt-2">
+                  <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-white/10">
+                    {state.tiers.flatMap((t, i) =>
+                      Array.from({ length: t.winners }, (_, k) => (
+                        <span key={`${i}-${k}`} className="h-full border-r border-[rgb(var(--base))] last:border-0" style={{ width: `${t.shareBps / 100 / t.winners}%`, background: ["#FFD600", "#8B9CFF", "#5EEAD4", "#F472B6"][i % 4] }} />
+                      )),
+                    )}
+                  </div>
+                  <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-ink-faint">
+                    {state.tiers.map((t, i) => (
+                      <span key={i} className="inline-flex items-center gap-1.5">
+                        <span className="h-2 w-2 rounded-full" style={{ background: ["#FFD600", "#8B9CFF", "#5EEAD4", "#F472B6"][i % 4] }} />
+                        {i === 0 ? "Top prize" : i === 1 ? "Runners-up" : "Small prizes"}: {t.winners} × {(t.shareBps / 100 / t.winners).toFixed(0)}%
+                      </span>
+                    ))}
+                  </div>
+                </dd>
+              )}
+            </div>
+            <div className="flex items-center justify-between gap-3 py-2.5">
+              <dt className="text-ink-muted">Draw number</dt>
+              <dd className="font-mono text-sm">#{state ? (state.epoch + 1n).toString() : "…"} <span className="text-ink-faint">· every {state ? human(Number(state.drawPeriod)) : "…"}</span></dd>
+            </div>
+          </dl>
         </div>
       </div>
       <FlowStatus state={flow.state} className="mt-5" />
