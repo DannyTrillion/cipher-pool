@@ -5,7 +5,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        base: "rgb(var(--base) / <alpha-value>)",
+        canvas: "rgb(var(--base) / <alpha-value>)",
         surface: "rgb(var(--surface) / <alpha-value>)",
         raised: "rgb(var(--raised) / <alpha-value>)",
         well: "rgb(var(--well) / <alpha-value>)",
