@@ -52,7 +52,7 @@ export function Hero() {
       </div>
 
       {/* preview row — the product, annotated */}
-      <div className="mt-16 grid gap-6 md:grid-cols-[1.05fr_0.9fr_0.9fr] md:gap-5">
+      <div className="mt-16 grid gap-20 md:grid-cols-[1.05fr_0.9fr_0.9fr] md:gap-5">
         <div className="relative">
           <Annotation text="Encrypted pool" className="absolute -top-14 left-1/2 -translate-x-1/2 text-accent" tilt={-5} />
           <div className="tile relative aspect-[1.05] overflow-hidden md:aspect-auto md:h-full md:min-h-[380px]">

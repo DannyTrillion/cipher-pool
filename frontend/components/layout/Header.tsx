@@ -72,12 +72,12 @@ export function Header() {
               {truncateAddress(address)}
             </button>
           ) : connectors.length === 0 || !hasInjected ? (
-            <a className="btn-primary" href="https://metamask.io/download/" target="_blank" rel="noreferrer" title="No wallet detected">
+            <a className="btn-primary whitespace-nowrap px-3 text-[13px] sm:px-4 sm:text-sm" href="https://metamask.io/download/" target="_blank" rel="noreferrer" title="No wallet detected">
               <span className="sm:hidden">Get a wallet</span><span className="hidden sm:inline">Install a wallet</span>
             </a>
           ) : (
             <button
-              className="btn-primary"
+              className="btn-primary whitespace-nowrap px-3 text-[13px] sm:px-4 sm:text-sm"
               disabled={isPending}
               onClick={() => connect({ connector: connectors[0] })}
             >
