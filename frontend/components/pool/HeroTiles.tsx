@@ -19,21 +19,22 @@ const PANES: { key: Pane; label: string }[] = [
 ];
 
 /**
- * One fused game card with a sliding segmented control. Auto-advances every
- * 8s like a gentle carousel until the visitor interacts, then stays put.
+ * One fused game card with a sliding segmented control. Manual only: tabs,
+ * dots, arrow keys, or a horizontal swipe change the pane. Nothing moves on its own.
  */
 export function GameCard() {
   const [pane, setPane] = useState<Pane>("position");
-  const [touched, setTouched] = useState(false);
-  useEffect(() => {
-    if (touched) return;
-    const id = setInterval(() => setPane((p) => (p === "position" ? "draw" : "position")), 8000);
-    return () => clearInterval(id);
-  }, [touched]);
-  const pick = (p: Pane) => { setTouched(true); setPane(p); sfx.click(); };
+  const [dir, setDir] = useState(1);
+  const pick = (p: Pane) => { setDir(p === "draw" ? 1 : -1); setPane(p); sfx.click(); };
+  const next = () => pick(pane === "position" ? "draw" : "position");
 
   return (
-    <div className="tile flex h-full min-h-[380px] flex-col">
+    <div
+      className="tile flex h-full min-h-[380px] flex-col"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === "ArrowRight") pick("draw"); if (e.key === "ArrowLeft") pick("position"); }}
+      aria-roledescription="carousel"
+    >
       <div className="flex items-center justify-between gap-3 border-b border-line px-3 py-2.5">
         <div className="relative flex rounded-full bg-black/40 p-1" role="tablist">
           {PANES.map((p) => (
@@ -49,20 +50,29 @@ export function GameCard() {
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-1.5 pr-1" aria-hidden="true">
-          {PANES.map((p) => (
-            <button key={p.key} className={cn("h-1.5 rounded-full transition-all", pane === p.key ? "w-5 bg-accent" : "w-1.5 bg-white/20")} onClick={() => pick(p.key)} tabIndex={-1} />
-          ))}
+        <div className="flex items-center gap-2 pr-1">
+          <div className="flex items-center gap-1.5" aria-hidden="true">
+            {PANES.map((p) => (
+              <button key={p.key} className={cn("h-1.5 rounded-full transition-all", pane === p.key ? "w-5 bg-accent" : "w-1.5 bg-white/20")} onClick={() => pick(p.key)} tabIndex={-1} />
+            ))}
+          </div>
+          <button className="btn-ghost h-7 w-7 !p-0 text-ink-muted" aria-label={pane === "position" ? "Show the prize draw" : "Show your savings"} onClick={next}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d={pane === "position" ? "M9 6l6 6-6 6" : "M15 6l-6 6 6 6"} /></svg>
+          </button>
         </div>
       </div>
       <div className="relative flex-1 overflow-hidden">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={pane}
-            initial={{ opacity: 0, x: 24 }}
+            initial={{ opacity: 0, x: 24 * dir }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -24 }}
+            exit={{ opacity: 0, x: -24 * dir }}
             transition={{ duration: 0.28, ease: [0.2, 0.7, 0.2, 1] }}
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.15}
+            onDragEnd={(_, info) => { if (info.offset.x < -60) pick("draw"); else if (info.offset.x > 60) pick("position"); }}
             className="absolute inset-0 flex flex-col"
           >
             {pane === "position" ? <PositionPane /> : <DrawPane />}
