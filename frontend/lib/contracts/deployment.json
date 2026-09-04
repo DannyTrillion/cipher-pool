@@ -1,7 +1,7 @@
 {
   "chainId": 11155111,
   "network": "sepolia",
-  "deployedAt": "2026-09-04T09:16:49.751Z",
+  "deployedAt": "2026-09-04T09:49:50.447Z",
   "deployer": "0xB3Bf0C0b8CC83c4e5aE2f102a370070f629c7A58",
   "drawPeriod": 600,
   "apyBps": 500,
@@ -1223,7 +1223,7 @@
       ]
     },
     "ConfidentialPrizePool": {
-      "address": "0x47Ea415E40439430a39DecAb1b3Ee15c45Fb21a2",
+      "address": "0x3217682C1290e3a4689de75686C5a63D6DE7e12C",
       "abi": [
         {
           "inputs": [

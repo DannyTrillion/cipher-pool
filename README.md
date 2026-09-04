@@ -64,7 +64,7 @@ reserve -= Σ_k select(winner_k < n, amount_k, 0)          // unfilled slots + d
 
 | Contract | Address |
 |---|---|
-| ConfidentialPrizePool | [`0x47Ea415E40439430a39DecAb1b3Ee15c45Fb21a2`](https://sepolia.etherscan.io/address/0x47Ea415E40439430a39DecAb1b3Ee15c45Fb21a2) |
+| ConfidentialPrizePool | [`0x3217682C1290e3a4689de75686C5a63D6DE7e12C`](https://sepolia.etherscan.io/address/0x3217682C1290e3a4689de75686C5a63D6DE7e12C) |
 | ConfidentialUSD (cUSD, ERC-7984) | [`0xaaF5Ff634dF99Eb4c3d9ea24c2Ef5AA033256Cf4`](https://sepolia.etherscan.io/address/0xaaF5Ff634dF99Eb4c3d9ea24c2Ef5AA033256Cf4) |
 | MockYieldSource | [`0x21FDaDD312420Ead95d6177aF4538A38AE829Bd6`](https://sepolia.etherscan.io/address/0x21FDaDD312420Ead95d6177aF4538A38AE829Bd6) |
 

@@ -15,11 +15,15 @@ async function main() {
   const fee = await ethers.provider.getFeeData();
   const P = await ethers.getContractFactory("ConfidentialPrizePool");
   const est = await ethers.provider.estimateGas({ data: (await P.getDeployTransaction(tokenAddr, ysAddr, drawPeriod)).data, from: deployer.address });
-  const cost = est * (fee.maxFeePerGas ?? fee.gasPrice ?? 0n);
-  console.log(`Balance ${ethers.formatEther(bal)} ETH · pool deploy est ${est} gas ≈ ${ethers.formatEther(cost)} ETH`);
-  if (cost * 13n / 10n > bal) throw new Error("Insufficient ETH for a safe redeploy; top up the deployer.");
+  const block = await ethers.provider.getBlock("latest");
+  const baseFee = block?.baseFeePerGas ?? fee.gasPrice ?? 0n;
+  const tip = 100_000_000n; // 0.1 gwei
+  const maxFee = (baseFee * 13n) / 10n + tip; // tight cap: base fee +30% headroom
+  const cost = est * maxFee;
+  console.log(`Balance ${ethers.formatEther(bal)} ETH · base fee ${ethers.formatUnits(baseFee, "gwei")} gwei · pool deploy est ${est} gas ≈ ${ethers.formatEther(cost)} ETH at cap`);
+  if (cost * 11n / 10n > bal) throw new Error("Insufficient ETH for a safe redeploy; top up the deployer.");
 
-  const pool = await P.deploy(tokenAddr, ysAddr, drawPeriod);
+  const pool = await P.deploy(tokenAddr, ysAddr, drawPeriod, { maxFeePerGas: maxFee, maxPriorityFeePerGas: tip });
   await pool.waitForDeployment();
   const poolAddr = await pool.getAddress();
   console.log(`ConfidentialPrizePool ${poolAddr}`);
