@@ -34,7 +34,7 @@ export function Hero() {
     <section className="relative" aria-label="Cipher Pool">
       {/* headline block — centred, Syne, yellow "Win" */}
       <div className="mx-auto max-w-3xl pt-10 text-center md:pt-16">
-        <h1 className="display text-[2.25rem] leading-[1.0] sm:text-5xl md:text-[3.5rem]">
+        <h1 className="display text-[1.9rem] leading-[1.0] xs:text-[2.1rem] sm:text-5xl md:text-[3.5rem]">
           <DecryptText text="Save privately." duration={900} />
           <br />
           <DecryptText text="Win" duration={700} delay={200} className="text-accent" /> <DecryptText text="verifiably." duration={900} delay={260} />

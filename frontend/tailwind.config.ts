@@ -4,6 +4,7 @@ const config: Config = {
   content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./lib/**/*.{ts,tsx}"],
   theme: {
     extend: {
+      screens: { xs: "400px" },
       colors: {
         canvas: "rgb(var(--base) / <alpha-value>)",
         surface: "rgb(var(--surface) / <alpha-value>)",
