@@ -110,46 +110,51 @@ export function PlayPanel() {
         <div className="mt-5"><Wizard onSkip={() => pickMode("pro")} /></div>
       ) : (
       <>
-      {isConnected && (
-        <div className="mt-4 flex items-center justify-between">
-          <div className="text-xs text-ink-faint">Your numbers are private. One signature shows them to you only.</div>
-          <button className="btn-secondary btn-sm" onClick={revealAll} disabled={!!busy || !user}>{busy ? "Loading…" : revealedAll ? "Refresh" : "Show all"}</button>
-        </div>
-      )}
 
-      {/* your numbers: four cards, each can be shown on its own */}
-      <div className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-        {[
-          { l: "Your savings", v: user?.poolBalance ? poolBal : isConnected ? null : undefined, h: user?.poolBalance ?? null, c: POOL.address, k: "pool", anchor: "position-balance", tone: "accent" },
-          { l: "Prizes to claim", v: user?.claimable ? claimable : isConnected ? null : undefined, h: user?.claimable ?? null, c: POOL.address, k: "claim", tone: "mint" },
-          { l: "cUSD in wallet", v: user?.walletBalance ? walletBal : isConnected ? null : undefined, h: user?.walletBalance ?? null, c: TOKEN.address, k: "wallet", tone: "cipher" },
-        ].map((x) => (
-          <motion.div key={x.l} layout className="group relative rounded-xl border border-line bg-black/20 px-3 py-2.5" data-anchor={x.anchor}>
-            <div className="flex items-center justify-between">
-              <div className="text-[10px] uppercase tracking-[0.18em] text-ink-faint">{x.l}</div>
-              <span className={cn("h-1.5 w-1.5 rounded-full", x.tone === "accent" ? "bg-accent" : x.tone === "mint" ? "bg-mint" : "bg-cipher")} />
-            </div>
-            <motion.div key={x.v === undefined || x.v === null ? "masked" : x.v.toString()} initial={{ scale: 0.96, opacity: 0.6 }} animate={{ scale: 1, opacity: 1 }} className="mt-1">
-              <EncryptedValue value={x.v} revealed={x.v !== undefined && x.v !== null} size="sm" />
-            </motion.div>
-            {isConnected && x.h && x.v === undefined && (
-              <button className="mt-1 text-[11px] text-accent hover:underline disabled:text-ink-faint" disabled={!!busy} onClick={() => reveal(x.c, x.h, x.k)}>{busy === x.k ? "Loading…" : "Show"}</button>
-            )}
-            {isConnected && x.k === "wallet" && (
-              <div className="mt-1 flex gap-2 text-[11px]">
-                <button className="text-ink-muted hover:text-ink hover:underline" onClick={() => { setTab("shield"); setAmount(""); flow.reset(); sfx.click(); }}>Wrap tUSD</button>
-                <button className="text-ink-muted hover:text-ink hover:underline" onClick={() => { setTab("unwrap"); setAmount(""); flow.reset(); sfx.click(); }}>Unwrap</button>
+
+      {/* balance strip: one row, four cells, hairlines between */}
+      <div className="mt-5 overflow-hidden rounded-2xl border border-line bg-black/20">
+        <div className="flex items-center justify-between border-b border-line px-4 py-2">
+          <div className="text-[11px] text-ink-faint">{isConnected ? "Your numbers. Private to you." : "Your numbers. Connect to see yours."}</div>
+          {isConnected && <button className="text-[11px] text-accent hover:underline disabled:text-ink-faint" onClick={revealAll} disabled={!!busy || !user}>{busy ? "Loading…" : revealedAll ? "Refresh" : "Show all"}</button>}
+        </div>
+        <div className="grid grid-cols-2 divide-x divide-y divide-line sm:grid-cols-4 sm:divide-y-0">
+          {[
+            { l: "Savings", v: user?.poolBalance ? poolBal : isConnected ? null : undefined, h: user?.poolBalance ?? null, c: POOL.address, k: "pool", anchor: "position-balance", icon: <svg viewBox="0 0 24 24" className="h-4 w-4 text-accent" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="13" r="7" /><path d="M12 3v6M9 6l3 3 3-3" /></svg> },
+            { l: "Prizes to collect", v: user?.claimable ? claimable : isConnected ? null : undefined, h: user?.claimable ?? null, c: POOL.address, k: "claim", icon: <svg viewBox="0 0 24 24" className="h-4 w-4 text-mint" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M8 21h8M12 17v4M5 4h14v4a7 7 0 0 1-14 0z" /><path d="M5 6H3v2a3 3 0 0 0 3 3M19 6h2v2a3 3 0 0 1-3 3" /></svg> },
+            { l: "Wallet cUSD", v: user?.walletBalance ? walletBal : isConnected ? null : undefined, h: user?.walletBalance ?? null, c: TOKEN.address, k: "wallet", icon: <svg viewBox="0 0 24 24" className="h-4 w-4 text-cipher" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="5" y="10" width="14" height="10" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg> },
+          ].map((x) => (
+            <div key={x.l} className="group px-4 py-3" data-anchor={x.anchor}>
+              <div className="flex items-center gap-1.5 text-[12px] text-ink-muted">{x.icon}<span>{x.l}</span></div>
+              <div className="mt-1.5 flex min-h-[26px] items-center gap-2">
+                {!isConnected ? (
+                  <span className="font-mono text-ink-faint">—</span>
+                ) : (
+                  <motion.span key={x.v === undefined || x.v === null ? "masked" : x.v.toString()} initial={{ scale: 0.96, opacity: 0.6 }} animate={{ scale: 1, opacity: 1 }}>
+                    <EncryptedValue value={x.v} revealed={x.v !== undefined && x.v !== null} size="sm" />
+                  </motion.span>
+                )}
+                {isConnected && x.h && x.v === undefined && (
+                  <button className="text-[11px] text-accent opacity-0 transition group-hover:opacity-100 focus:opacity-100 disabled:opacity-60" disabled={!!busy} onClick={() => reveal(x.c, x.h, x.k)}>{busy === x.k ? "…" : "show"}</button>
+                )}
               </div>
-            )}
-          </motion.div>
-        ))}
-        <div className="rounded-xl border border-line bg-black/20 px-3 py-2.5">
-          <div className="flex items-center justify-between">
-            <div className="text-[10px] uppercase tracking-[0.18em] text-ink-faint">tUSD in wallet</div>
-            <span className="rounded-full border border-line px-1.5 text-[9px] uppercase tracking-wider text-ink-faint">public</span>
+              {isConnected && x.k === "wallet" && (
+                <div className="mt-1 flex gap-3 text-[11px]">
+                  <button className="text-ink-faint hover:text-ink hover:underline" onClick={() => { setTab("shield"); setAmount(""); flow.reset(); sfx.click(); }}>Wrap tUSD</button>
+                  <button className="text-ink-faint hover:text-ink hover:underline" onClick={() => { setTab("unwrap"); setAmount(""); flow.reset(); sfx.click(); }}>Unwrap</button>
+                </div>
+              )}
+            </div>
+          ))}
+          <div className="px-4 py-3" title="tUSD is a plain test token. Anyone can see this number.">
+            <div className="flex items-center gap-1.5 text-[12px] text-ink-muted">
+              <svg viewBox="0 0 24 24" className="h-4 w-4 text-ink-faint" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="5" y="10" width="14" height="10" rx="2" /><path d="M8 10V7a4 4 0 0 1 7.5-2" /></svg>
+              <span>Wallet tUSD</span>
+              <span className="text-[10px] text-ink-faint">public</span>
+            </div>
+            <div className="mt-1.5 flex min-h-[26px] items-center font-mono text-sm tabular">{isConnected && user ? `${formatUnits(user.tusdBalance, DECIMALS)}` : <span className="text-ink-faint">—</span>}</div>
+            {isConnected && user && user.tusdBalance > 0n && !user.walletBalance && <div className="mt-1 text-[11px] text-accent">Wrap this to start</div>}
           </div>
-          <div className="mt-1 font-mono text-sm tabular">{isConnected && user ? `${formatUnits(user.tusdBalance, DECIMALS)} ${UNDERLYING_SYMBOL}` : "—"}</div>
-          {isConnected && user && user.tusdBalance > 0n && !user.walletBalance && <div className="mt-1 text-[11px] text-accent">Wrap this to start</div>}
         </div>
       </div>
       {isConnected && claimable !== undefined && claimable > 0n && (
