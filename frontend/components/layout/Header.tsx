@@ -9,7 +9,7 @@ import { sepolia } from "wagmi/chains";
 import { cn } from "@/lib/cn";
 import { truncateAddress } from "@/lib/format";
 import { clearDecryptSessions } from "@/lib/fhevm/useDecryptSession";
-import { Logo } from "@/components/brand/Logo";
+import { Logo, LogoMark } from "@/components/brand/Logo";
 import { Identicon } from "@/components/layout/Identicon";
 import { usePoolState, Phase } from "@/lib/hooks/usePoolData";
 import { initSoundPref, setSound, sfx } from "@/lib/sound";
@@ -164,7 +164,8 @@ export function Header() {
         <div className={cn("mx-auto grid w-full max-w-6xl grid-cols-[1fr_auto_1fr] items-center px-4 transition-all duration-300 sm:px-6", scrolled ? "h-14" : "h-16")}>
           <div className="flex items-center gap-3">
             <Link href="/" className="group flex items-center" aria-label="Cipher Pool home">
-              <Logo size={scrolled ? 30 : 34} className="transition-all" />
+              <span className="sm:hidden"><LogoMark size={32} /></span>
+              <span className="hidden sm:inline-flex"><Logo size={scrolled ? 30 : 34} className="transition-all" /></span>
             </Link>
             {isConnected && (
               <button
