@@ -118,7 +118,7 @@ export function PlayPanel() {
           <div className="text-[11px] text-ink-faint">{isConnected ? "Your numbers. Private to you." : "Your numbers. Connect to see yours."}</div>
           {isConnected && <button className="text-[11px] text-accent hover:underline disabled:text-ink-faint" onClick={revealAll} disabled={!!busy || !user}>{busy ? "Loading…" : revealedAll ? "Refresh" : "Show all"}</button>}
         </div>
-        <div className="grid grid-cols-2 divide-x divide-y divide-line sm:grid-cols-4 sm:divide-y-0">
+        <div className="grid grid-cols-2 [&>*:nth-child(odd)]:border-r [&>*:nth-child(-n+2)]:border-b [&>*]:border-line">
           {[
             { l: "Savings", v: user?.poolBalance ? poolBal : isConnected ? null : undefined, h: user?.poolBalance ?? null, c: POOL.address, k: "pool", anchor: "position-balance", icon: <svg viewBox="0 0 24 24" className="h-4 w-4 text-accent" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="13" r="7" /><path d="M12 3v6M9 6l3 3 3-3" /></svg> },
             { l: "Prizes to collect", v: user?.claimable ? claimable : isConnected ? null : undefined, h: user?.claimable ?? null, c: POOL.address, k: "claim", icon: <svg viewBox="0 0 24 24" className="h-4 w-4 text-mint" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M8 21h8M12 17v4M5 4h14v4a7 7 0 0 1-14 0z" /><path d="M5 6H3v2a3 3 0 0 0 3 3M19 6h2v2a3 3 0 0 1-3 3" /></svg> },
@@ -126,7 +126,7 @@ export function PlayPanel() {
           ].map((x) => (
             <div key={x.l} className="group px-4 py-3" data-anchor={x.anchor}>
               <div className="flex items-center gap-1.5 text-[12px] text-ink-muted">{x.icon}<span>{x.l}</span></div>
-              <div className="mt-1.5 flex min-h-[26px] items-center gap-2">
+              <div className="mt-1.5 flex min-h-[28px] items-center gap-2 text-[15px]">
                 {!isConnected ? (
                   <span className="font-mono text-ink-faint">—</span>
                 ) : (
@@ -150,9 +150,9 @@ export function PlayPanel() {
             <div className="flex items-center gap-1.5 text-[12px] text-ink-muted">
               <svg viewBox="0 0 24 24" className="h-4 w-4 text-ink-faint" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="5" y="10" width="14" height="10" rx="2" /><path d="M8 10V7a4 4 0 0 1 7.5-2" /></svg>
               <span>Wallet tUSD</span>
-              <span className="text-[10px] text-ink-faint">public</span>
+              <span className="rounded-full border border-line px-1.5 text-[9px] uppercase tracking-wider text-ink-faint">public</span>
             </div>
-            <div className="mt-1.5 flex min-h-[26px] items-center font-mono text-sm tabular">{isConnected && user ? `${formatUnits(user.tusdBalance, DECIMALS)}` : <span className="text-ink-faint">—</span>}</div>
+            <div className="mt-1.5 flex min-h-[28px] items-center font-mono text-[15px] tabular">{isConnected && user ? `${formatUnits(user.tusdBalance, DECIMALS)}` : <span className="text-ink-faint">—</span>}</div>
             {isConnected && user && user.tusdBalance > 0n && !user.walletBalance && <div className="mt-1 text-[11px] text-accent">Wrap this to start</div>}
           </div>
         </div>
