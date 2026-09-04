@@ -7,7 +7,7 @@ import { sepolia } from "wagmi/chains";
 import { cn } from "@/lib/cn";
 import { truncateAddress } from "@/lib/format";
 import { clearDecryptSessions } from "@/lib/fhevm/useDecryptSession";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const NAV = [
   { href: "/", label: "Pool" },
@@ -26,6 +26,12 @@ export function Header() {
   useEffect(() => {
     clearDecryptSessions();
   }, [address]);
+
+  // Detect an injected provider after mount (SSR has no window).
+  const [hasInjected, setHasInjected] = useState(true);
+  useEffect(() => {
+    setHasInjected(typeof window !== "undefined" && !!(window as unknown as { ethereum?: unknown }).ethereum);
+  }, []);
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-canvas/80 backdrop-blur">
@@ -68,6 +74,10 @@ export function Header() {
             <button className="btn-secondary font-mono" onClick={() => disconnect()} title="Disconnect">
               {truncateAddress(address)}
             </button>
+          ) : connectors.length === 0 || !hasInjected ? (
+            <a className="btn-primary" href="https://metamask.io/download/" target="_blank" rel="noreferrer" title="No wallet detected">
+              Install a wallet
+            </a>
           ) : (
             <button
               className="btn-primary"

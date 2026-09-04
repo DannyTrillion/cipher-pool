@@ -46,6 +46,20 @@ export function humanizeError(err: unknown): string {
 
   if (lower.includes("user rejected") || lower.includes("user denied") || lower.includes("rejected the request"))
     return "You rejected the request in your wallet.";
+  // Cipher Pool custom errors (viem surfaces the error name in the message).
+  if (lower.includes("poolnotopen")) return "A draw is in progress — deposits and withdrawals resume as soon as it completes.";
+  if (lower.includes("drawnotdue")) return "The draw isn't due yet. Wait for the countdown to reach zero.";
+  if (lower.includes("noparticipants")) return "Nobody has deposited yet, so there is nothing to draw.";
+  if (lower.includes("drawnotinprogress")) return "There is no draw in progress right now.";
+  if (lower.includes("nothingdeposited")) return "You haven't deposited into the pool yet.";
+  if (lower.includes("nothingtoreveal")) return "You weren't part of that draw, so there is nothing to publish.";
+  if (lower.includes("faucetcooldown")) return "The faucet is on cooldown for this address — try again in a while.";
+  if (lower.includes("invalidtiers")) return "That tier configuration is invalid (shares over 100%, too many winners, or an empty tier).";
+  if (lower.includes("erc7984unauthorizedspender")) return "The pool isn't approved to move your cUSD yet. Approve it and retry.";
+  if (lower.includes("erc7984zerobalance")) return "That account holds no cUSD yet — use the faucet first.";
+  if (lower.includes("ownableunauthorizedaccount")) return "Only the pool owner can do that.";
+  if (lower.includes("connector not found") || lower.includes("no injected provider") || lower.includes("provider not found"))
+    return "No wallet detected. Install MetaMask (or another EIP-1193 wallet) and reload.";
   if (lower.includes("handle is not initialized"))
     return "This balance was never initialized — there's nothing to reveal yet.";
   if (lower.includes("is not authorized to user decrypt"))
