@@ -84,14 +84,14 @@ export function PlayPanel() {
 
   return (
     <section className="card min-w-0 overflow-hidden p-6 sm:p-7" id="deposit">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
         <div>
           <h2 className="display text-2xl">Play</h2>
           <div className="mt-1 text-xs text-ink-faint">Save, win, withdraw. Everything about you stays encrypted.</div>
         </div>
-        <div className="flex rounded-full bg-black/40 p-1" role="tablist" aria-label="Experience">
+        <div className="flex w-max rounded-full bg-black/40 p-1" role="tablist" aria-label="Experience">
           {(["new", "pro"] as const).map((m) => (
-            <button key={m} role="tab" aria-selected={mode === m} className={cn("relative rounded-full px-3 py-1 text-[12px] font-medium transition", mode === m ? "text-black" : "text-ink-muted hover:text-ink")} onClick={() => pickMode(m)}>
+            <button key={m} role="tab" aria-selected={mode === m} className={cn("relative whitespace-nowrap rounded-full px-3 py-1 text-[12px] font-medium transition", mode === m ? "text-black" : "text-ink-muted hover:text-ink")} onClick={() => pickMode(m)}>
               {mode === m && <motion.span layoutId="mode-pill" className="absolute inset-0 rounded-full bg-accent" transition={{ type: "spring", stiffness: 500, damping: 40 }} />}
               <span className="relative">{m === "new" ? "New here" : "Experienced"}</span>
             </button>
