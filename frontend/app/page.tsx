@@ -2,6 +2,7 @@ import { PrizeHero } from "@/components/pool/PrizeHero";
 import { PositionPanel } from "@/components/pool/PositionPanel";
 import { DrawPanel } from "@/components/pool/DrawPanel";
 import { AdminPanel } from "@/components/pool/AdminPanel";
+import { MyDraws } from "@/components/pool/MyDraws";
 import { HowStrip } from "@/components/pool/HowStrip";
 
 export default function Home() {
@@ -12,6 +13,7 @@ export default function Home() {
         <PositionPanel />
         <DrawPanel />
       </div>
+      <MyDraws />
       <AdminPanel />
       <HowStrip />
     </div>

@@ -165,3 +165,16 @@ export function useUserState(epoch: bigint | undefined) {
     refetch: q.refetch,
   };
 }
+
+/** The connected user's encrypted prize credit for each of the given epochs (null = not in that draw). */
+export function useUserDrawCredits(epochs: bigint[]) {
+  const { address } = useAccount();
+  const user = address ?? "0x0000000000000000000000000000000000000000";
+  const q = useReadContracts({
+    allowFailure: false,
+    contracts: epochs.map((e) => ({ ...POOL, chainId: CHAIN_ID, functionName: "wonInDraw", args: [e, user] })),
+    query: { enabled: !!address && epochs.length > 0, refetchInterval: REFRESH },
+  });
+  const credits = ((q.data as unknown[] | undefined) ?? []).map((h) => (h === ZERO_HANDLE ? null : (h as `0x${string}`)));
+  return { credits, isLoading: q.isLoading };
+}

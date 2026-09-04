@@ -80,6 +80,7 @@ export function PositionPanel() {
 
   const cooldown = Number(user?.faucetCooldown ?? 0n);
   const eligibleNow = user && state ? user.lastTouchedEpoch !== state.epoch + 1n : false;
+  const step = !user ? 0 : !user.walletBalance && !user.poolBalance ? 1 : !user.poolBalance ? 2 : 3;
 
   return (
     <section className="card p-6">
@@ -93,6 +94,16 @@ export function PositionPanel() {
         </button>
       </div>
 
+      {step > 0 && step < 3 && (
+        <ol className="mt-4 grid grid-cols-3 gap-2 text-xs">
+          {["Get test cUSD", "Deposit privately", "Wait for the draw"].map((t, i) => (
+            <li key={t} className={cn("rounded-lg border px-2.5 py-2", i + 1 === step ? "border-accent/50 bg-accent-faint text-ink" : i + 1 < step ? "border-line text-ink-faint line-through" : "border-line text-ink-faint")}>
+              <span className="font-mono text-accent">{i + 1}.</span> {t}
+            </li>
+          ))}
+        </ol>
+      )}
+
       <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div>
           <div className="label">In the pool</div>
@@ -100,6 +111,11 @@ export function PositionPanel() {
           {user?.isParticipant && (
             <div className={cn("mt-1 text-xs", eligibleNow ? "text-ok" : "text-warn")}>
               {eligibleNow ? "Fully eligible for the next draw" : "Moved this epoch — only the part held all epoch counts"}
+            </div>
+          )}
+          {user?.isParticipant && state && (
+            <div className="mt-1 text-xs text-ink-faint" title="The pool keeps total deposits encrypted, so it cannot publish your odds. Your chance per slot equals your eligible balance divided by everyone's eligible balance.">
+              Odds per slot = your share of the pool · {state.winnerSlots} slots per draw · odds stay private
             </div>
           )}
         </div>
