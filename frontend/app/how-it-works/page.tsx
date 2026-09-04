@@ -10,7 +10,7 @@ export default function HowItWorks() {
   return (
     <article className="prose-invert mx-auto max-w-3xl space-y-10">
       <header>
-        <h1 className="text-3xl font-semibold tracking-tight">How Cipher Pool works</h1>
+        <h1 className="display text-4xl sm:text-5xl">How Cipher Pool works</h1>
         <p className="mt-2 text-ink-muted">
           A confidential, no-loss prize savings pool. Same game as PoolTogether — deposit, keep your principal, the pool&apos;s yield
           goes to a periodic winner — except every deposit, balance and prize credit is a ciphertext handled by the Zama Protocol&apos;s FHEVM.
@@ -18,7 +18,7 @@ export default function HowItWorks() {
       </header>
 
       <section className="space-y-3">
-        <h2 className="text-xl font-semibold">1. Deposits are encrypted before they leave your browser</h2>
+        <h2 className="display text-2xl">1. Deposits are encrypted before they leave your browser</h2>
         <p className="text-sm text-ink-muted">
           The app encrypts your amount with the network&apos;s FHE public key, bound to <em>your</em> address and the pool contract, and submits
           the ciphertext plus a zero-knowledge input proof. The pool pulls funds through an ERC-7984 <code>confidentialTransferFrom</code>,
@@ -32,7 +32,7 @@ FHE.allow(_balances[msg.sender], msg.sender);   // only you can decrypt`}</Code>
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-xl font-semibold">2. Yield builds the prize — homomorphically</h2>
+        <h2 className="display text-2xl">2. Yield builds the prize — homomorphically</h2>
         <p className="text-sm text-ink-muted">
           The pool never learns the total principal. The yield source receives the encrypted total and computes
           <code> principal × APY × elapsed / year </code> as FHE scalar operations, mints the result in cUSD to the pool, and the pool adds it
@@ -46,7 +46,7 @@ FHE.allow(_balances[msg.sender], msg.sender);   // only you can decrypt`}</Code>
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-xl font-semibold">3. Tiered winners are chosen without decrypting anything</h2>
+        <h2 className="display text-2xl">3. Tiered winners are chosen without decrypting anything</h2>
         <p className="text-sm text-ink-muted">
           Like PoolTogether, each draw pays a tiered set of prizes — by default a grand prize worth 40% of the round, two prizes of 20% and two
           of 10%, five winner slots in all (the owner can reconfigure tiers between draws). When a period elapses, anyone can start the draw.
@@ -74,7 +74,7 @@ for i in participants:                                            // pass 2, bat
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-xl font-semibold">4. Fairness: no last-second sniping</h2>
+        <h2 className="display text-2xl">4. Fairness: no last-second sniping</h2>
         <p className="text-sm text-ink-muted">
           Your weight in a draw is <code>min(balance at the start of the epoch, current balance)</code>, computed lazily and homomorphically the
           first time you touch your position in an epoch. Depositing right before a draw doesn&apos;t buy odds for that draw, and withdrawing
@@ -83,7 +83,7 @@ for i in participants:                                            // pass 2, bat
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-xl font-semibold">5. Verifying a draw</h2>
+        <h2 className="display text-2xl">5. Verifying a draw</h2>
         <p className="text-sm text-ink-muted">
           Each draw stores a record: start and completion time, participant count, the tier structure, the prize handle and one FHE seed handle
           per winner slot, all marked publicly decryptable at draw time. Anyone can fetch the cleartexts through the relayer (the app does this on the Draws page). The
@@ -94,7 +94,7 @@ for i in participants:                                            // pass 2, bat
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-xl font-semibold">6. What stays private, what doesn&apos;t</h2>
+        <h2 className="display text-2xl">6. What stays private, what doesn&apos;t</h2>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="card p-4">
             <div className="text-sm font-semibold text-cipher">Encrypted</div>
@@ -118,7 +118,7 @@ for i in participants:                                            // pass 2, bat
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-xl font-semibold">Contracts (Sepolia)</h2>
+        <h2 className="display text-2xl">Contracts (Sepolia)</h2>
         <ul className="space-y-1 font-mono text-sm">
           <li><a className="text-ink-muted hover:text-ink" href={etherscanAddr(POOL.address)} target="_blank" rel="noreferrer">ConfidentialPrizePool · {POOL.address}</a></li>
           <li><a className="text-ink-muted hover:text-ink" href={etherscanAddr(TOKEN.address)} target="_blank" rel="noreferrer">ConfidentialUSD (cUSD, ERC-7984) · {TOKEN.address}</a></li>
