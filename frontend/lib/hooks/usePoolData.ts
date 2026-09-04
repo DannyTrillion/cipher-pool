@@ -178,3 +178,22 @@ export function useUserDrawCredits(epochs: bigint[]) {
   const credits = ((q.data as unknown[] | undefined) ?? []).map((h) => (h === ZERO_HANDLE ? null : (h as `0x${string}`)));
   return { credits, isLoading: q.isLoading };
 }
+
+/** The public saver list with each saver's encrypted balance handle (what everyone can see). */
+export function useSaversLedger(count: bigint | undefined, max = 24) {
+  const n = Math.min(max, Number(count ?? 0n));
+  const idx = Array.from({ length: n }, (_, i) => BigInt(i));
+  const addrQ = useReadContracts({
+    allowFailure: false,
+    contracts: idx.map((i) => ({ ...POOL, chainId: CHAIN_ID, functionName: "participantAt", args: [i] })),
+    query: { enabled: n > 0, refetchInterval: REFRESH },
+  });
+  const addrs = ((addrQ.data as `0x${string}`[] | undefined) ?? []);
+  const balQ = useReadContracts({
+    allowFailure: false,
+    contracts: addrs.map((a) => ({ ...POOL, chainId: CHAIN_ID, functionName: "balanceOf", args: [a] })),
+    query: { enabled: addrs.length > 0, refetchInterval: REFRESH },
+  });
+  const handles = ((balQ.data as `0x${string}`[] | undefined) ?? []);
+  return { rows: addrs.map((a, i) => ({ address: a, handle: handles[i] })), total: Number(count ?? 0n) };
+}

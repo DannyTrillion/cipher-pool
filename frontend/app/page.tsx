@@ -5,6 +5,7 @@ import { AdminPanel } from "@/components/pool/AdminPanel";
 import { MyDraws } from "@/components/pool/MyDraws";
 import { HowStrip } from "@/components/pool/HowStrip";
 import { Badges } from "@/components/pool/Badges";
+import { SaversLedger } from "@/components/pool/SaversLedger";
 import { FlyingCoins } from "@/components/fx/FlyingCoins";
 import { GlyphConfetti } from "@/components/fx/GlyphConfetti";
 
@@ -21,6 +22,7 @@ export default function Home() {
           <DrawPanel />
         </div>
         <MyDraws />
+        <SaversLedger />
         <AdminPanel />
         <HowStrip />
       </div>
