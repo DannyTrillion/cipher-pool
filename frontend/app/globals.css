@@ -35,7 +35,7 @@
   --line: 0 0 0;
   color-scheme: light;
 }
-:root[data-theme="light"] body::after { opacity: 0.03; mix-blend-mode: multiply; }
+:root[data-theme="light"] body::after { display: none; }
 :root[data-theme="light"] body::before { background: radial-gradient(1200px 800px at 50% 40%, transparent 60%, rgb(0 0 0 / 0.06)); }
 :root[data-theme="light"] .glass,
 :root[data-theme="light"] .card,
