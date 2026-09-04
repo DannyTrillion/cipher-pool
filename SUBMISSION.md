@@ -13,20 +13,21 @@
 
 | Requirement | Where |
 |---|---|
-| Deposit into a shared pool | `ConfidentialPrizePool.deposit` (encrypted input + ERC-7984 `confidentialTransferFrom`) |
+| Deposit a test ERC-20 | tUSD faucet → `approve` → `cUSD.wrap` (ERC-7984 wrapper) → `deposit` (encrypted input + `confidentialTransferFrom`) |
 | Yield distributed through periodic draws | `harvest` → encrypted prize reserve → `startDraw` / `advanceDraw` |
 | Withdraw principal at any time | `withdraw` (any time the pool is open; never reverts on over-request) |
 | Deposits, balances, winnings encrypted | `euint64` everywhere; ACL only to holder + pool; tests prove other users cannot decrypt |
 | Winner selection over encrypted balances | encrypted ticket + encrypted prefix-sum walk + encrypted index (`advanceDraw`) |
-| Only winners decrypt prizes | `wonInDraw[epoch][user]` ACL'd to the user only; credit lands in encrypted balance |
+| Claim | `claimableOf` (EIP-712 decrypt) → `claimPrize()` confidential transfer to wallet; constant-cost, safe for non-winners |
+| Only winners decrypt prizes | `wonInDraw[epoch][user]` and `claimableOf` ACL'd to the user only |
 | Draw publicly verifiable | per-draw `DrawRecord` with publicly decryptable seed + prize; optional proof-of-win |
 | Production quality | 14 mock tests, batched draws for HCU budget, sign-once reveal, graceful errors, no owner access to funds |
 
 ## Demo script (3 minutes)
-1. Connect → faucet 1,000 cUSD (encrypted mint).
-2. Deposit 400 → balance shows as cipher; Reveal (one signature) → 400.
+1. Connect → faucet 1,000 tUSD → Shield into cUSD (approve + wrap).
+2. Deposit 400 → balance shows as cipher; Unlock (one signature) → 400.
 3. Second wallet deposits; sponsor 25 cUSD to the prize → hero shows public prize.
 4. Countdown hits zero → Run draw: start (seed) → batches (progress bar) → complete.
-5. "Did I win?" → private reveal; winner sees prize in balance; optionally publish proof.
+5. "Did I win?" → reel reveal; Claim to wallet (confidential transfer); optionally publish proof.
 6. Draws page: seed + prize public; Etherscan shows identical touches for every account.
 7. Withdraw everything, any time.
