@@ -1,8 +1,13 @@
 import type { Tier } from "@/lib/hooks/usePoolData";
 
-/** "1 × 40% · 2 × 20% · 2 × 10%" */
+/** Per-winner shares: "1 × 40% · 2 × 20% · 2 × 10%" */
 export function describeTiers(tiers: Tier[]): string {
-  return tiers.map((t) => `${t.winners} × ${(t.shareBps / 100).toFixed(t.shareBps % 100 ? 1 : 0)}%`).join(" · ");
+  return tiers
+    .map((t) => {
+      const pct = t.shareBps / 100 / t.winners;
+      return `${t.winners} × ${Number.isInteger(pct) ? pct : pct.toFixed(1)}%`;
+    })
+    .join(" · ");
 }
 
 /** Per-slot amounts for a prize, in slot order (matches the contract's integer maths). */
