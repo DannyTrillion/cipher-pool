@@ -84,9 +84,33 @@ export function PositionPanel() {
 
   if (!isConnected) {
     return (
-      <section className="card card-hover p-6 sm:p-7">
-        <div className="label">Your position</div>
-        <p className="mt-2 text-sm text-ink-muted">Connect a wallet on Sepolia to deposit. Your balance is encrypted — only you can reveal it.</p>
+      <section className="card card-hover p-6 sm:p-7" id="position">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <div className="label">Your position</div>
+            <div className="mt-1 text-xs text-ink-faint">Encrypted on-chain · reveal with one signature</div>
+          </div>
+          <span className="pill border-cipher/30 text-cipher">Preview</span>
+        </div>
+        <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {["In the pool", "Lifetime winnings", "Wallet cUSD"].map((l) => (
+            <div key={l}>
+              <div className="label">{l}</div>
+              <div className="mt-1"><EncryptedValue value={undefined} revealed={false} size="lg" /></div>
+            </div>
+          ))}
+        </div>
+        <p className="mt-5 text-sm leading-relaxed text-ink-muted">
+          This is what everyone else sees of your position — including the contract. Connect a wallet on Sepolia to take test cUSD from the faucet, deposit privately, and reveal your own numbers.
+        </p>
+        <ol className="mt-4 grid grid-cols-3 gap-2 text-xs">
+          {["Get test cUSD", "Deposit privately", "Wait for the draw"].map((t, i) => (
+            <li key={t} className="rounded-xl border border-line px-2.5 py-2 text-ink-faint">
+              <span className="font-mono text-accent">{i + 1}.</span> {t}
+            </li>
+          ))}
+        </ol>
+        <ConnectInline />
       </section>
     );
   }
