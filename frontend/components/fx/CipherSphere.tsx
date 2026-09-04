@@ -106,6 +106,9 @@ export function CipherSphere({
 
     let t0 = performance.now();
     let angle = 0, rx = 0, ry = 0;
+    let light = document.documentElement.getAttribute("data-theme") === "light";
+    const onTheme = () => { light = document.documentElement.getAttribute("data-theme") === "light"; };
+    window.addEventListener("cipherpool-theme", onTheme);
 
     const frame = (now: number) => {
       raf = requestAnimationFrame(frame);
@@ -135,7 +138,7 @@ export function CipherSphere({
       // core glow (+ flash)
       const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 1.5);
       const fl = s.flash;
-      g.addColorStop(0, s.drawing ? `rgba(255,214,0,${0.16 + fl * 0.3})` : `rgba(139,156,255,${0.12 + fl * 0.35})`);
+      g.addColorStop(0, s.drawing ? `rgba(255,214,0,${(light ? 0.22 : 0.16) + fl * 0.3})` : light ? `rgba(88,104,214,${0.10 + fl * 0.3})` : `rgba(139,156,255,${0.12 + fl * 0.35})`);
       g.addColorStop(0.55, `rgba(139,156,255,${0.04 + fl * 0.08})`);
       g.addColorStop(1, "rgba(0,0,0,0)");
       ctx.fillStyle = g;
@@ -170,7 +173,7 @@ export function CipherSphere({
           const d2 = dx * dx + dy * dy;
           if (d2 > maxD * maxD) continue;
           const al = (1 - Math.sqrt(d2) / maxD) * 0.24 * ((p.z + q.z) / 2 + 0.6);
-          ctx.strokeStyle = `rgba(139,156,255,${al.toFixed(3)})`;
+          ctx.strokeStyle = light ? `rgba(70,84,190,${(al * 1.4).toFixed(3)})` : `rgba(139,156,255,${al.toFixed(3)})`;
           ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke();
         }
       }
@@ -195,7 +198,7 @@ export function CipherSphere({
         const isYou = s.you && p.i === YOU_INDEX;
         const size = (isYou ? 4.2 : gold ? 2.8 : 1.9) * p.sc * (0.6 + depth * 0.8);
         const alpha = 0.18 + depth * 0.82;
-        ctx.fillStyle = isYou ? `rgba(255,214,0,${alpha})` : gold ? `rgba(255,214,0,${alpha})` : `rgba(160,176,255,${alpha * 0.9})`;
+        ctx.fillStyle = isYou || gold ? (light ? `rgba(200,160,0,${alpha})` : `rgba(255,214,0,${alpha})`) : light ? `rgba(70,84,190,${alpha * 0.9})` : `rgba(160,176,255,${alpha * 0.9})`;
         ctx.beginPath(); ctx.arc(p.x, p.y, size, 0, Math.PI * 2); ctx.fill();
         if ((gold || isYou) && depth > 0.6) {
           ctx.fillStyle = `rgba(255,214,0,${(depth - 0.6) * (isYou ? 0.6 : 0.4)})`;
@@ -288,6 +291,7 @@ export function CipherSphere({
       registerSphereCenter(null);
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("cipherpool-theme", onTheme);
     };
   }, [reduced]);
 

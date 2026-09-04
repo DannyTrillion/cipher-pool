@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
 import { useAccount, useConnect } from "wagmi";
 import { usePoolState, useSaversLedger, Phase } from "@/lib/hooks/usePoolData";
 import { usePublicReveal } from "@/lib/hooks/useReveal";
@@ -65,8 +66,9 @@ export function StatConsole() {
             Shared by <span className="text-ink">{state?.winnerSlots ?? 5} winners</span> every {state ? human(Number(state.drawPeriod)) : "…"}. Grows by about {formatAmount(state ? state.dripPerSecond * 3600n : DRIP_PER_HOUR, DECIMALS, { maxFractionDigits: 0 })} {SYMBOL} an hour from simulated yield.
             {h && errors[h] && prize === undefined && " Relayer catching up…"}
           </div>
-          <div className="mt-3 text-xs text-ink-faint">
-            {due ? "The draw is ready. Anyone can run it." : drawing ? "Draw in progress — anyone can push it along." : "Deposits and withdrawals are open until the draw."}
+          <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-ink-faint">
+            <span>{due ? "The draw is ready. Anyone can run it." : drawing ? "Draw in progress — anyone can push it along." : "Deposits and withdrawals are open until the draw."}</span>
+            <Link href="/draws" className="text-accent hover:underline">See all prizes →</Link>
           </div>
         </div>
 

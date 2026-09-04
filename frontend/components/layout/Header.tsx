@@ -11,6 +11,7 @@ import { truncateAddress } from "@/lib/format";
 import { clearDecryptSessions } from "@/lib/fhevm/useDecryptSession";
 import { Logo, LogoMark } from "@/components/brand/Logo";
 import { Identicon } from "@/components/layout/Identicon";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { usePoolState, Phase } from "@/lib/hooks/usePoolData";
 import { initSoundPref, setSound, sfx } from "@/lib/sound";
 import { onScene } from "@/lib/scene";
@@ -19,7 +20,7 @@ import { useNow } from "@/components/ui/Countdown";
 
 const NAV = [
   { href: "/", label: "Pool" },
-  { href: "/draws", label: "Draws" },
+  { href: "/draws", label: "Prizes" },
   { href: "/how-it-works", label: "How it works" },
 ];
 
@@ -183,6 +184,7 @@ export function Header() {
           <div className="md:hidden" />
 
           <div className="flex items-center justify-end gap-2">
+            <ThemeToggle />
             <WalletControl />
             <button className="btn-ghost h-9 w-9 !p-0 md:hidden" aria-label="Menu" aria-expanded={sheet} onClick={() => { sfx.click(); setSheet(true); }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 7h16M4 12h16M4 17h16" /></svg>

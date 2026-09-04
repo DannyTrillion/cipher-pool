@@ -53,10 +53,30 @@ export function DrawsTimeline() {
   const drawing = !!state && state.phase !== Phase.Open;
   const due = !!state && !drawing && Number(state.nextDrawAt) <= now && Number(state.participantCount) > 0;
 
+  const h = state?.prizeReserveHandle;
+  useEffect(() => { if (h) void pub.reveal([h]); }, [h, pub.reveal]);
+  const building = h ? pub.values[h] : undefined;
   const list = useMemo(() => draws.map((d, i) => ({ d, credit: credits[i] ?? null })).filter((x) => filter === "all" || !!x.credit), [draws, credits, filter]);
 
   return (
     <div className="space-y-8">
+      {/* building up now */}
+      <div className="glass grid gap-6 p-6 sm:grid-cols-[1.4fr_1fr] sm:items-center sm:p-7">
+        <div>
+          <div className="label">Prize building up now · public</div>
+          <div className="mt-2 flex items-baseline gap-3">
+            {building !== undefined ? <span className="display prize-glow text-5xl tabular sm:text-6xl">{formatAmount(building, DECIMALS, { maxFractionDigits: 2 })}</span> : <span className="cipher-mask inline-block h-12 w-44" />}
+            <span className="font-mono text-lg text-ink-muted">{SYMBOL}</span>
+          </div>
+          <div className="mt-2 text-sm text-ink-muted">Shared by {state?.winnerSlots ?? 5} winners at the next draw. Grows with simulated yield and sponsorships; every saver keeps their principal.</div>
+        </div>
+        <div className="rounded-2xl border border-line bg-black/20 p-4">
+          <div className="label">{drawing ? "Draw running" : due ? "Draw ready" : "Next draw in"}</div>
+          <div className="mt-1 font-mono text-3xl tabular">{!state ? "…" : drawing ? "LIVE" : due ? "now" : formatDuration(Number(state.nextDrawAt) - now)}</div>
+          <a href="/#console" className="btn-primary shine mt-3 w-full">{due ? "Go run the draw" : "Go to the button"}</a>
+        </div>
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-3">
         <Stat label="Paid out in prizes" value={totalPaid} suffix={SYMBOL} />
         <Stat label="Draws run" value={draws.length} />
