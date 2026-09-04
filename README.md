@@ -89,6 +89,7 @@ The frontend reads all addresses and ABIs from `frontend/lib/contracts/deploymen
 
 - `MockYieldSource` is the only testnet stand-in. It sits behind `IYieldSource`; a mainnet deployment swaps in an adapter over a real vault and points the pool at a registry-listed confidential token (e.g. cUSDT).
 - Draw batch size is a client parameter (`DRAW_BATCH`, default 8). Per-participant cost is ~5 FHE ops in pass 1 and ~4 in pass 2.
+- Measured on Sepolia (real coprocessor): faucet 332k gas · operator approval 46k · encrypted deposit 870k · sponsor prize 642k · `startDraw` 918k · `advanceDraw` pass 1 ≈ 230k + ~150k per participant · pass 2 ≈ 545k + ~450k per participant. A batch of 8 stays under ~4.5M gas.
 - The 96-block reorg window applies to ACL grants as on any FHEVM app; prize credits are in-balance (no one-shot key reveal), so a reorg can only delay, not misdirect, a payout.
 - Owner powers are limited to the draw period and (testnet) APY. There is no pause, no upgrade, no ability to read or move user funds.
 
