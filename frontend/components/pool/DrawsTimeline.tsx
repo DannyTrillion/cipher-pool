@@ -73,7 +73,7 @@ export function DrawsTimeline() {
         <div className="rounded-2xl border border-line bg-black/20 p-4">
           <div className="label">{drawing ? "Draw running" : due ? "Draw ready" : "Next draw in"}</div>
           <div className="mt-1 font-mono text-3xl tabular">{!state ? "…" : drawing ? "LIVE" : due ? "now" : formatDuration(Number(state.nextDrawAt) - now)}</div>
-          <a href="/#console" className="btn-primary shine mt-3 w-full">{due ? "Go run the draw" : "Go to the button"}</a>
+          <a href="/#console" className="btn-primary btn-arrow shine mt-3 w-full">{due ? "Go run the draw" : "Go to the button"}</a>
         </div>
       </div>
 
@@ -92,7 +92,7 @@ export function DrawsTimeline() {
           <span className="font-medium">{!state ? "Loading…" : drawing ? "A draw is running right now" : due ? "The next draw is ready to run" : `Next draw in ${formatDuration(Number(state.nextDrawAt) - now)}`}</span>
         </div>
         <div className="flex items-center gap-3">
-          <a href="/#console" className="btn-glass text-xs">Go to the button</a>
+          <a href="/#console" className="btn-glass btn-sm">Go to the button</a>
           {isConnected && (
             <div className="flex rounded-full bg-black/40 p-1">
               {(["all", "mine"] as const).map((f) => (
@@ -117,7 +117,7 @@ export function DrawsTimeline() {
         ))}
       </ol>
       {list.length > shown && (
-        <div className="text-center"><button className="btn-glass" onClick={() => setShown((s) => s + 10)}>Show older draws</button></div>
+        <div className="text-center"><button className="btn-glass btn-lg" onClick={() => setShown((s) => s + 10)}>Show older draws</button></div>
       )}
     </div>
   );
@@ -186,7 +186,7 @@ function DrawCard({ draw, credit, prize, index, live }: { draw: DrawRecord; cred
               <>
                 <ReelReveal spinning={false} faces={facesFor(mine, slots, draw.tiers)} size={44} />
                 <span className="text-sm font-semibold text-accent">🏆 You won {formatAmount(mine, DECIMALS, { maxFractionDigits: 2 })} {SYMBOL}</span>
-                <button className="btn-primary text-xs" disabled={proofFlow.state.status === "pending"} onClick={() => proofFlow.run((s) => actions.claim(s), { successMessage: "Claimed. Everything you had won is in your wallet as cUSD." })}>Claim to wallet</button>
+                <button className="btn-mint btn-sm" disabled={proofFlow.state.status === "pending"} onClick={() => proofFlow.run((s) => actions.claim(s), { successMessage: "Claimed. Everything you had won is in your wallet as cUSD." })}>Claim to wallet</button>
                 <button className="btn-ghost text-xs" disabled={proofFlow.state.status === "pending"} onClick={() => proofFlow.run((s) => actions.revealWin(draw.epoch, s), { successMessage: "Your win is now public for anyone to check." })}>Show the world</button>
                 <FlowStatus state={proofFlow.state} />
               </>

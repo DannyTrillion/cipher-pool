@@ -92,7 +92,7 @@ export function ResultsPanel() {
                 <div className="flex flex-wrap items-center gap-4">
                   <ReelReveal spinning={spinning} />
                   <button
-                    className="btn-primary shine px-6 py-3"
+                    className="btn-primary btn-lg shine"
                     disabled={!!busy || spinning}
                     onClick={async () => {
                       sfx.click(); fire({ type: "reveal" }); setSpinning(true);
@@ -111,7 +111,7 @@ export function ResultsPanel() {
                   <motion.div initial={{ rotateX: 90, opacity: 0 }} animate={{ rotateX: 0, opacity: 1 }} transition={{ type: "spring", stiffness: 260, damping: 18, delay: 0.7 }} className="rounded-xl border border-accent/40 bg-accent-soft px-3 py-2 text-sm font-semibold text-accent shadow-[0_0_30px_rgb(255_214_0/0.25)]">
                     🏆 You won <EncryptedValue value={myCredit} revealed size="sm" className="text-accent" /> — waiting in your encrypted pot.
                   </motion.div>
-                  <button className="btn-primary text-xs" disabled={claimFlow.state.status === "pending"} onClick={() => claimFlow.run(async (s) => { await actions.claim(s); await reveal(POOL.address, user?.claimable ?? null, "claim"); }, { successMessage: "Claimed. Your prize is in your wallet as cUSD." })}>{claimFlow.state.status === "pending" ? "Claiming…" : "Claim to wallet"}</button>
+                  <button className="btn-mint btn-sm" disabled={claimFlow.state.status === "pending"} onClick={() => claimFlow.run(async (s) => { await actions.claim(s); await reveal(POOL.address, user?.claimable ?? null, "claim"); }, { successMessage: "Claimed. Your prize is in your wallet as cUSD." })}>{claimFlow.state.status === "pending" ? "Claiming…" : "Claim to wallet"}</button>
                   <button className="btn-ghost text-xs" onClick={() => revealFlow.run((s) => actions.revealWin(latest.epoch, s), { successMessage: "Your win is now public for anyone to check." })} disabled={revealFlow.state.status === "pending"}>Show the world I won</button>
                 </div>
               ) : (

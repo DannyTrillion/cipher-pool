@@ -129,7 +129,7 @@ export function PlayPanel() {
         </div>
       </div>
       {isConnected && claimable !== undefined && claimable > 0n && (
-        <button className="btn-primary shine mt-3 w-full" disabled={flow.state.status === "pending"} onClick={() => flow.run(async (s) => { await actions.claim(s); await refetch(); await revealAll(); }, { successMessage: "Claimed. Your prize is in your wallet as cUSD." })}>
+        <button className="btn-mint btn-lg shine mt-3 w-full" disabled={flow.state.status === "pending"} onClick={() => flow.run(async (s) => { await actions.claim(s); await refetch(); await revealAll(); }, { successMessage: "Claimed. Your prize is in your wallet as cUSD." })}>
           Claim {formatUnits(claimable, DECIMALS)} cUSD to my wallet
         </button>
       )}
@@ -143,9 +143,9 @@ export function PlayPanel() {
         <div className="mt-5">
           <p className="text-sm leading-relaxed text-ink-muted">This is all anyone can see of you — including the pool itself. Connect to get test cUSD, save privately, and unlock your own numbers.</p>
           {hasWallet ? (
-            <button className="btn-primary shine mt-4 w-full" disabled={isPending} onClick={() => { sfx.click(); connect({ connector: connectors[0] }); }}>{isPending ? "Connecting…" : "Connect wallet to play"}</button>
+            <button className="btn-primary btn-lg btn-arrow shine mt-4 w-full" disabled={isPending} onClick={() => { sfx.click(); connect({ connector: connectors[0] }); }}>{isPending ? "Connecting…" : "Connect wallet to play"}</button>
           ) : (
-            <a className="btn-primary shine mt-4 w-full" href="https://metamask.io/download/" target="_blank" rel="noreferrer">Install a wallet to play</a>
+            <a className="btn-primary btn-lg btn-arrow shine mt-4 w-full" href="https://metamask.io/download/" target="_blank" rel="noreferrer">Install a wallet to play</a>
           )}
         </div>
       ) : (
@@ -200,7 +200,7 @@ export function PlayPanel() {
             </p>
           </div>
 
-          <button data-anchor={tab === "shield" ? "shield" : "deposit"} className="btn-primary shine mt-4 w-full py-3.5 text-[15px]" onClick={submit} disabled={(!open && tab !== "shield") || value === 0n || flow.state.status === "pending"}>
+          <button data-anchor={tab === "shield" ? "shield" : "deposit"} className="btn-primary btn-lg shine mt-4 w-full" onClick={submit} disabled={(!open && tab !== "shield") || value === 0n || flow.state.status === "pending"}>
             {flow.state.status === "pending" ? "Working…" : buttonLabel}
           </button>
           <FlowStatus state={flow.state} className="mt-3" />

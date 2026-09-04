@@ -41,8 +41,8 @@ export default function HowItWorks() {
         <h1 className="display mt-8 text-4xl sm:text-5xl">How Cipher Pool works</h1>
         <p className="mt-3 max-w-2xl text-lg text-ink-muted">The same game as PoolTogether: save, keep your principal, win the pool&apos;s yield. The difference is that every deposit, balance and prize credit is ciphertext handled by Zama&apos;s FHEVM, so nobody can see what you hold.</p>
         <div className="mt-5 flex gap-3">
-          <Link href="/#play" className="btn-primary shine">Play</Link>
-          <Link href="/draws" className="btn-glass">See the draws</Link>
+          <Link href="/#play" className="btn-primary btn-lg btn-arrow shine">Play</Link>
+          <Link href="/draws" className="btn-glass btn-lg">See the prizes</Link>
         </div>
       </header>
 

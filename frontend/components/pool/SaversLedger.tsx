@@ -128,9 +128,9 @@ export function SaversLedger() {
                       <div className="mt-1 break-all font-mono text-xs text-ink-muted">{r.handle ?? "—"}</div>
                       <div className="mt-3 flex flex-wrap items-center gap-3">
                         {you && isConnected ? (
-                          <button className="btn-primary text-xs" disabled={!!busy} onClick={() => reveal(POOL.address, myHandle, "ledger-me")}>{busy ? "Unlocking…" : mine !== undefined ? "Unlocked — only you could" : "Unlock mine"}</button>
+                          <button className="btn-primary btn-sm" disabled={!!busy} onClick={() => reveal(POOL.address, myHandle, "ledger-me")}>{busy ? "Unlocking…" : mine !== undefined ? "Unlocked — only you could" : "Unlock mine"}</button>
                         ) : (
-                          <button className="btn-secondary text-xs" disabled={attempt.status === "trying"} onClick={() => tryRead(r.handle)}>{attempt.status === "trying" ? "Asking the relayer…" : "Try to read it"}</button>
+                          <button className="btn-secondary btn-sm" disabled={attempt.status === "trying"} onClick={() => tryRead(r.handle)}>{attempt.status === "trying" ? "Asking the relayer…" : "Try to read it"}</button>
                         )}
                         <a className="text-xs text-ink-faint underline-offset-4 hover:text-ink hover:underline" href={etherscanAddr(r.address)} target="_blank" rel="noreferrer">Saver on Etherscan ↗</a>
                       </div>

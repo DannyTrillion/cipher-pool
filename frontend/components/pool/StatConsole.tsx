@@ -89,7 +89,7 @@ export function StatConsole() {
             <div className="h-[176px] w-[176px] rounded-full bg-white/5" />
           )}
           {drawing && isConnected && flow.state.status !== "pending" && (
-            <button className="btn-secondary mt-6 text-xs" onClick={run}>Continue the draw</button>
+            <button className="btn-mint btn-sm mt-6" onClick={run}>Continue the draw</button>
           )}
         </div>
 

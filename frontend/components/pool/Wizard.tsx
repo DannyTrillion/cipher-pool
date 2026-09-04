@@ -82,18 +82,18 @@ export function Wizard() {
 
               <div className="mt-4">
                 {step.key === "connect" && (hasWallet ? (
-                  <button className="btn-primary shine w-full py-3" disabled={isPending} onClick={() => { sfx.click(); connect({ connector: connectors[0] }); }}>{isPending ? "Connecting…" : "Connect wallet"}</button>
+                  <button className="btn-primary btn-lg btn-arrow shine w-full" disabled={isPending} onClick={() => { sfx.click(); connect({ connector: connectors[0] }); }}>{isPending ? "Connecting…" : "Connect wallet"}</button>
                 ) : (
-                  <a className="btn-primary shine w-full py-3" href="https://metamask.io/download/" target="_blank" rel="noreferrer">Install MetaMask, then come back</a>
+                  <a className="btn-primary btn-lg btn-arrow shine w-full" href="https://metamask.io/download/" target="_blank" rel="noreferrer">Install MetaMask, then come back</a>
                 ))}
                 {step.key === "faucet" && (
-                  <button data-anchor="faucet" className="btn-primary shine w-full py-3" disabled={flow.state.status === "pending" || Number(user?.faucetCooldown ?? 0n) > 0} onClick={doFaucet}>
+                  <button data-anchor="faucet" className="btn-primary btn-lg shine w-full" disabled={flow.state.status === "pending" || Number(user?.faucetCooldown ?? 0n) > 0} onClick={doFaucet}>
                     {Number(user?.faucetCooldown ?? 0n) > 0 ? `Try again in ${formatDuration(Number(user!.faucetCooldown))}` : flow.state.status === "pending" ? "Minting…" : "Get 1,000 test tUSD"}
                   </button>
                 )}
                 {step.key === "shield" && (
                   <div className="space-y-3">
-                    <button data-anchor="shield" className="btn-primary shine w-full py-3" disabled={flow.state.status === "pending" || (user?.tusdBalance ?? 0n) === 0n} onClick={doShield}>
+                    <button data-anchor="shield" className="btn-primary btn-lg shine w-full" disabled={flow.state.status === "pending" || (user?.tusdBalance ?? 0n) === 0n} onClick={doShield}>
                       {flow.state.status === "pending" ? "Working…" : `Shield ${formatUnits(user?.tusdBalance ?? 0n, DECIMALS)} ${UNDERLYING_SYMBOL} into cUSD`}
                     </button>
                     <p className="text-xs text-ink-faint">Two confirmations: an ERC-20 approval, then the wrap. Your tUSD stays locked in the wrapper, backing your cUSD one to one.</p>
@@ -106,14 +106,14 @@ export function Wizard() {
                         <button key={c} className={cn("pill flex-1 justify-center py-2", amount === c && "border-accent/50 text-accent")} onClick={() => { setAmount(c); sfx.click(); }}>{c} cUSD</button>
                       ))}
                     </div>
-                    <button data-anchor="deposit" className="btn-primary shine w-full py-3" disabled={flow.state.status === "pending" || drawing} onClick={doDeposit}>
+                    <button data-anchor="deposit" className="btn-primary btn-lg shine w-full" disabled={flow.state.status === "pending" || drawing} onClick={doDeposit}>
                       {drawing ? "Paused while the draw runs" : flow.state.status === "pending" ? "Working…" : `Deposit ${amount} cUSD privately`}
                     </button>
                     <p className="text-xs text-ink-faint">Two quick confirmations the first time: one lets the pool move your cUSD, one is the deposit itself.</p>
                   </div>
                 )}
                 {step.key === "unlock" && (
-                  <button className="btn-primary shine w-full py-3" disabled={!!busy || flow.state.status === "pending"} onClick={doUnlock}>{busy ? "Unlocking…" : "Unlock my numbers"}</button>
+                  <button className="btn-primary btn-lg shine w-full" disabled={!!busy || flow.state.status === "pending"} onClick={doUnlock}>{busy ? "Unlocking…" : "Unlock my numbers"}</button>
                 )}
                 {step.key === "draw" && (
                   <div className="rounded-xl border border-line bg-black/20 p-4">
@@ -121,7 +121,7 @@ export function Wizard() {
                       <span className="text-sm text-ink-muted">{eligible ? "You're in the next draw." : "You'll be in the draw after next — money needs a full round in the pool first."}</span>
                       <span className="font-mono text-lg">{state ? (drawing ? "running" : due ? "ready" : formatDuration(Number(state.nextDrawAt) - now)) : "…"}</span>
                     </div>
-                    {due && <a href="#console" className="btn-primary shine mt-3 w-full py-3">Go press the button</a>}
+                    {due && <a href="#console" className="btn-primary btn-lg btn-arrow shine mt-3 w-full">Go press the button</a>}
                     {!due && !drawing && <p className="mt-3 text-xs text-ink-faint">When the countdown ends, anyone can press the big button above to run the draw. Then come back here for your result.</p>}
                   </div>
                 )}

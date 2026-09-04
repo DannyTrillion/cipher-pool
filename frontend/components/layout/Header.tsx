@@ -97,11 +97,11 @@ export function Header() {
   const WalletControl = () => {
     if (!isConnected) {
       return hasInjected && connectors.length > 0 ? (
-        <button className="btn-primary whitespace-nowrap px-4 text-[13px] sm:text-sm" disabled={isPending} onClick={() => { sfx.click(); connect({ connector: connectors[0] }); }}>
+        <button className="btn-primary btn-sm whitespace-nowrap " disabled={isPending} onClick={() => { sfx.click(); connect({ connector: connectors[0] }); }}>
           {isPending ? "Connecting…" : "Connect"}
         </button>
       ) : (
-        <a className="btn-primary whitespace-nowrap px-4 text-[13px] sm:text-sm" href="https://metamask.io/download/" target="_blank" rel="noreferrer">Get a wallet</a>
+        <a className="btn-primary btn-sm whitespace-nowrap" href="https://metamask.io/download/" target="_blank" rel="noreferrer">Get a wallet</a>
       );
     }
     return (

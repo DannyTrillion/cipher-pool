@@ -27,8 +27,8 @@ export function Hero() {
           your odds and your winnings are ciphertext on-chain — even to the contract — and every draw is verifiable by anyone.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <a href="#play" className="btn-primary shine px-7 py-3 text-[15px]">Play</a>
-          <a href="#deposit" className="btn-glass px-7 py-3 text-[15px]">Deposit</a>
+          <a href="#play" className="btn-primary btn-lg btn-arrow shine min-w-[150px]">Play</a>
+          <a href="#deposit" className="btn-glass btn-lg min-w-[150px]">Deposit</a>
         </div>
         <Link href="/how-it-works" className="mt-4 inline-block text-xs text-ink-faint underline-offset-4 hover:text-ink hover:underline">How the blind draw works →</Link>
       </div>
