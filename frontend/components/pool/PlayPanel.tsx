@@ -3,6 +3,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Wizard } from "@/components/pool/Wizard";
 import { motion, AnimatePresence } from "framer-motion";
+import { SuccessTick } from "@/components/ui/SuccessTick";
+import { useActivity } from "@/lib/hooks/useActivity";
+import { sameAddress } from "@/lib/format";
 import { useAccount, useConnect } from "wagmi";
 import { formatUnits, parseUnits } from "viem";
 import { usePoolState, useUserState, Phase } from "@/lib/hooks/usePoolData";
@@ -26,11 +29,11 @@ const TABS: { key: Tab; label: string; verb: string }[] = [
 ];
 const MAIN_TABS = TABS.filter((t) => t.key === "deposit" || t.key === "withdraw" || t.key === "sponsor");
 const isConvert = (t: Tab) => t === "shield" || t === "unwrap";
-const CHIPS = ["25", "100", "250"];
+
 
 /** The play area: one amount, one big button, everything narrated in plain words. */
 export function PlayPanel() {
-  const { isConnected } = useAccount();
+  const { address, isConnected } = useAccount();
   const { connect, connectors, isPending } = useConnect();
   const { state, refetch: refetchPool } = usePoolState();
   const { user, refetch } = useUserState(state?.epoch);
@@ -41,6 +44,8 @@ export function PlayPanel() {
   const [tab, setTab] = useState<Tab>("deposit");
   const [amount, setAmount] = useState("");
   const [mode, setMode] = useState<"new" | "pro">("new");
+  const [tick, setTick] = useState(false);
+  const { rows: activity } = useActivity(12);
   const inputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     try { const m = localStorage.getItem("cipherpool.mode"); if (m === "pro" || m === "new") setMode(m); } catch {}
@@ -71,6 +76,7 @@ export function PlayPanel() {
     await reveal(TOKEN.address, user?.walletBalance ?? null, "wallet");
     await reveal(POOL.address, user?.claimable ?? null, "claim");
   };
+  const celebrate = () => { setTick(true); setTimeout(() => setTick(false), 1400); };
   const submit = () =>
     flow.run(async (setStep) => {
       if (tab === "shield") await actions.shield(amount, setStep);
@@ -79,6 +85,7 @@ export function PlayPanel() {
       else if (tab === "unwrap") await actions.unwrap(amount, setStep);
       else await actions.donate(amount, setStep);
       setAmount("");
+      celebrate();
       await Promise.all([refetch(), refetchPool()]);
       if (revealedAll || poolBal !== undefined) await revealAll();
     }, { successMessage: tab === "shield" ? "Wrapped. Your cUSD is private now." : tab === "deposit" ? "Done. Your money is in the pool, scrambled." : tab === "withdraw" ? "Done. It is back in your wallet as cUSD." : tab === "unwrap" ? "Done. Your tUSD is back in your wallet." : "Added to the prize. Thank you!" });
@@ -157,6 +164,14 @@ export function PlayPanel() {
           </div>
         </div>
       </div>
+      {isConnected && address && (() => {
+        const mine = activity.find((r) => r.who && sameAddress(r.who, address));
+        if (!mine) return null;
+        const verb = mine.kind === "deposit" ? "put money in" : mine.kind === "withdraw" ? "took money out" : mine.kind === "sponsor" ? "added to the prize" : mine.kind === "claim" ? "collected a prize" : "";
+        const ago = mine.ts ? Math.max(0, Math.floor(Date.now() / 1000) - mine.ts) : undefined;
+        const when = ago === undefined ? "" : ago < 60 ? "just now" : ago < 3600 ? `${Math.floor(ago / 60)} min ago` : ago < 86400 ? `${Math.floor(ago / 3600)} h ago` : `${Math.floor(ago / 86400)} d ago`;
+        return verb ? <div className="mt-2 text-[11px] text-ink-faint">Last: you {verb} {when}.</div> : null;
+      })()}
       {isConnected && claimable !== undefined && claimable > 0n && (
         <button className="btn-mint btn-lg shine mt-3 w-full" disabled={flow.state.status === "pending"} onClick={() => flow.run(async (s) => { await actions.claim(s); await refetch(); await revealAll(); }, { successMessage: "Collected. Your prize is in your wallet as cUSD." })}>
           Collect my {formatUnits(claimable, DECIMALS)} cUSD prize
@@ -196,9 +211,11 @@ export function PlayPanel() {
                 ))}
               </div>
             )}
-            <button data-anchor="faucet" className="pill py-1.5 text-accent hover:bg-accent-faint disabled:text-ink-faint" onClick={claimFaucet} disabled={faucetFlow.state.status === "pending" || cooldown > 0} title="Free test tokens on Sepolia">
-              {cooldown > 0 ? `More test tUSD in ${formatDuration(cooldown)}` : "Need test tUSD? Get 1,000"}
-            </button>
+            {user && user.tusdBalance === 0n && !user.walletBalance && (
+              <button data-anchor="faucet" className="pill py-1.5 text-accent hover:bg-accent-faint disabled:text-ink-faint" onClick={claimFaucet} disabled={faucetFlow.state.status === "pending" || cooldown > 0} title="Free test tokens on Sepolia">
+                {cooldown > 0 ? `More test tUSD in ${formatDuration(cooldown)}` : "Need test tUSD? Get 1,000"}
+              </button>
+            )}
           </div>
           <FlowStatus state={faucetFlow.state} className="mt-2" />
 
@@ -218,9 +235,18 @@ export function PlayPanel() {
               <span className="absolute inset-y-0 right-4 flex items-center font-mono text-sm text-ink-muted">{tab === "shield" ? UNDERLYING_SYMBOL : "cUSD"}</span>
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-2">
-              {CHIPS.map((c) => (
-                <button key={c} className={cn("pill py-1.5 hover:bg-white/10", amount === c && "border-accent/50 text-accent")} onClick={() => { setAmount(c); sfx.click(); }}>{c}</button>
-              ))}
+              {(() => {
+                const fmt = (v: bigint) => formatUnits(v, DECIMALS).replace(/\.?0+$/, "");
+                const presets: { l: string; v: string }[] = [];
+                if (tab === "withdraw" && poolBal !== undefined && poolBal > 0n) presets.push({ l: "Half", v: fmt(poolBal / 2n) }, { l: "All", v: fmt(poolBal) });
+                else if (tab === "unwrap" && walletBal !== undefined && walletBal > 0n) presets.push({ l: "Half", v: fmt(walletBal / 2n) }, { l: "All", v: fmt(walletBal) });
+                else if (tab === "shield" && user && user.tusdBalance > 0n) presets.push({ l: "Half", v: fmt(user.tusdBalance / 2n) }, { l: "All", v: fmt(user.tusdBalance) });
+                else if (walletBal !== undefined && walletBal >= 1000n * 10n ** BigInt(DECIMALS)) presets.push({ l: "250", v: "250" }, { l: "500", v: "500" }, { l: "All", v: fmt(walletBal) });
+                else presets.push({ l: "25", v: "25" }, { l: "100", v: "100" }, { l: "250", v: "250" });
+                return presets.map((c) => (
+                  <button key={c.l} className={cn("pill py-1.5 hover:bg-white/10", amount === c.v && "border-accent/50 text-accent")} onClick={() => { setAmount(c.v); sfx.click(); }}>{c.l}</button>
+                ));
+              })()}
               <button className={cn("pill py-1.5 hover:bg-white/10", maxNum === undefined && "opacity-60")} onClick={() => { if (max !== undefined) setAmount(formatUnits(max, DECIMALS)); else void revealAll(); }} title={maxNum === undefined ? "Unlock your numbers to use MAX" : ""}>
                 MAX{maxNum !== undefined ? ` · ${maxNum.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : ""}
               </button>
@@ -242,9 +268,16 @@ export function PlayPanel() {
           </motion.div>
           </AnimatePresence>
 
-          <button data-anchor={tab === "shield" ? "shield" : "deposit"} className="btn-primary btn-lg shine mt-4 w-full" onClick={submit} disabled={(!open && pausable) || value === 0n || flow.state.status === "pending"}>
-            {flow.state.status === "pending" ? "Working…" : buttonLabel}
-          </button>
+          <div className="relative mt-4">
+            <button data-anchor={tab === "shield" ? "shield" : "deposit"} className="btn-primary btn-lg shine w-full" onClick={submit} disabled={(!open && pausable) || value === 0n || flow.state.status === "pending"}>
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.span key={flow.state.status === "pending" ? "working" : buttonLabel} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.12 }}>
+                  {flow.state.status === "pending" ? "Working…" : buttonLabel}
+                </motion.span>
+              </AnimatePresence>
+            </button>
+            <SuccessTick show={tick} />
+          </div>
           <FlowStatus state={flow.state} className="mt-3" />
         </>
       )}

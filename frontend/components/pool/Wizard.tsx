@@ -14,6 +14,7 @@ import { formatUnits } from "viem";
 import { formatDuration, useNow } from "@/components/ui/Countdown";
 import { cn } from "@/lib/cn";
 import { sfx } from "@/lib/sound";
+import { SuccessTick } from "@/components/ui/SuccessTick";
 
 /** Guided flow for new savers: five steps, each auto-completing from chain state. */
 export function Wizard({ onSkip }: { onSkip?: () => void } = {}) {
@@ -26,6 +27,8 @@ export function Wizard({ onSkip }: { onSkip?: () => void } = {}) {
   const flow = useActionFlow();
   const now = useNow();
   const [amount, setAmount] = useState("100");
+  const [tick, setTick] = useState(false);
+  const celebrate = () => { setTick(true); setTimeout(() => setTick(false), 1400); };
 
   const poolBal = get(user?.poolBalance);
   const hasWallet = typeof window !== "undefined" && !!(window as unknown as { ethereum?: unknown }).ethereum && connectors.length > 0;
@@ -55,10 +58,10 @@ export function Wizard({ onSkip }: { onSkip?: () => void } = {}) {
   const allDone = steps.every((s) => s.done);
   const step = steps[Math.min(current, steps.length - 1)];
 
-  const doFaucet = () => flow.run(async (s) => { await actions.faucet(s); await refetch(); }, { successMessage: "1,000 test tUSD is in your wallet." });
-  const doShield = () => flow.run(async (s) => { await actions.shield(formatUnits(user?.tusdBalance ?? 0n, DECIMALS), s); await refetch(); }, { successMessage: "Wrapped. Your cUSD is private now." });
-  const doDeposit = () => flow.run(async (s) => { await actions.deposit(amount, s); await Promise.all([refetch(), refetchPool()]); }, { successMessage: "Done. Your money is in the pool, scrambled." });
-  const doUnlock = () => flow.run(async (s) => { s("Waiting for your signature…"); await reveal(POOL.address, user?.poolBalance ?? null, "pool"); await reveal(TOKEN.address, user?.walletBalance ?? null, "wallet"); }, { successMessage: "Here they are. Only you can see these." });
+  const doFaucet = () => flow.run(async (s) => { await actions.faucet(s); celebrate(); await refetch(); }, { successMessage: "1,000 test tUSD is in your wallet." });
+  const doShield = () => flow.run(async (s) => { await actions.shield(formatUnits(user?.tusdBalance ?? 0n, DECIMALS), s); celebrate(); await refetch(); }, { successMessage: "Wrapped. Your cUSD is private now." });
+  const doDeposit = () => flow.run(async (s) => { await actions.deposit(amount, s); celebrate(); await Promise.all([refetch(), refetchPool()]); }, { successMessage: "Done. Your money is in the pool, scrambled." });
+  const doUnlock = () => flow.run(async (s) => { s("Waiting for your signature…"); await reveal(POOL.address, user?.poolBalance ?? null, "pool"); await reveal(TOKEN.address, user?.walletBalance ?? null, "wallet"); celebrate(); }, { successMessage: "Here they are. Only you can see these." });
 
   return (
     <div>
@@ -111,7 +114,8 @@ export function Wizard({ onSkip }: { onSkip?: () => void } = {}) {
               </div>
               <p className="mt-2 text-sm leading-relaxed text-ink-muted">{step.why}</p>
 
-              <div className="mt-4">
+              <div className="relative mt-4">
+                <SuccessTick show={tick} />
                 {step.key === "connect" && (hasWallet ? (
                   <button className="btn-primary btn-lg btn-arrow shine w-full" disabled={isPending} onClick={() => { sfx.click(); connect({ connector: connectors[0] }); }}>{isPending ? "Connecting…" : "Connect wallet"}</button>
                 ) : (
