@@ -311,7 +311,7 @@ body::before {
   position: relative;
   overflow: hidden;
 }
-.shine::after {
+.shine::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -319,7 +319,7 @@ body::before {
   transform: translateX(-120%);
   transition: transform 700ms ease;
 }
-.shine:hover::after {
+.shine:hover::before {
   transform: translateX(120%);
 }
 .progress-stripes {
