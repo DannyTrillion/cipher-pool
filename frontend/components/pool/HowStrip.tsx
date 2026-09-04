@@ -11,7 +11,7 @@ export function HowStrip() {
   return (
     <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {STEPS.map((s, i) => (
-        <div key={s.t} className="card p-5">
+        <div key={s.t} className="card card-hover p-5">
           <div className="font-mono text-xs text-accent">0{i + 1}</div>
           <div className="mt-1 font-semibold">{s.t}</div>
           <p className="mt-1.5 text-sm text-ink-muted">{s.d}</p>

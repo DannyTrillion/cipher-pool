@@ -59,14 +59,14 @@ export function DrawPanel() {
   const amounts = draw && prize !== undefined ? slotAmounts(prize, draw.tiers) : [];
 
   return (
-    <section className="card p-6">
+    <section className="card card-hover p-6">
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="label">Draw</div>
           <div className="mt-1 text-xs text-ink-faint">Winner picked over encrypted balances · seed and prize published for verification</div>
         </div>
         {isConnected && (due || inProgress) && (
-          <button className="btn-primary" onClick={run} disabled={flow.state.status === "pending" || n === 0}>
+          <button className="btn-primary shine" onClick={run} disabled={flow.state.status === "pending" || n === 0}>
             {inProgress ? "Continue draw" : "Run draw"}
           </button>
         )}
@@ -79,7 +79,7 @@ export function DrawPanel() {
             <span className="font-mono">{cursor}/{n} · batches of {DRAW_BATCH}</span>
           </div>
           <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-well">
-            <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${progress}%` }} />
+            <div className="progress-stripes h-full rounded-full bg-accent transition-all" style={{ width: `${progress}%` }} />
           </div>
           <p className="mt-2 text-xs text-ink-faint">
             Deposits and withdrawals pause while the draw runs. Anyone can continue it — every batch is bounded to fit the FHE compute budget.

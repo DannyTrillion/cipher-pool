@@ -71,7 +71,7 @@ export function PositionPanel() {
 
   if (!isConnected) {
     return (
-      <section className="card p-6">
+      <section className="card card-hover p-6">
         <div className="label">Your position</div>
         <p className="mt-2 text-sm text-ink-muted">Connect a wallet on Sepolia to deposit. Your balance is encrypted — only you can reveal it.</p>
       </section>
@@ -152,7 +152,7 @@ export function PositionPanel() {
           {tab === "withdraw" && "Withdraw any amount up to your balance, any time the pool is open. Requests above your balance move nothing — and never reveal it."}
           {tab === "sponsor" && "Add cUSD straight to the prize. Sponsorships never join the principal and cannot be withdrawn."}
         </p>
-        <button className="btn-primary w-full" onClick={submit} disabled={!open || !amount || flow.state.status === "pending"}>
+        <button className="btn-primary shine w-full" onClick={submit} disabled={!open || !amount || flow.state.status === "pending"}>
           {!open ? "Paused during the draw" : flow.state.status === "pending" ? "Working…" : tab === "deposit" ? "Deposit privately" : tab === "withdraw" ? "Withdraw" : "Sponsor the prize"}
         </button>
         <FlowStatus state={flow.state} />

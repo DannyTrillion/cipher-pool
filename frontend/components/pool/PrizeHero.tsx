@@ -6,6 +6,7 @@ import { usePublicReveal } from "@/lib/hooks/useReveal";
 import { Countdown, useNow } from "@/components/ui/Countdown";
 import { formatAmount } from "@/lib/format";
 import { DECIMALS, SYMBOL } from "@/lib/contracts";
+import { useCountUp } from "@/lib/hooks/useCountUp";
 
 export function PrizeHero() {
   const { state } = usePoolState();
@@ -22,21 +23,22 @@ export function PrizeHero() {
     const id = setTimeout(() => retry(h), 12_000);
     return () => clearTimeout(id);
   }, [h, errors, retry]);
-  const prize = h ? values[h] : undefined;
+  const prizeRaw = h ? values[h] : undefined;
+  const prize = useCountUp(prizeRaw);
 
   const phaseLabel =
     state?.phase === Phase.Selecting ? "Drawing — selecting winner" : state?.phase === Phase.Awarding ? "Drawing — awarding prize" : state?.isDrawDue ? "Draw ready" : "Open";
   const due = state ? Number(state.nextDrawAt) <= now : false;
 
   return (
-    <section className="card relative overflow-hidden p-6 sm:p-8">
+    <section className="card card-hover relative overflow-hidden p-6 sm:p-8">
       <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-accent/10 blur-3xl" />
       <div className="relative grid gap-6 md:grid-cols-[1.4fr_1fr]">
         <div>
           <div className="label mb-2">Prize up for grabs</div>
           <div className="flex items-end gap-3">
             {prize !== undefined ? (
-              <div className="animate-reveal font-mono text-5xl font-semibold tabular sm:text-6xl">
+              <div className="prize-glow animate-reveal font-mono text-5xl font-semibold tabular sm:text-6xl">
                 {formatAmount(prize, DECIMALS, { maxFractionDigits: 2 })}
                 <span className="ml-2 text-xl text-ink-muted">{SYMBOL}</span>
               </div>
