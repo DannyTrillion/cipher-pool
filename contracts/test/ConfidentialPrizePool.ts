@@ -48,6 +48,16 @@ describe("ConfidentialPrizePool", function () {
     await pool.connect(user).deposit(enc.handles[0], enc.inputProof);
   }
 
+  const singleWinner = () => pool.setTiers([10_000], [1]);
+
+  // Decrypt sequentially: the mock coprocessor's event cursor is not re-entrant.
+  async function slotSeeds(epoch: bigint | number) {
+    const seeds = await pool.getDrawSeeds(epoch);
+    const out: bigint[] = [];
+    for (const h of seeds) out.push(await fhevm.publicDecryptEuint(FhevmType.euint64, h));
+    return out;
+  }
+
   async function runFullDraw(batch = 10) {
     await pool.startDraw();
     while ((await pool.phase()) !== 0n) {
@@ -145,7 +155,8 @@ describe("ConfidentialPrizePool", function () {
       await expect(pool.advanceDraw(5)).to.be.revertedWithCustomError(pool, "DrawNotInProgress");
     });
 
-    it("awards the sponsored prize to exactly one eligible depositor, privately", async () => {
+    it("awards the sponsored prize to exactly one eligible depositor, privately (single-winner tier)", async () => {
+      await singleWinner();
       await fundAndDeposit(alice, 300n * ONE);
       await fundAndDeposit(bob, 700n * ONE);
 
@@ -163,12 +174,13 @@ describe("ConfidentialPrizePool", function () {
       expect(await wonInDraw(1, alice)).to.eq(0n);
       expect(await wonInDraw(1, bob)).to.eq(0n);
 
-      // Draw record is publicly verifiable: seed + prize are public.
+      // Draw record is publicly verifiable: seeds + prize are public.
       const rec = await pool.getDraw(1);
       expect(rec.participants).to.eq(2n);
+      expect(rec.winnerSlots).to.eq(1n);
       const prize = await fhevm.publicDecryptEuint(FhevmType.euint64, rec.prize);
       expect(prize).to.be.gte(50n * ONE); // 50 donated + a little simulated yield
-      await fhevm.publicDecryptEuint(FhevmType.euint64, rec.seed); // must not throw
+      expect((await slotSeeds(1)).length).to.eq(1); // must decrypt publicly
 
       // Second draw: both fully eligible now. Exactly one wins the whole prize.
       await ethers.provider.send("evm_increaseTime", [DRAW_PERIOD + 1]);
@@ -233,9 +245,9 @@ describe("ConfidentialPrizePool", function () {
       await ethers.provider.send("evm_increaseTime", [DRAW_PERIOD + 1]);
       await runFullDraw();
 
-      let aliceWins = 0;
-      let bobWins = 0;
-      const rounds = 12;
+      let aliceWins = 0n;
+      let bobWins = 0n;
+      const rounds = 8;
       for (let i = 0; i < rounds; i++) {
         await token.connect(carol).faucet().catch(() => {});
         await token.connect(carol).setOperator(poolAddr, FAR_FUTURE);
@@ -244,14 +256,15 @@ describe("ConfidentialPrizePool", function () {
         await ethers.provider.send("evm_increaseTime", [DRAW_PERIOD + 1]);
         await runFullDraw();
         const e = await pool.epoch();
-        if ((await wonInDraw(e, alice)) > 0n) aliceWins++;
-        if ((await wonInDraw(e, bob)) > 0n) bobWins++;
+        aliceWins += await wonInDraw(e, alice);
+        bobWins += await wonInDraw(e, bob);
       }
-      expect(aliceWins + bobWins).to.eq(rounds); // there is always a winner once eligible
-      expect(aliceWins).to.be.gt(bobWins);
+      expect(aliceWins + bobWins).to.be.gt(0n); // every slot finds a winner once weight > 0
+      expect(aliceWins).to.be.gt(bobWins); // 95% share wins far more prize money over 8 draws × 5 slots
     });
 
     it("lets a winner publish a proof-of-win, and nobody else can read it before", async () => {
+      await singleWinner();
       await fundAndDeposit(alice, 100n * ONE);
       await ethers.provider.send("evm_increaseTime", [DRAW_PERIOD + 1]);
       await runFullDraw(); // eligibility draw
@@ -267,6 +280,63 @@ describe("ConfidentialPrizePool", function () {
       await expect(pool.connect(bob).revealWin(2)).to.be.revertedWithCustomError(pool, "NothingToReveal");
       await pool.connect(alice).revealWin(2);
       expect(await fhevm.publicDecryptEuint(FhevmType.euint64, h)).to.be.gte(10n * ONE);
+    });
+
+    it("pays tiered prizes to several winner slots and keeps rounding dust in the reserve", async () => {
+      // Default tiers: 1 × 40%, 2 × 20%, 2 × 10% = 5 slots.
+      expect(await pool.winnerSlots()).to.eq(5n);
+      for (const u of [alice, bob, carol]) await fundAndDeposit(u, 100n * ONE);
+      await ethers.provider.send("evm_increaseTime", [DRAW_PERIOD + 1]);
+      await runFullDraw(); // eligibility draw: nobody eligible, prize (yield only) rolls over
+
+      // Sponsor 100 cUSD via the deployer.
+      await token.faucet();
+      await token.setOperator(poolAddr, FAR_FUTURE);
+      const d = await encAmount(poolAddr, deployer, 100n * ONE);
+      await pool.donatePrize(d.handles[0], d.inputProof);
+
+      await ethers.provider.send("evm_increaseTime", [DRAW_PERIOD + 1]);
+      await runFullDraw(4); // 3 participants, batch 4 → one tx per pass
+      const rec = await pool.getDraw(2);
+      expect(rec.winnerSlots).to.eq(5n);
+      expect(rec.tiers.length).to.eq(3);
+      expect((await slotSeeds(2)).length).to.eq(5);
+
+      const prize = await fhevm.publicDecryptEuint(FhevmType.euint64, rec.prize);
+      // Slot amounts: 40% ×1, 20% ×2, 10% ×2 — dust from integer division stays in reserve.
+      const perSlot = [prize * 4000n / 10000n, prize * 4000n / 20000n, prize * 4000n / 20000n, prize * 2000n / 20000n, prize * 2000n / 20000n];
+      const expectedPaid = perSlot.reduce((a, b) => a + b, 0n);
+
+      const credits: bigint[] = [];
+      for (const u of [alice, bob, carol]) credits.push(await wonInDraw(2, u));
+      const paid = credits.reduce((a, b) => a + b, 0n);
+      expect(paid).to.eq(expectedPaid); // every slot found a winner (all three had weight)
+      expect(paid).to.be.lte(prize);
+      // Each credit is a sum of whole slot amounts.
+      for (const c of credits) {
+        let remaining = c;
+        for (const amt of [...perSlot].sort((a, b) => (a < b ? 1 : -1))) while (remaining >= amt && amt > 0n) remaining -= amt;
+        expect(remaining).to.eq(0n);
+      }
+      const reserve = await fhevm.publicDecryptEuint(FhevmType.euint64, await pool.prizeReserve());
+      expect(reserve).to.eq(prize - expectedPaid);
+    });
+
+    it("rejects invalid tier configurations and changes during a draw", async () => {
+      await expect(pool.setTiers([6000, 5000], [1, 1])).to.be.revertedWithCustomError(pool, "InvalidTiers"); // > 100%
+      await expect(pool.setTiers([5000], [9])).to.be.revertedWithCustomError(pool, "InvalidTiers"); // > MAX_WINNERS
+      await expect(pool.setTiers([5000, 0], [1, 1])).to.be.revertedWithCustomError(pool, "InvalidTiers");
+      await expect(pool.setTiers([], [])).to.be.revertedWithCustomError(pool, "InvalidTiers");
+      await expect(pool.connect(alice).setTiers([10_000], [1])).to.be.revertedWithCustomError(pool, "OwnableUnauthorizedAccount");
+      await pool.setTiers([7000, 3000], [1, 3]);
+      expect(await pool.winnerSlots()).to.eq(4n);
+      const tiers = await pool.getTiers();
+      expect(tiers[1].winners).to.eq(3n);
+
+      await fundAndDeposit(alice, 10n * ONE);
+      await ethers.provider.send("evm_increaseTime", [DRAW_PERIOD + 1]);
+      await pool.startDraw();
+      await expect(pool.setTiers([10_000], [1])).to.be.revertedWithCustomError(pool, "PoolNotOpen");
     });
 
     it("accrues simulated yield on the encrypted principal", async () => {

@@ -11,7 +11,7 @@ import { useToast } from "@/components/ui/Toast";
 
 const OPERATOR_TTL = 365 * 24 * 3600;
 /** Participants processed per advanceDraw() tx — bounded to stay well under the FHE HCU budget. */
-export const DRAW_BATCH = 8;
+export const DRAW_BATCH = 5;
 
 type Step = (s: string) => void;
 

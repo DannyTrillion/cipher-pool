@@ -17,6 +17,7 @@ export function AdminPanel() {
   const flow = useActionFlow();
   const [period, setPeriod] = useState("");
   const [apy, setApy] = useState("");
+  const [tiers, setTiers] = useState("");
   if (!state || !address || !sameAddress(address, state.owner)) return null;
 
   return (
@@ -31,6 +32,28 @@ export function AdminPanel() {
           <input className="input !text-sm" placeholder={`APY bps · now ${state.apyBps}`} value={apy} onChange={(e) => setApy(e.target.value.replace(/\D/g, ""))} />
           <button className="btn-secondary" disabled={!apy} onClick={() => flow.run(async (s) => { s("Confirm…"); await write({ ...YIELD, chainId: CHAIN_ID, functionName: "setApy", args: [BigInt(apy)] }); await refetch(); }, { successMessage: "APY updated." })}>Set</button>
         </div>
+      </div>
+      <div className="mt-3 flex gap-2">
+        <input className="input !text-sm" placeholder={`Tiers as share%:winners, e.g. 40:1,40:2,20:2 · now ${state.tiers.map((t) => `${t.shareBps / 100}:${t.winners}`).join(",")}`} value={tiers} onChange={(e) => setTiers(e.target.value)} />
+        <button
+          className="btn-secondary"
+          disabled={!tiers || state.phase !== 0}
+          onClick={() =>
+            flow.run(
+              async (s) => {
+                const parts = tiers.split(",").map((p) => p.trim().split(":"));
+                const shares = parts.map((p) => BigInt(Math.round(Number(p[0]) * 100)));
+                const winners = parts.map((p) => BigInt(p[1]));
+                s("Confirm…");
+                await write({ ...POOL, chainId: CHAIN_ID, functionName: "setTiers", args: [shares, winners] });
+                await refetch();
+              },
+              { successMessage: "Tiers updated for the next draw." },
+            )
+          }
+        >
+          Set
+        </button>
       </div>
       <FlowStatus state={flow.state} className="mt-3" />
     </section>

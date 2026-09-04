@@ -21,6 +21,13 @@ export interface PoolState {
   prizeReserveHandle: `0x${string}`;
   apyBps: bigint;
   owner: `0x${string}`;
+  tiers: Tier[];
+  winnerSlots: number;
+}
+
+export interface Tier {
+  shareBps: number;
+  winners: number;
 }
 
 /** Public pool state — polled. */
@@ -39,6 +46,7 @@ export function usePoolState() {
       { ...POOL, chainId: CHAIN_ID, functionName: "prizeReserve" },
       { ...YIELD, chainId: CHAIN_ID, functionName: "apyBps" },
       { ...POOL, chainId: CHAIN_ID, functionName: "owner" },
+      { ...POOL, chainId: CHAIN_ID, functionName: "getTiers" },
     ],
     query: { refetchInterval: REFRESH },
   });
@@ -56,6 +64,8 @@ export function usePoolState() {
         prizeReserveHandle: d[8] as `0x${string}`,
         apyBps: d[9] as bigint,
         owner: d[10] as `0x${string}`,
+        tiers: (d[11] as { shareBps: number; winners: number }[]).map((t) => ({ shareBps: Number(t.shareBps), winners: Number(t.winners) })),
+        winnerSlots: (d[11] as { winners: number }[]).reduce((a, t) => a + Number(t.winners), 0),
       }
     : undefined;
   return { state, refetch: q.refetch, isLoading: q.isLoading, error: q.error };
@@ -66,8 +76,32 @@ export interface DrawRecord {
   startedAt: bigint;
   completedAt: bigint;
   participants: number;
-  seed: `0x${string}`;
+  winnerSlots: number;
   prize: `0x${string}`;
+  tiers: Tier[];
+}
+
+type RawDraw = { startedAt: bigint; completedAt: bigint; participants: number; winnerSlots: number; prize: `0x${string}`; tiers: { shareBps: number; winners: number }[] };
+const toDraw = (epoch: bigint, r: RawDraw): DrawRecord => ({
+  epoch,
+  startedAt: r.startedAt,
+  completedAt: r.completedAt,
+  participants: Number(r.participants),
+  winnerSlots: Number(r.winnerSlots),
+  prize: r.prize,
+  tiers: r.tiers.map((t) => ({ shareBps: Number(t.shareBps), winners: Number(t.winners) })),
+});
+
+/** Per-slot FHE seeds of a draw (public once started). */
+export function useDrawSeeds(epoch: bigint | undefined) {
+  const q = useReadContract({
+    ...POOL,
+    chainId: CHAIN_ID,
+    functionName: "getDrawSeeds",
+    args: [epoch ?? 0n],
+    query: { enabled: epoch !== undefined && epoch > 0n, refetchInterval: REFRESH },
+  });
+  return { seeds: (q.data as `0x${string}`[] | undefined) ?? [] };
 }
 
 export function useDraw(epoch: bigint | undefined) {
@@ -78,8 +112,8 @@ export function useDraw(epoch: bigint | undefined) {
     args: [epoch ?? 0n],
     query: { enabled: epoch !== undefined && epoch > 0n, refetchInterval: REFRESH },
   });
-  const r = q.data as { startedAt: bigint; completedAt: bigint; participants: number; seed: `0x${string}`; prize: `0x${string}` } | undefined;
-  const draw: DrawRecord | undefined = r && epoch ? { epoch, ...r, participants: Number(r.participants) } : undefined;
+  const r = q.data as RawDraw | undefined;
+  const draw: DrawRecord | undefined = r && epoch ? toDraw(epoch, r) : undefined;
   return { draw, refetch: q.refetch };
 }
 
@@ -91,10 +125,7 @@ export function useDraws(count: bigint | undefined) {
     contracts: epochs.map((e) => ({ ...POOL, chainId: CHAIN_ID, functionName: "getDraw", args: [e] })),
     query: { enabled: n > 0, refetchInterval: REFRESH },
   });
-  const draws: DrawRecord[] = ((q.data as unknown[] | undefined) ?? []).map((r, i) => {
-    const x = r as { startedAt: bigint; completedAt: bigint; participants: number; seed: `0x${string}`; prize: `0x${string}` };
-    return { epoch: epochs[i], ...x, participants: Number(x.participants) };
-  });
+  const draws: DrawRecord[] = ((q.data as unknown[] | undefined) ?? []).map((r, i) => toDraw(epochs[i], r as RawDraw));
   return { draws, isLoading: q.isLoading };
 }
 

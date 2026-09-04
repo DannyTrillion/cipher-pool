@@ -6,6 +6,7 @@ import { usePublicReveal } from "@/lib/hooks/useReveal";
 import { Countdown, useNow } from "@/components/ui/Countdown";
 import { formatAmount } from "@/lib/format";
 import { DECIMALS, SYMBOL } from "@/lib/contracts";
+import { describeTiers } from "@/lib/tiers";
 
 export function PrizeHero() {
   const { state } = usePoolState();
@@ -45,9 +46,20 @@ export function PrizeHero() {
             )}
           </div>
           <p className="mt-3 max-w-md text-sm text-ink-muted">
-            Yield from everyone&apos;s deposits goes to one winner each draw. Your principal is never at risk and your
+            Yield from everyone&apos;s deposits is split across {state ? state.winnerSlots : "several"} winners each draw. Your principal is never at risk and your
             balance is encrypted end-to-end.
           </p>
+          {state && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {state.tiers.map((t, i) => (
+                <span key={i} className="pill">
+                  <span className="text-accent">{i === 0 ? "Grand" : `Tier ${i + 1}`}</span>
+                  {t.winners} × {(t.shareBps / 100 / t.winners).toFixed(1).replace(/\.0$/, "")}%
+                </span>
+              ))}
+              <span className="pill">{describeTiers(state.tiers)}</span>
+            </div>
+          )}
           {h && errors[h] && prize === undefined && (
             <p className="mt-2 text-xs text-warn">
               The prize reserve was just updated; the relayer is still processing it. It will appear shortly.

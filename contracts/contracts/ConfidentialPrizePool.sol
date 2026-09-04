@@ -18,13 +18,15 @@ import {IYieldSource} from "./interfaces/IYieldSource.sol";
  *  - Principal is withdrawable at any time (outside the short draw window).
  *  - Yield accrues into an encrypted prize reserve and is awarded through
  *    periodic draws. The pool itself never learns any balance.
- *  - Winner selection runs entirely over encrypted balances:
- *        seed   = FHE random (coprocessor-generated, on-chain)
- *        ticket = floor(seed * totalWeight / 2^64)       (encrypted)
- *        winner = #{ i : cumulativeWeight_i <= ticket }  (encrypted index)
- *    so the probability of winning equals a depositor's share of the pool
- *    (weighted lottery), exactly like PoolTogether, but nobody — not even the
- *    contract owner — learns who won unless the winner chooses to reveal it.
+ *  - Prizes are tiered like PoolTogether: each draw pays several winner slots
+ *    (e.g. 1 grand prize at 40%, 2 at 20%, 2 at 10%). Every slot gets its own
+ *    coprocessor random seed, and selection runs entirely over encrypted balances:
+ *        seed_k   = FHE random (coprocessor-generated, on-chain)
+ *        ticket_k = floor(seed_k * totalWeight / 2^64)       (encrypted)
+ *        winner_k = #{ i : cumulativeWeight_i <= ticket_k }  (encrypted index)
+ *    so the probability of taking a slot equals a depositor's share of the pool
+ *    (weighted lottery, with replacement), but nobody — not even the contract
+ *    owner — learns who won unless the winner chooses to reveal it.
  *  - The aggregate prize reserve is public (as PoolTogether's prize is); the
  *    total principal and every individual position stay encrypted.
  *  - Verifiability: the random seed, the prize amount and the participant
@@ -50,13 +52,22 @@ contract ConfidentialPrizePool is ZamaEthereumConfig, Ownable2Step, ReentrancyGu
         Awarding // pass 2: crediting the prize to the (encrypted) winner
     }
 
+    struct Tier {
+        uint16 shareBps; // share of the draw prize allocated to this tier
+        uint8 winners; // number of winner slots in this tier
+    }
+
     struct DrawRecord {
         uint64 startedAt;
         uint64 completedAt;
         uint32 participants;
-        euint64 seed; // publicly decryptable after start
+        uint8 winnerSlots;
         euint64 prize; // publicly decryptable after start
+        Tier[] tiers; // snapshot of the tier structure used
     }
+
+    uint256 public constant MAX_WINNERS = 8;
+    uint256 public constant MAX_TIERS = 4;
 
     // ------------------------------------------------------------------
     // Storage
@@ -77,11 +88,17 @@ contract ConfidentialPrizePool is ZamaEthereumConfig, Ownable2Step, ReentrancyGu
     euint64 private _totalDeposits;
     euint64 private _prizeReserve;
 
-    // Encrypted draw scratch state
-    euint64 private _ticket;
+    // Prize tiers (owner-configurable between draws)
+    Tier[] private _tiers;
+
+    // Encrypted draw scratch state (one entry per winner slot)
+    uint256 private _activeSlots;
+    euint64[MAX_WINNERS] private _slotTicket;
+    euint64[MAX_WINNERS] private _slotWinner;
+    euint64[MAX_WINNERS] private _slotAmount;
     euint64 private _cumulative;
-    euint64 private _winnerIndex;
     euint64 private _drawPrize;
+    mapping(uint256 => euint64[]) private _drawSeeds; // epoch => per-slot seeds (public)
 
     // Per-user encrypted state
     mapping(address => euint64) private _balances;
@@ -103,7 +120,8 @@ contract ConfidentialPrizePool is ZamaEthereumConfig, Ownable2Step, ReentrancyGu
     event Withdrawn(address indexed user, euint64 amount);
     event PrizeDonated(address indexed from, euint64 amount);
     event YieldHarvested(uint256 elapsed, euint64 amount);
-    event DrawStarted(uint256 indexed epoch, uint256 participants, euint64 seed, euint64 prize);
+    event DrawStarted(uint256 indexed epoch, uint256 participants, uint256 winnerSlots, euint64 prize);
+    event TiersSet(uint16[] shareBps, uint8[] winners);
     event DrawAdvanced(uint256 indexed epoch, Phase phase, uint256 cursor);
     event DrawCompleted(uint256 indexed epoch);
     event WinRevealed(uint256 indexed epoch, address indexed user, euint64 credit);
@@ -122,6 +140,7 @@ contract ConfidentialPrizePool is ZamaEthereumConfig, Ownable2Step, ReentrancyGu
     error InvalidBatch();
     error InvalidPeriod();
     error NothingDeposited();
+    error InvalidTiers();
 
     // ------------------------------------------------------------------
     // Setup
@@ -140,6 +159,41 @@ contract ConfidentialPrizePool is ZamaEthereumConfig, Ownable2Step, ReentrancyGu
         FHE.allowThis(_totalDeposits);
         FHE.allowThis(_prizeReserve);
         FHE.makePubliclyDecryptable(_prizeReserve);
+
+        // Default structure: 1 grand prize (40%), 2 × 20%, 2 × 10% — five winners per draw.
+        _tiers.push(Tier({shareBps: 4000, winners: 1}));
+        _tiers.push(Tier({shareBps: 4000, winners: 2}));
+        _tiers.push(Tier({shareBps: 2000, winners: 2}));
+    }
+
+    /**
+     * @notice Configure the prize tiers used from the next draw on. `shareBps`
+     * is the share of the draw prize for the whole tier, split equally among
+     * its `winners`. Shares must sum to at most 10,000 (dust stays in reserve).
+     */
+    function setTiers(uint16[] calldata shareBps, uint8[] calldata winners) external onlyOwner whenOpen {
+        if (shareBps.length == 0 || shareBps.length != winners.length || shareBps.length > MAX_TIERS) revert InvalidTiers();
+        uint256 totalBps;
+        uint256 totalWinners;
+        for (uint256 i = 0; i < shareBps.length; i++) {
+            if (shareBps[i] == 0 || winners[i] == 0) revert InvalidTiers();
+            totalBps += shareBps[i];
+            totalWinners += winners[i];
+        }
+        if (totalBps > 10_000 || totalWinners > MAX_WINNERS) revert InvalidTiers();
+        delete _tiers;
+        for (uint256 i = 0; i < shareBps.length; i++) {
+            _tiers.push(Tier({shareBps: shareBps[i], winners: winners[i]}));
+        }
+        emit TiersSet(shareBps, winners);
+    }
+
+    function getTiers() external view returns (Tier[] memory) {
+        return _tiers;
+    }
+
+    function winnerSlots() public view returns (uint256 n) {
+        for (uint256 i = 0; i < _tiers.length; i++) n += _tiers[i].winners;
     }
 
     function setDrawPeriod(uint256 drawPeriod_) external onlyOwner {
@@ -286,36 +340,53 @@ contract ConfidentialPrizePool is ZamaEthereumConfig, Ownable2Step, ReentrancyGu
         FHE.allowThis(_drawPrize);
         FHE.makePubliclyDecryptable(prize);
 
-        // On-chain FHE randomness from the coprocessor; published for verifiability.
-        euint64 seed = FHE.randEuint64();
-        FHE.allowThis(seed);
-        FHE.makePubliclyDecryptable(seed);
+        // Per-slot prize amounts and tickets. Each slot draws its own on-chain FHE
+        // seed (published for verifiability). ticket = floor(seed * totalWeight / 2^64)
+        // in [0, totalWeight), computed at 128 bits so the product cannot overflow.
+        // Per-user weights are min(eligible, balance) <= balance, so the sum of weights
+        // is <= totalDeposits; a ticket beyond the weighted sum simply yields "no
+        // winner" for that slot (its amount rolls over) — never a wrong winner.
+        euint128 total128 = FHE.asEuint128(_totalDeposits);
+        euint128 prize128 = FHE.asEuint128(prize);
+        euint64[] storage seeds = _drawSeeds[epoch];
+        uint256 slot;
+        for (uint256 t = 0; t < _tiers.length; t++) {
+            Tier memory tier = _tiers[t];
+            euint64 perWinner = FHE.asEuint64(
+                FHE.div(FHE.mul(prize128, uint128(tier.shareBps)), uint128(10_000 * uint256(tier.winners)))
+            );
+            FHE.allowThis(perWinner);
+            for (uint256 w = 0; w < tier.winners; w++) {
+                euint64 seed = FHE.randEuint64();
+                FHE.allowThis(seed);
+                FHE.makePubliclyDecryptable(seed);
+                seeds.push(seed);
 
-        // ticket = floor(seed * totalWeight / 2^64) in [0, totalWeight). Computed at
-        // 128 bits so the product cannot overflow. Note: totalWeight uses total
-        // deposits; per-user weights below are min(eligible, balance) <= balance so
-        // the sum of weights <= totalDeposits and a ticket above the weighted sum
-        // simply yields "no winner" (prize rolls over) — never a wrong winner.
-        euint128 wide = FHE.mul(FHE.asEuint128(seed), FHE.asEuint128(_totalDeposits));
-        _ticket = FHE.asEuint64(FHE.shr(wide, 64));
-        FHE.allowThis(_ticket);
+                euint64 ticket = FHE.asEuint64(FHE.shr(FHE.mul(FHE.asEuint128(seed), total128), 64));
+                FHE.allowThis(ticket);
+                _slotTicket[slot] = ticket;
+                _slotAmount[slot] = perWinner;
+                euint64 zeroIdx = FHE.asEuint64(0);
+                FHE.allowThis(zeroIdx);
+                _slotWinner[slot] = zeroIdx;
+                slot++;
+            }
+        }
+        _activeSlots = slot;
 
         _cumulative = FHE.asEuint64(0);
-        _winnerIndex = FHE.asEuint64(0);
         FHE.allowThis(_cumulative);
-        FHE.allowThis(_winnerIndex);
 
-        _draws[epoch] = DrawRecord({
-            startedAt: uint64(block.timestamp),
-            completedAt: 0,
-            participants: uint32(n),
-            seed: seed,
-            prize: prize
-        });
+        DrawRecord storage rec = _draws[epoch];
+        rec.startedAt = uint64(block.timestamp);
+        rec.participants = uint32(n);
+        rec.winnerSlots = uint8(slot);
+        rec.prize = prize;
+        for (uint256 t = 0; t < _tiers.length; t++) rec.tiers.push(_tiers[t]);
 
         phase = Phase.Selecting;
         drawCursor = 0;
-        emit DrawStarted(epoch, n, seed, prize);
+        emit DrawStarted(epoch, n, slot, prize);
     }
 
     /**
@@ -331,20 +402,28 @@ contract ConfidentialPrizePool is ZamaEthereumConfig, Ownable2Step, ReentrancyGu
         uint256 end = drawCursor + maxSteps;
         if (end > n) end = n;
 
+        uint256 slots = _activeSlots;
+
         if (phase == Phase.Selecting) {
             euint64 cumulative = _cumulative;
-            euint64 winnerIndex = _winnerIndex;
+            euint64[MAX_WINNERS] memory winners;
+            for (uint256 k = 0; k < slots; k++) winners[k] = _slotWinner[k];
+
             for (uint256 i = drawCursor; i < end; i++) {
                 euint64 weight = _weightOf(_participants[i]);
                 cumulative = FHE.add(cumulative, weight);
-                // winner = first index whose cumulative weight exceeds the ticket
-                //        = count of indices whose cumulative weight <= ticket
-                winnerIndex = FHE.add(winnerIndex, FHE.asEuint64(FHE.le(cumulative, _ticket)));
+                // winner_k = first index whose cumulative weight exceeds ticket_k
+                //          = count of indices whose cumulative weight <= ticket_k
+                for (uint256 k = 0; k < slots; k++) {
+                    winners[k] = FHE.add(winners[k], FHE.asEuint64(FHE.le(cumulative, _slotTicket[k])));
+                }
             }
             _cumulative = cumulative;
-            _winnerIndex = winnerIndex;
             FHE.allowThis(_cumulative);
-            FHE.allowThis(_winnerIndex);
+            for (uint256 k = 0; k < slots; k++) {
+                _slotWinner[k] = winners[k];
+                FHE.allowThis(winners[k]);
+            }
             drawCursor = end;
 
             if (end == n) {
@@ -355,12 +434,15 @@ contract ConfidentialPrizePool is ZamaEthereumConfig, Ownable2Step, ReentrancyGu
             return;
         }
 
-        // Phase.Awarding — credit the prize to whichever index matches, encrypted.
-        euint64 prize = _drawPrize;
+        // Phase.Awarding — credit each slot's prize to whichever index matches, encrypted.
+        euint64 zero = FHE.asEuint64(0);
         for (uint256 i = drawCursor; i < end; i++) {
             address user = _participants[i];
-            ebool isWinner = FHE.eq(_winnerIndex, uint64(i));
-            euint64 credit = FHE.select(isWinner, prize, FHE.asEuint64(0));
+            euint64 credit = zero;
+            for (uint256 k = 0; k < slots; k++) {
+                ebool isWinner = FHE.eq(_slotWinner[k], uint64(i));
+                credit = FHE.add(credit, FHE.select(isWinner, _slotAmount[k], zero));
+            }
 
             euint64 newBalance = FHE.add(_balances[user], credit);
             _balances[user] = newBalance;
@@ -379,10 +461,13 @@ contract ConfidentialPrizePool is ZamaEthereumConfig, Ownable2Step, ReentrancyGu
         drawCursor = end;
 
         if (end == n) {
-            // If a winner was found (index < n) the prize leaves the reserve and
-            // joins the principal (it is now part of the winner's balance).
-            ebool found = FHE.lt(_winnerIndex, uint64(n));
-            euint64 paid = FHE.select(found, prize, FHE.asEuint64(0));
+            // Slots that found a winner (index < n) leave the reserve and join the
+            // principal (they are now part of winners' balances). Others roll over.
+            euint64 paid = zero;
+            for (uint256 k = 0; k < slots; k++) {
+                ebool found = FHE.lt(_slotWinner[k], uint64(n));
+                paid = FHE.add(paid, FHE.select(found, _slotAmount[k], zero));
+            }
             _prizeReserve = FHE.sub(_prizeReserve, paid);
             _totalDeposits = FHE.add(_totalDeposits, paid);
             FHE.allowThis(_prizeReserve);
@@ -455,6 +540,11 @@ contract ConfidentialPrizePool is ZamaEthereumConfig, Ownable2Step, ReentrancyGu
 
     function getDraw(uint256 epoch_) external view returns (DrawRecord memory) {
         return _draws[epoch_];
+    }
+
+    /// @notice Per-slot FHE seeds of a draw (publicly decryptable once the draw has started).
+    function getDrawSeeds(uint256 epoch_) external view returns (euint64[] memory) {
+        return _drawSeeds[epoch_];
     }
 
     /// @notice The epoch a user's balance is currently eligible for (0 = fully eligible now).

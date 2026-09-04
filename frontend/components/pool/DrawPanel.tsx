@@ -2,7 +2,8 @@
 
 import { useEffect } from "react";
 import { useAccount } from "wagmi";
-import { usePoolState, useUserState, useDraw, Phase } from "@/lib/hooks/usePoolData";
+import { usePoolState, useUserState, useDraw, useDrawSeeds, Phase } from "@/lib/hooks/usePoolData";
+import { slotAmounts } from "@/lib/tiers";
 import { usePoolActions, DRAW_BATCH } from "@/lib/hooks/usePoolActions";
 import { usePublicReveal, useReveal } from "@/lib/hooks/useReveal";
 import { useActionFlow } from "@/lib/useActionFlow";
@@ -17,6 +18,7 @@ export function DrawPanel() {
   const { state, refetch } = usePoolState();
   const { user, refetch: refetchUser } = useUserState(state?.epoch);
   const { draw } = useDraw(state?.epoch);
+  const { seeds } = useDrawSeeds(state?.epoch);
   const actions = usePoolActions();
   const flow = useActionFlow();
   const revealFlow = useActionFlow();
@@ -25,8 +27,8 @@ export function DrawPanel() {
   const now = useNow();
 
   useEffect(() => {
-    if (draw?.completedAt && draw.completedAt > 0n) void pub.reveal([draw.seed, draw.prize]);
-  }, [draw?.seed, draw?.prize, draw?.completedAt, pub.reveal]);
+    if (draw?.completedAt && draw.completedAt > 0n) void pub.reveal([draw.prize, ...seeds]);
+  }, [draw?.prize, draw?.completedAt, seeds, pub.reveal]);
 
   const inProgress = state && state.phase !== Phase.Open;
   const due = state ? state.phase === Phase.Open && Number(state.nextDrawAt) <= now : false;
@@ -52,8 +54,9 @@ export function DrawPanel() {
   const myCredit = get(user?.wonInDraw);
   const lastEpoch = state?.epoch ?? 0n;
   const lastDone = draw && draw.completedAt > 0n;
-  const seed = draw ? pub.values[draw.seed] : undefined;
   const prize = draw ? pub.values[draw.prize] : undefined;
+  const seedValues = seeds.map((h) => pub.values[h]);
+  const amounts = draw && prize !== undefined ? slotAmounts(prize, draw.tiers) : [];
 
   return (
     <section className="card p-6">
@@ -103,8 +106,16 @@ export function DrawPanel() {
               <div className="mt-1 font-mono text-lg tabular">{prize !== undefined ? `${formatAmount(prize, DECIMALS, { maxFractionDigits: 2 })} ${SYMBOL}` : lastDone ? <span className="cipher-mask">••••••</span> : "—"}</div>
             </div>
             <div className="sm:col-span-2">
-              <div className="label">FHE random seed (public)</div>
-              <div className="mt-1 break-all font-mono text-sm text-ink-muted">{seed !== undefined ? seed.toString() : lastDone ? <span className="cipher-mask">••••••••••••••••</span> : "—"}</div>
+              <div className="label">{draw ? `${draw.winnerSlots} winner slots · FHE seeds (public)` : "FHE seeds (public)"}</div>
+              <ul className="mt-1 space-y-0.5 font-mono text-xs text-ink-muted">
+                {seeds.map((h, i) => (
+                  <li key={h} className="flex gap-2">
+                    <span className="w-16 shrink-0 text-ink-faint">{amounts[i] !== undefined ? `${formatAmount(amounts[i], DECIMALS, { maxFractionDigits: 2 })}` : `slot ${i + 1}`}</span>
+                    <span className="truncate">{seedValues[i] !== undefined ? seedValues[i]!.toString() : lastDone ? <span className="cipher-mask">••••••••••••</span> : "—"}</span>
+                  </li>
+                ))}
+                {seeds.length === 0 && <li>—</li>}
+              </ul>
             </div>
           </div>
 
@@ -124,7 +135,7 @@ export function DrawPanel() {
                   </button>
                 </div>
               ) : (
-                <div className="text-sm text-ink-muted">Not this time — your principal is untouched. Odds scale with your share of the pool.</div>
+                <div className="text-sm text-ink-muted">Not this time — your principal is untouched. Each of the {draw?.winnerSlots ?? ""} slots is drawn independently; odds scale with your share of the pool.</div>
               )}
               <FlowStatus state={revealFlow.state} />
             </div>

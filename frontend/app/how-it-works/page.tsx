@@ -46,25 +46,30 @@ FHE.allow(_balances[msg.sender], msg.sender);   // only you can decrypt`}</Code>
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-xl font-semibold">3. The winner is chosen without decrypting anything</h2>
+        <h2 className="text-xl font-semibold">3. Tiered winners are chosen without decrypting anything</h2>
         <p className="text-sm text-ink-muted">
-          When a period elapses, anyone can start the draw. The contract asks the coprocessor for an encrypted random number and derives an
-          encrypted winning ticket in <code>[0, totalWeight)</code>. It then walks the participant list, keeping an encrypted running sum, and
-          counts how many prefix sums are ≤ the ticket. That count <em>is</em> the winner&apos;s index — still encrypted. In a second pass every
-          participant receives <code>select(index == i, prize, 0)</code>: the winner&apos;s balance grows by the prize, everyone else&apos;s by an
-          encrypted zero. From the outside, every account was touched identically.
+          Like PoolTogether, each draw pays a tiered set of prizes — by default a grand prize worth 40% of the round, two prizes of 20% and two
+          of 10%, five winner slots in all (the owner can reconfigure tiers between draws). When a period elapses, anyone can start the draw.
+          For every slot the contract asks the coprocessor for an encrypted random number and derives an encrypted winning ticket in
+          <code> [0, totalWeight)</code>. It then walks the participant list once, keeping an encrypted running sum, and for each slot counts how
+          many prefix sums are ≤ that slot&apos;s ticket. Each count <em>is</em> that slot&apos;s winner index — still encrypted. In a second pass
+          every participant receives the sum over slots of <code>select(index_k == i, amount_k, 0)</code>: winners&apos; balances grow by their
+          prizes, everyone else&apos;s by an encrypted zero. From the outside, every account was touched identically.
         </p>
-        <Code>{`seed   = FHE.randEuint64()                                    // coprocessor randomness
-ticket = (uint128(seed) * uint128(totalWeight)) >> 64             // encrypted, < totalWeight
-for i in participants:
-    cum    += weight_i                                            // encrypted prefix sum
-    winner += asEuint64(cum <= ticket)                            // encrypted index
-for i in participants:
-    credit_i = select(winner == i, prize, 0)                      // encrypted; one is non-zero
+        <Code>{`for each slot k:
+    seed_k   = FHE.randEuint64()                                  // coprocessor randomness, public
+    ticket_k = (uint128(seed_k) * uint128(totalWeight)) >> 64     // encrypted, < totalWeight
+for i in participants:                                            // pass 1, batched
+    cum += weight_i                                               // encrypted prefix sum
+    for each slot k: winner_k += asEuint64(cum <= ticket_k)       // encrypted indices
+for i in participants:                                            // pass 2, batched
+    credit_i   = Σ_k select(winner_k == i, amount_k, 0)           // encrypted
     balance_i += credit_i`}</Code>
         <p className="text-sm text-ink-muted">
-          Your probability of winning equals your share of the eligible weight — a weighted lottery, exactly as in PoolTogether. Both passes
-          run in bounded batches (<code>advanceDraw</code>) so a pool of any size stays under the FHE per-transaction compute budget.
+          Your probability of taking any given slot equals your share of the eligible weight — a weighted lottery with replacement, as in
+          PoolTogether (one saver can win more than one slot). Slots whose ticket lands beyond the eligible weight, and integer-division dust,
+          roll over to the next draw. Both passes run in bounded batches (<code>advanceDraw</code>) so a pool of any size stays under the FHE
+          per-transaction compute budget.
         </p>
       </section>
 
@@ -80,8 +85,8 @@ for i in participants:
       <section className="space-y-3">
         <h2 className="text-xl font-semibold">5. Verifying a draw</h2>
         <p className="text-sm text-ink-muted">
-          Each draw stores a record: start and completion time, participant count, and the handles of the FHE seed and the prize, both marked
-          publicly decryptable at draw time. Anyone can fetch the cleartexts through the relayer (the app does this on the Draws page). The
+          Each draw stores a record: start and completion time, participant count, the tier structure, the prize handle and one FHE seed handle
+          per winner slot, all marked publicly decryptable at draw time. Anyone can fetch the cleartexts through the relayer (the app does this on the Draws page). The
           selection logic itself is on-chain and deterministic given the seed and the encrypted balances, so an auditor with read access to the
           balances — or a court-ordered decryption via the KMS — can reproduce the outcome. A winner may additionally publish a proof of win
           by making their prize credit public; nobody else can.

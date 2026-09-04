@@ -3,7 +3,7 @@ import Link from "next/link";
 const STEPS = [
   { t: "Deposit privately", d: "Your amount is encrypted in the browser and pulled into the pool as an ERC-7984 confidential transfer. The chain never sees a number." },
   { t: "Yield builds the prize", d: "A yield source accrues on the encrypted principal. The prize reserve is public — like PoolTogether — but every position stays private." },
-  { t: "One winner, chosen blind", d: "The contract draws an FHE random seed and walks the encrypted balances homomorphically. Odds equal your share. Nobody learns who won." },
+  { t: "Winners chosen blind", d: "Each draw pays several tiered prizes. Every slot gets its own FHE random seed and the contract walks the encrypted balances homomorphically. Odds equal your share. Nobody learns who won." },
   { t: "Withdraw any time", d: "Principal is always yours. Reveal your balance or winnings with one signature; publish a proof of win only if you want to." },
 ];
 

@@ -1274,6 +1274,11 @@
         },
         {
           "inputs": [],
+          "name": "InvalidTiers",
+          "type": "error"
+        },
+        {
+          "inputs": [],
           "name": "NoParticipants",
           "type": "error"
         },
@@ -1433,9 +1438,9 @@
             },
             {
               "indexed": false,
-              "internalType": "euint64",
-              "name": "seed",
-              "type": "bytes32"
+              "internalType": "uint256",
+              "name": "winnerSlots",
+              "type": "uint256"
             },
             {
               "indexed": false,
@@ -1502,6 +1507,25 @@
             }
           ],
           "name": "PrizeDonated",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "internalType": "uint16[]",
+              "name": "shareBps",
+              "type": "uint16[]"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint8[]",
+              "name": "winners",
+              "type": "uint8[]"
+            }
+          ],
+          "name": "TiersSet",
           "type": "event"
         },
         {
@@ -1579,6 +1603,32 @@
           ],
           "name": "YieldSourceSet",
           "type": "event"
+        },
+        {
+          "inputs": [],
+          "name": "MAX_TIERS",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "MAX_WINNERS",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
         },
         {
           "inputs": [],
@@ -1761,19 +1811,80 @@
                   "type": "uint32"
                 },
                 {
-                  "internalType": "euint64",
-                  "name": "seed",
-                  "type": "bytes32"
+                  "internalType": "uint8",
+                  "name": "winnerSlots",
+                  "type": "uint8"
                 },
                 {
                   "internalType": "euint64",
                   "name": "prize",
                   "type": "bytes32"
+                },
+                {
+                  "components": [
+                    {
+                      "internalType": "uint16",
+                      "name": "shareBps",
+                      "type": "uint16"
+                    },
+                    {
+                      "internalType": "uint8",
+                      "name": "winners",
+                      "type": "uint8"
+                    }
+                  ],
+                  "internalType": "struct ConfidentialPrizePool.Tier[]",
+                  "name": "tiers",
+                  "type": "tuple[]"
                 }
               ],
               "internalType": "struct ConfidentialPrizePool.DrawRecord",
               "name": "",
               "type": "tuple"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "epoch_",
+              "type": "uint256"
+            }
+          ],
+          "name": "getDrawSeeds",
+          "outputs": [
+            {
+              "internalType": "euint64[]",
+              "name": "",
+              "type": "bytes32[]"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "getTiers",
+          "outputs": [
+            {
+              "components": [
+                {
+                  "internalType": "uint16",
+                  "name": "shareBps",
+                  "type": "uint16"
+                },
+                {
+                  "internalType": "uint8",
+                  "name": "winners",
+                  "type": "uint8"
+                }
+              ],
+              "internalType": "struct ConfidentialPrizePool.Tier[]",
+              "name": "",
+              "type": "tuple[]"
             }
           ],
           "stateMutability": "view",
@@ -1996,6 +2107,24 @@
         {
           "inputs": [
             {
+              "internalType": "uint16[]",
+              "name": "shareBps",
+              "type": "uint16[]"
+            },
+            {
+              "internalType": "uint8[]",
+              "name": "winners",
+              "type": "uint8[]"
+            }
+          ],
+          "name": "setTiers",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
               "internalType": "contract IYieldSource",
               "name": "yieldSource_",
               "type": "address"
@@ -2037,6 +2166,19 @@
           "name": "transferOwnership",
           "outputs": [],
           "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "winnerSlots",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "n",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
           "type": "function"
         },
         {
