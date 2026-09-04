@@ -83,7 +83,7 @@ export function PlayPanel() {
   const buttonLabel = !open ? "Paused while the draw runs" : value > 0n ? `${verb} ${amount} cUSD` : `${verb} cUSD`;
 
   return (
-    <section className="card p-6 sm:p-7" id="deposit">
+    <section className="card min-w-0 overflow-hidden p-6 sm:p-7" id="deposit">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="display text-2xl">Play</h2>

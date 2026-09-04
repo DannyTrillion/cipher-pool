@@ -56,7 +56,7 @@ export function ResultsPanel() {
     : [];
 
   return (
-    <section className="card p-6 sm:p-7">
+    <section className="card min-w-0 overflow-hidden p-6 sm:p-7">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="display text-2xl">Your results</h2>

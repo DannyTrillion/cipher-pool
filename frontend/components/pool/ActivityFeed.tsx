@@ -35,8 +35,8 @@ export function ActivityFeed({ compact = false }: { compact?: boolean }) {
       <ul className="mt-2 space-y-1.5 text-[13px]">
         <AnimatePresence initial={false}>
           {rows.map((r) => (
-            <motion.li key={r.id} initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="flex items-center justify-between gap-3 rounded-lg border border-line bg-black/20 px-3 py-1.5">
-              <span className="flex items-center gap-2 truncate">
+            <motion.li key={r.id} initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="flex min-w-0 items-center justify-between gap-3 rounded-lg border border-line bg-black/20 px-3 py-1.5">
+              <span className="flex min-w-0 items-center gap-2 truncate">
                 <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", LABEL[r.kind].c)} />
                 {r.who ? (
                   <span className="truncate"><span className="font-mono text-ink-muted">{truncateAddress(r.who)}</span> {LABEL[r.kind].t} <span className="text-ink-faint">· amount encrypted</span></span>

@@ -27,7 +27,7 @@ export function GrandSlam() {
 
   return (
     <section id="play" className={cn("relative scroll-mt-20 rounded-[28px] p-[1px] transition-colors", drawing ? "bg-[linear-gradient(120deg,rgb(94_234_212/0.5),rgb(255_214_0/0.4),rgb(139_156_255/0.5))]" : "bg-[linear-gradient(120deg,rgb(255_214_0/0.25),rgb(255_255_255/0.06),rgb(139_156_255/0.25))]")} aria-label="Play">
-      <div className="rounded-[27px] bg-[rgb(var(--base))]/85 p-4 backdrop-blur-xl sm:p-6">
+      <div className="overflow-hidden rounded-[27px] bg-[rgb(var(--base))]/85 p-4 backdrop-blur-xl sm:p-6">
         {/* live status bar */}
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-black/30 px-4 py-2.5">
           <div className="flex items-center gap-2.5 text-sm">
@@ -43,7 +43,7 @@ export function GrandSlam() {
             <span className="hidden sm:inline">{state?.winnerSlots ?? 5} prizes per draw</span>
           </div>
         </div>
-        <div className="mt-4 grid gap-4 lg:grid-cols-2 lg:gap-6">
+        <div className="mt-4 grid gap-4 lg:grid-cols-2 lg:gap-6 [&>*]:min-w-0">
           <PlayPanel />
           <ResultsPanel />
         </div>
