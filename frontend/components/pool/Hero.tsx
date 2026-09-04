@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
-import { usePoolState, Phase } from "@/lib/hooks/usePoolData";
+import { usePoolState, useUserState, Phase } from "@/lib/hooks/usePoolData";
 import { usePublicReveal } from "@/lib/hooks/useReveal";
 import { useCountUp } from "@/lib/hooks/useCountUp";
 import { CipherSphere } from "@/components/fx/CipherSphere";
@@ -14,6 +14,7 @@ import { DECIMALS, SYMBOL } from "@/lib/contracts";
 
 export function Hero() {
   const { state } = usePoolState();
+  const { user } = useUserState(state?.epoch);
   const { reveal, retry, values, errors } = usePublicReveal();
   const h = state?.prizeReserveHandle;
   useEffect(() => { if (h) void reveal([h]); }, [h, reveal]);
@@ -31,7 +32,7 @@ export function Hero() {
     <section className="hero-bleed relative isolate overflow-hidden" aria-label="Cipher Pool">
       {/* working background: the live ciphertext sphere */}
       <div className="pointer-events-none absolute right-0 top-[38%] bottom-0 -z-10 w-full opacity-60 md:inset-y-0 md:w-[62%] md:opacity-100">
-        <CipherSphere className="h-full w-full" points={120 + savers * 24} orbs={state?.winnerSlots ?? 5} drawing={drawing} />
+        <CipherSphere className="h-full w-full" points={120 + savers * 24} orbs={state?.winnerSlots ?? 5} drawing={drawing} you={!!user?.poolBalance} />
         <div className="absolute inset-y-0 left-0 hidden w-72 bg-gradient-to-r from-[rgb(var(--base))] via-[rgb(var(--base)/0.7)] to-transparent md:block" />
         <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[rgb(var(--base))] to-transparent" />
       </div>

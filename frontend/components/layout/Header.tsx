@@ -7,6 +7,8 @@ import { sepolia } from "wagmi/chains";
 import { cn } from "@/lib/cn";
 import { truncateAddress } from "@/lib/format";
 import { clearDecryptSessions } from "@/lib/fhevm/useDecryptSession";
+import { Logo } from "@/components/brand/Logo";
+import { SoundToggle } from "@/components/ui/SoundToggle";
 import { useEffect, useState } from "react";
 
 const NAV = [
@@ -37,15 +39,8 @@ export function Header() {
     <header className="sticky top-0 z-40 border-b border-line/60 bg-canvas/40 backdrop-blur-xl">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
         <div className="flex items-center gap-6">
-          <Link href="/" className="flex items-center gap-2.5">
-            <span className="grid h-8 w-8 place-items-center rounded-lg bg-accent text-black">
-              <svg viewBox="0 0 24 24" className="h-4.5 w-4.5" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.4">
-                <circle cx="12" cy="12" r="8" />
-                <rect x="9" y="11" width="6" height="5" rx="1.2" fill="currentColor" stroke="none" />
-                <path d="M10 11V9.5a2 2 0 0 1 4 0V11" />
-              </svg>
-            </span>
-            <span className="display whitespace-nowrap text-[17px]">Cipher Pool</span>
+          <Link href="/" className="flex items-center gap-2.5" aria-label="Cipher Pool home">
+            <Logo size={34} />
             <span className="pill hidden md:inline-flex">Sepolia</span>
           </Link>
           <nav className="hidden items-center gap-1 md:flex">
@@ -65,13 +60,15 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-2">
+          <SoundToggle />
           {wrongChain && (
             <button className="btn-secondary border-warn/40 text-warn" onClick={() => switchChain({ chainId: sepolia.id })}>
               Switch to Sepolia
             </button>
           )}
           {isConnected ? (
-            <button className="btn-secondary font-mono" onClick={() => disconnect()} title="Disconnect">
+            <button className="btn-secondary font-mono" onClick={() => disconnect()} title="Disconnect" data-anchor="wallet">
+              <span className="inline-block h-2 w-2 rounded-full bg-accent shadow-[0_0_10px_rgb(255_214_0/0.9)]" />
               {truncateAddress(address)}
             </button>
           ) : connectors.length === 0 || !hasInjected ? (

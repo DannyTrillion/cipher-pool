@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { fire } from "@/lib/scene";
+import { sfx } from "@/lib/sound";
 import { useAccount } from "wagmi";
 import { usePoolState, useUserState, useDraw, useDrawSeeds, Phase } from "@/lib/hooks/usePoolData";
 import { slotAmounts } from "@/lib/tiers";
@@ -122,20 +125,37 @@ export function DrawPanel() {
           {isConnected && lastDone && user?.wonInDraw && (
             <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-line pt-4">
               {myCredit === undefined ? (
-                <button className="btn-secondary" onClick={() => reveal(POOL.address, user.wonInDraw, "won")} disabled={!!busy}>
-                  {busy === "won" ? "Revealing…" : "Did I win? (private)"}
+                <button
+                  className="btn-secondary"
+                  onClick={async () => {
+                    sfx.click();
+                    fire({ type: "reveal" });
+                    const v = await reveal(POOL.address, user.wonInDraw, "won");
+                    if (v !== null && v !== undefined) fire(v > 0n ? { type: "win", amount: v } : { type: "lose" });
+                    if (v === 0n) sfx.lose();
+                  }}
+                  disabled={!!busy}
+                >
+                  {busy === "won" ? "Decrypting…" : "Did I win? (private)"}
                 </button>
               ) : myCredit > 0n ? (
                 <div className="flex flex-wrap items-center gap-3">
-                  <div className="rounded-lg bg-accent-soft px-3 py-2 text-sm font-semibold text-accent animate-reveal">
-                    🎉 You won <EncryptedValue value={myCredit} revealed size="sm" className="text-accent" /> — already in your pool balance.
-                  </div>
+                  <motion.div
+                    initial={{ rotateX: 90, opacity: 0 }}
+                    animate={{ rotateX: 0, opacity: 1 }}
+                    transition={{ type: "spring", stiffness: 260, damping: 18 }}
+                    className="rounded-xl border border-accent/40 bg-accent-soft px-3 py-2 text-sm font-semibold text-accent shadow-[0_0_30px_rgb(255_214_0/0.25)]"
+                  >
+                    🏆 You won <EncryptedValue value={myCredit} revealed size="sm" className="text-accent" /> — already in your pool balance.
+                  </motion.div>
                   <button className="btn-ghost text-xs" onClick={() => revealFlow.run((s) => actions.revealWin(lastEpoch, s), { successMessage: "Your win is now publicly verifiable." })} disabled={revealFlow.state.status === "pending"}>
                     Publish proof of win
                   </button>
                 </div>
               ) : (
-                <div className="text-sm text-ink-muted">Not this time — your principal is untouched. Each of the {draw?.winnerSlots ?? ""} slots is drawn independently; odds scale with your share of the pool.</div>
+                <motion.div initial={{ y: 6, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="text-sm text-ink-muted">
+                  Not this round — <span className="text-ok">your principal is untouched</span>. Each of the {draw?.winnerSlots ?? ""} slots is drawn independently; odds scale with your share of the pool.
+                </motion.div>
               )}
               <FlowStatus state={revealFlow.state} />
             </div>

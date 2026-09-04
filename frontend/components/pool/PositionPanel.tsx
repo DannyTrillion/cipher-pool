@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { useAccount, useConnect } from "wagmi";
 import { formatUnits } from "viem";
 import { usePoolState, useUserState, Phase } from "@/lib/hooks/usePoolData";
@@ -119,7 +120,7 @@ export function PositionPanel() {
       <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div>
           <div className="label">In the pool</div>
-          <div className="mt-1"><EncryptedValue value={user ? (user.poolBalance ? poolBal : null) : undefined} revealed={poolBal !== undefined} size="lg" /></div>
+          <div className="mt-1" data-anchor="position-balance"><EncryptedValue value={user ? (user.poolBalance ? poolBal : null) : undefined} revealed={poolBal !== undefined} size="lg" /></div>
           {user?.isParticipant && (
             <div className={cn("mt-1 text-xs", eligibleNow ? "text-ok" : "text-warn")}>
               {eligibleNow ? "Fully eligible for the next draw" : "Moved this epoch — only the part held all epoch counts"}
@@ -138,21 +139,22 @@ export function PositionPanel() {
         <div>
           <div className="label">Wallet cUSD</div>
           <div className="mt-1"><EncryptedValue value={user ? (user.walletBalance ? walletBal : null) : undefined} revealed={walletBal !== undefined} size="lg" /></div>
-          <button className="mt-1 text-xs text-accent hover:underline disabled:text-ink-faint disabled:no-underline" onClick={claimFaucet} disabled={faucetFlow.state.status === "pending" || cooldown > 0}>
+          <button data-anchor="faucet" className="mt-1 text-xs text-accent hover:underline disabled:text-ink-faint disabled:no-underline" onClick={claimFaucet} disabled={faucetFlow.state.status === "pending" || cooldown > 0}>
             {cooldown > 0 ? `Faucet again in ${formatDuration(cooldown)}` : "Get 1,000 test cUSD"}
           </button>
         </div>
       </div>
       <FlowStatus state={faucetFlow.state} className="mt-3" />
 
-      <div className="mt-6 flex gap-1 rounded-xl bg-well p-1">
+      <div className="mt-6 flex gap-1 rounded-full bg-black/40 p-1">
         {(["deposit", "withdraw", "sponsor"] as Tab[]).map((t) => (
           <button
             key={t}
-            className={cn("flex-1 rounded-lg px-3 py-2 text-sm font-medium capitalize transition", tab === t ? "bg-raised text-ink" : "text-ink-muted hover:text-ink")}
+            className={cn("relative flex-1 rounded-full px-3 py-2 text-sm font-medium capitalize transition", tab === t ? "text-black" : "text-ink-muted hover:text-ink")}
             onClick={() => { setTab(t); flow.reset(); }}
           >
-            {t === "sponsor" ? "Sponsor prize" : t}
+            {tab === t && <motion.span layoutId="tab-pill" className="absolute inset-0 rounded-full bg-accent shadow-[0_0_24px_rgb(255_214_0/0.35)]" transition={{ type: "spring", stiffness: 500, damping: 40 }} />}
+            <span className="relative">{t === "sponsor" ? "Sponsor prize" : t}</span>
           </button>
         ))}
       </div>
@@ -164,7 +166,7 @@ export function PositionPanel() {
           {tab === "withdraw" && "Withdraw any amount up to your balance, any time the pool is open. Requests above your balance move nothing — and never reveal it."}
           {tab === "sponsor" && "Add cUSD straight to the prize. Sponsorships never join the principal and cannot be withdrawn."}
         </p>
-        <button className="btn-primary shine w-full" onClick={submit} disabled={!open || !amount || flow.state.status === "pending"}>
+        <button data-anchor="deposit" className="btn-primary shine w-full" onClick={submit} disabled={!open || !amount || flow.state.status === "pending"}>
           {!open ? "Paused during the draw" : flow.state.status === "pending" ? "Working…" : tab === "deposit" ? "Deposit privately" : tab === "withdraw" ? "Withdraw" : "Sponsor the prize"}
         </button>
         <FlowStatus state={flow.state} />
