@@ -6,7 +6,7 @@ import { CipherMachine } from "@/components/fx/CipherMachine";
 /** Full-bleed illustrated header in the spirit of PoolTogether's hero, FHE edition. */
 export function HeroBand() {
   return (
-    <section className="relative -mx-4 -mt-6 overflow-hidden border-b border-line sm:-mx-6" aria-label="Cipher Pool">
+    <section className="relative isolate -mx-4 -mt-6 overflow-hidden border-b border-line sm:-mx-6" aria-label="Cipher Pool">
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(900px_400px_at_20%_30%,rgb(var(--accent)/0.10),transparent_60%),radial-gradient(700px_360px_at_80%_60%,rgb(var(--cipher)/0.10),transparent_60%)]" />
       <CipherMachine className="absolute inset-0 -z-[5] h-full w-full opacity-90" />
       <div className="mx-auto flex min-h-[340px] w-full max-w-6xl flex-col justify-center px-4 py-12 sm:px-6 md:min-h-[400px]">
