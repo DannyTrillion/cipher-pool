@@ -32,20 +32,18 @@ export function Hero() {
 
   return (
     <section className="relative" aria-label="Cipher Pool">
-      {/* headline block — quiet, left, no badge */}
-      <div className="max-w-4xl pt-10 md:pt-16">
-        <h1 className="hero-title max-w-[17ch]" style={{ textWrap: "balance" }}>
-          <DecryptText text="The no-loss prize pool where nobody can see what you hold." duration={1400} />
+      {/* headline block — centred, Syne, yellow "Win" */}
+      <div className="mx-auto max-w-3xl pt-10 text-center md:pt-16">
+        <h1 className="display text-[2.25rem] leading-[1.0] sm:text-5xl md:text-[3.5rem]">
+          <DecryptText text="Save privately." duration={900} />
+          <br />
+          <DecryptText text="Win" duration={700} delay={200} className="text-accent" /> <DecryptText text="verifiably." duration={900} delay={260} />
         </h1>
-        <p className="mt-6 max-w-3xl text-lg leading-relaxed text-ink-muted sm:text-xl">
+        <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-ink-muted sm:text-lg">
           Deposit, keep every cent of your principal, and win the pool&apos;s yield through tiered draws. Your balance, your odds and
-          your winnings are ciphertext on-chain — even to the contract — and the draw is verifiable by anyone.
-          <span className="ml-3 inline-flex items-center gap-2 align-middle">
-            <span className="cipher-mask inline-block h-5 w-16" />
-            <span className="hand text-base">← encrypted</span>
-          </span>
+          your winnings are ciphertext on-chain — even to the contract — and every draw is verifiable by anyone.
         </p>
-        <div className="mt-8 flex flex-wrap items-center gap-5">
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-5">
           <a href="#position" className="btn-primary shine px-6 py-3 text-[15px]">Deposit privately</a>
           <Link href="/how-it-works" className="text-sm text-ink-muted underline-offset-4 hover:text-ink hover:underline">How the blind draw works →</Link>
         </div>
@@ -54,13 +52,12 @@ export function Hero() {
       {/* preview row — the product, annotated */}
       <div className="mt-16 grid gap-20 md:grid-cols-[1.05fr_0.9fr_0.9fr] md:gap-5">
         <div className="relative">
-          <Annotation text="Encrypted pool" className="absolute -top-14 left-1/2 -translate-x-1/2 text-accent" tilt={-5} />
-          <div className="tile relative aspect-[1.05] overflow-hidden md:aspect-auto md:h-full md:min-h-[380px]">
+          <Annotation text="Encrypted pool" className="absolute -top-14 left-1/2 z-10 -translate-x-1/2 text-accent" tilt={-5} />
+          {/* borderless: the sphere is the world the tiles sit beside; it may spill past its column */}
+          <div className="relative aspect-square md:absolute md:-inset-x-16 md:-inset-y-10 md:aspect-auto">
             <CipherSphere className="absolute inset-0 h-full w-full" points={120 + savers * 24} orbs={state?.winnerSlots ?? 5} drawing={drawing} you={!!user?.poolBalance} />
-            <div className="pointer-events-none absolute left-3 top-3 flex items-center gap-2 text-[11px] text-ink-faint">
-              <span className="h-1.5 w-1.5 rounded-full bg-cipher" /> {savers} saver{savers === 1 ? "" : "s"} · every point a ciphertext
-            </div>
           </div>
+          <div className="hidden md:block md:min-h-[380px]" />
         </div>
         <div className="relative">
           <Annotation text="Your position" className="absolute -top-14 left-1/2 -translate-x-1/2 text-accent" tilt={4} />
