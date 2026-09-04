@@ -4,7 +4,7 @@
 
 ## Links
 - Live demo: https://cipher-pool-beta.vercel.app
-- Repository: _TBD_
+- Repository: https://github.com/DannyTrillion/cipher-pool
 - Video (3 min, real-person pitch): _TBD_
 - X thread: _TBD_
 - Contracts (Sepolia): see `frontend/lib/contracts/deployment.json` and the app's "How it works" page

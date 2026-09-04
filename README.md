@@ -1,6 +1,7 @@
 # Cipher Pool — Confidential Prize Savings on the Zama Protocol
 
 **Live app (Sepolia): https://cipher-pool-beta.vercel.app**
+**Source: https://github.com/DannyTrillion/cipher-pool**
 
 A production-grade, no-loss prize savings pool in the PoolTogether mould, where **deposits, balances, odds and winnings are encrypted end-to-end** with Zama's FHEVM, **winners are selected on-chain over encrypted balances with FHE randomness**, and every draw is publicly verifiable.
 

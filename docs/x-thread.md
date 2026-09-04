@@ -34,8 +34,8 @@ From the outside, every account was touched identically. Not even the contract o
 
 9/ Try it on Sepolia: take test tUSD, shield it into cUSD, deposit, hold the big button to run a draw, reveal privately whether you won, claim, withdraw any time.
 
-Demo: [link]
-Code: [link]
+Demo: https://cipher-pool-beta.vercel.app
+Code: https://github.com/DannyTrillion/cipher-pool
 Video: [link]
 
 Built with @zama FHEVM, OpenZeppelin confidential contracts and the Zama relayer SDK.
