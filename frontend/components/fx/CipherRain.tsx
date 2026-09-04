@@ -54,8 +54,8 @@ export function CipherRain() {
         }
         if (Math.random() < 0.15) c.chars[Math.floor(Math.random() * c.chars.length)] = HEX[Math.floor(Math.random() * 16)];
         for (let i = 0; i < c.len; i++) {
-          const a = (1 - i / c.len) * 0.16;
-          ctx.fillStyle = i === 0 ? `rgba(255,214,0,${a + 0.12})` : `rgba(125,165,255,${a})`;
+          const a = (1 - i / c.len) * 0.11;
+          ctx.fillStyle = i === 0 ? `rgba(255,214,0,${a + 0.08})` : `rgba(125,165,255,${a})`;
           ctx.fillText(c.chars[i % c.chars.length], c.x, c.y - i * 14);
         }
       }
