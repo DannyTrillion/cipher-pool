@@ -4,7 +4,7 @@ A production-grade, no-loss prize savings pool (PoolTogether-style) where **depo
 
 Built for the **Zama Developer Program — Mainnet Season 4 Bounty Track**.
 
-> **Live demo:** _(added after deployment)_
+> **Live demo:** https://cipher-pool-beta.vercel.app
 > **Network:** Sepolia · **Asset:** cUSD (ERC-7984 confidential token, testnet faucet)
 
 ## What it does
@@ -58,6 +58,16 @@ reserve -= select(winner < n, prize, 0)           // rolls over if no eligible w
 | Every balance, incl. the pool's total principal | Aggregate prize reserve & each draw's prize |
 | Who won, and lifetime winnings | FHE seed and participant count per draw |
 | Per-user eligibility weights | Anything a winner chooses to publish |
+
+## Deployed contracts (Sepolia)
+
+| Contract | Address |
+|---|---|
+| ConfidentialPrizePool | [`0x47Ea415E40439430a39DecAb1b3Ee15c45Fb21a2`](https://sepolia.etherscan.io/address/0x47Ea415E40439430a39DecAb1b3Ee15c45Fb21a2) |
+| ConfidentialUSD (cUSD, ERC-7984) | [`0xaaF5Ff634dF99Eb4c3d9ea24c2Ef5AA033256Cf4`](https://sepolia.etherscan.io/address/0xaaF5Ff634dF99Eb4c3d9ea24c2Ef5AA033256Cf4) |
+| MockYieldSource | [`0x21FDaDD312420Ead95d6177aF4538A38AE829Bd6`](https://sepolia.etherscan.io/address/0x21FDaDD312420Ead95d6177aF4538A38AE829Bd6) |
+
+Draw period 10 minutes · simulated APY 5% · faucet 1,000 cUSD per hour per address.
 
 ## Run it
 

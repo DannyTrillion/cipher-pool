@@ -3,7 +3,7 @@
 **Project:** Cipher Pool — Confidential Prize Savings (confidential PoolTogether)
 
 ## Links
-- Live demo: _TBD_
+- Live demo: https://cipher-pool-beta.vercel.app
 - Repository: _TBD_
 - Video (3 min, real-person pitch): _TBD_
 - X thread: _TBD_
