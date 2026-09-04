@@ -129,7 +129,7 @@ export function CipherSphere({
       ctx.clearRect(0, 0, w, h);
       const cx = w / 2;
       const cy = h / 2 - Math.min(120, scrollY * 0.12); // scroll parallax
-      const R = Math.min(w, h) * 0.34 * s.zoom;
+      const R = Math.min(w, h) * 0.37 * s.zoom;
       const f = R * 3.2;
 
       // core glow (+ flash)

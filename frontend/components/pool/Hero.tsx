@@ -34,10 +34,8 @@ export function Hero() {
     <section className="relative" aria-label="Cipher Pool">
       {/* headline block — quiet, left, no badge */}
       <div className="max-w-4xl pt-10 md:pt-16">
-        <h1 className="hero-title">
-          <DecryptText text="The no-loss prize pool where" duration={1000} />
-          <br />
-          <DecryptText text="nobody can see what you hold." duration={1000} delay={200} />
+        <h1 className="hero-title max-w-[17ch]" style={{ textWrap: "balance" }}>
+          <DecryptText text="The no-loss prize pool where nobody can see what you hold." duration={1400} />
         </h1>
         <p className="mt-6 max-w-3xl text-lg leading-relaxed text-ink-muted sm:text-xl">
           Deposit, keep every cent of your principal, and win the pool&apos;s yield through tiered draws. Your balance, your odds and
@@ -75,8 +73,8 @@ export function Hero() {
       </div>
 
       {/* stat rail — unchanged */}
-      <div className="glass mt-8 grid grid-cols-2 gap-6 p-5 sm:p-6 lg:grid-cols-[1.6fr_auto_auto_auto] lg:items-center lg:gap-10">
-        <div className="col-span-2 lg:col-span-1">
+      <div className="glass mt-8 grid grid-cols-1 gap-6 p-5 sm:grid-cols-2 sm:p-6 lg:grid-cols-[1.6fr_auto_auto_auto] lg:items-center lg:gap-10 [&>*]:min-w-0">
+        <div className="sm:col-span-2 lg:col-span-1">
           <div className="label">Prize up for grabs · public</div>
           <div className="mt-2 flex items-baseline gap-3">
             {prize !== undefined ? (
