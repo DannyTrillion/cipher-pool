@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAccount } from "wagmi";
+import { useAccount, useConfig } from "wagmi";
+import { readContracts } from "wagmi/actions";
+import { CHAIN_ID } from "@/lib/contracts";
 import { encodeFunctionData, decodeFunctionResult, formatUnits, type Abi } from "viem";
 import { POOL, TUSD, TOKEN } from "@/lib/contracts";
 
@@ -39,8 +41,11 @@ async function via(send: (method: string, params: unknown[]) => Promise<unknown>
 
 export default function DebugPage() {
   const { address, isConnected } = useAccount();
+  const config = useConfig();
   const [rows, setRows] = useState<Row[]>([]);
   const [ran, setRan] = useState<string>("");
+  const [appPath, setAppPath] = useState<string>("");
+  const build = (process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA || "local").slice(0, 7);
 
   const run = async () => {
     if (!address) return;
@@ -60,6 +65,20 @@ export default function DebugPage() {
     }
     setRows(out);
     setRan(new Date().toLocaleTimeString());
+    // The exact path the app uses: one multicall through the app's own transports.
+    try {
+      const t0 = performance.now();
+      const res = await readContracts(config, { allowFailure: true, contracts: [
+        { ...TUSD, chainId: CHAIN_ID, functionName: "balanceOf", args: [address] },
+        { ...POOL, chainId: CHAIN_ID, functionName: "balanceOf", args: [address] },
+        { ...POOL, chainId: CHAIN_ID, functionName: "participantCount" },
+        { ...TOKEN, chainId: CHAIN_ID, functionName: "confidentialBalanceOf", args: [address] },
+      ] });
+      const show = (r: { status: string; result?: unknown; error?: Error }) => r.status === "success" ? (typeof r.result === "bigint" ? r.result.toString() : String(r.result).slice(0, 12)) : `FAIL ${r.error?.message?.slice(0, 80)}`;
+      setAppPath(`multicall via app transports (${Math.round(performance.now() - t0)} ms): USDT=${show(res[0])} pool=${show(res[1])} savers=${show(res[2])} cUSDT=${show(res[3])}`);
+    } catch (e) {
+      setAppPath(`multicall via app transports FAILED: ${(e as Error).message.slice(0, 200)}`);
+    }
   };
   useEffect(() => { void run(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [address]);
 
@@ -67,7 +86,8 @@ export default function DebugPage() {
     <div className="mx-auto max-w-3xl">
       <h1 className="display text-3xl">Network check</h1>
       <p className="mt-2 text-sm text-ink-muted">Reads your balances through each endpoint the app can use. If one row disagrees with the others, that endpoint is stale or blocked on your connection.</p>
-      <div className="mt-4 font-mono text-xs text-ink-muted">Wallet: {isConnected ? address : "not connected"} · Pool: {POOL.address} · {ran && `checked ${ran}`}</div>
+      <div className="mt-4 font-mono text-xs text-ink-muted">Wallet: {isConnected ? address : "not connected"} · Pool: {POOL.address} · build {build} · {ran && `checked ${ran}`}</div>
+      {appPath && <div className="mt-2 break-all font-mono text-xs text-ink">{appPath}</div>}
       {!isConnected && <p className="mt-4 text-sm text-warn">Connect your wallet first, then this page runs by itself.</p>}
       <div className="mt-4 overflow-x-auto rounded-2xl border border-line">
         <table className="w-full text-left text-xs">
