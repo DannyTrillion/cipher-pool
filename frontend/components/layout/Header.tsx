@@ -38,6 +38,7 @@ export function Header() {
   const drawReady = !!state && state.phase === Phase.Open && Number(state.nextDrawAt) <= now && Number(state.participantCount) > 0;
 
   const [scrolled, setScrolled] = useState(false);
+  const [hidden, setHidden] = useState(false);
   const [menu, setMenu] = useState(false);
   const [sheet, setSheet] = useState(false);
   const [sound, setSoundOn] = useState(false);
@@ -49,7 +50,22 @@ export function Header() {
   useEffect(() => {
     setHasInjected(!!(window as unknown as { ethereum?: unknown }).ethereum);
     setSoundOn(initSoundPref());
-    const onScroll = () => setScrolled(window.scrollY > 12);
+    let last = window.scrollY;
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const y = window.scrollY;
+        setScrolled(y > 12);
+        // phones: slide the bar away when scrolling down past the hero, bring it back on any scroll up
+        if (window.innerWidth < 768) setHidden(y > 96 && y > last + 4);
+        else setHidden(false);
+        if (y < last - 4 || y <= 96) setHidden(false);
+        last = y;
+        ticking = false;
+      });
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -160,8 +176,9 @@ export function Header() {
     <>
       <header
         className={cn(
-          "sticky top-0 z-40 transition-all duration-300",
-          scrolled ? "border-b border-line/70 bg-canvas/55 backdrop-blur-xl" : "border-b border-transparent bg-transparent",
+          "sticky top-0 z-40 transition-all duration-300 will-change-transform",
+          scrolled ? "border-b border-line/70 bg-canvas/70 md:bg-canvas/55 md:backdrop-blur-xl" : "border-b border-transparent bg-transparent",
+          hidden && "-translate-y-full",
         )}
       >
         <div className={cn("mx-auto grid w-full max-w-6xl grid-cols-[1fr_auto_1fr] items-center px-4 transition-all duration-300 sm:px-6", scrolled ? "h-14" : "h-16")}>

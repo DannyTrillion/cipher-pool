@@ -47,9 +47,14 @@ export function CipherSphere({
     if (!ctx) return;
 
     let raf = 0, w = 0, h = 0, dpr = 1;
+    const mobile = window.innerWidth < 768;
+    let visible = true;
+    const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; }, { threshold: 0.05 });
+    io.observe(canvas);
+    let lastFrame = 0;
     const resize = () => {
       const r = canvas.getBoundingClientRect();
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      dpr = Math.min(window.devicePixelRatio || 1, mobile ? 1.5 : 2);
       w = r.width; h = r.height;
       canvas.width = w * dpr; canvas.height = h * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -112,7 +117,9 @@ export function CipherSphere({
 
     const frame = (now: number) => {
       raf = requestAnimationFrame(frame);
-      if (document.hidden) return;
+      if (document.hidden || !visible) return;
+      if (mobile && now - lastFrame < 33) return; // ~30fps budget on phones
+      lastFrame = now;
       const dt = Math.min(0.05, (now - t0) / 1000);
       t0 = now;
       const s = state.current;
@@ -144,7 +151,7 @@ export function CipherSphere({
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, w, h);
 
-      const n = Math.min(MAX, Math.max(60, Math.floor(s.points)));
+      const n = Math.min(mobile ? 110 : MAX, Math.max(60, Math.floor(s.points)));
       if (n !== baseN) rebuild(n);
       const cosA = Math.cos(angle + ry), sinA = Math.sin(angle + ry);
       const cosX = Math.cos(rx), sinX = Math.sin(rx);
@@ -160,10 +167,10 @@ export function CipherSphere({
       }
       proj.sort((a, b) => a.z - b.z);
 
-      // constellation lines
+      // constellation lines (skipped on phones: O(n²) is the main cost)
       ctx.lineWidth = 1;
       const maxD = R * 0.42;
-      for (let a = 0; a < proj.length; a++) {
+      for (let a = 0; a < (mobile ? 0 : proj.length); a++) {
         const p = proj[a];
         if (p.z < -0.1) continue;
         for (let b = a + 1; b < proj.length; b++) {
@@ -287,6 +294,7 @@ export function CipherSphere({
     return () => {
       cancelAnimationFrame(raf);
       ro.disconnect();
+      io.disconnect();
       off();
       registerSphereCenter(null);
       window.removeEventListener("mousemove", onMove);

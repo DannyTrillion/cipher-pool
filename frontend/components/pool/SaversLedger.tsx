@@ -72,7 +72,7 @@ export function SaversLedger() {
   const mine = get(myHandle);
 
   return (
-    <section className="card p-6 sm:p-7">
+    <section className="card defer-render p-6 sm:p-7">
       <div className="grid gap-6 md:grid-cols-[1.1fr_0.9fr] md:items-end">
         <div>
           <h2 className="display text-2xl sm:text-3xl">Everyone is listed. Nothing is readable.</h2>

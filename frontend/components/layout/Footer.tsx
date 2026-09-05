@@ -30,7 +30,7 @@ function AddressRow({ label, address }: { label: string; address: string }) {
 export function Footer() {
   const c = deployment.contracts;
   return (
-    <footer className="mt-16 border-t border-line">
+    <footer className="defer-render mt-16 border-t border-line">
       <div className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[1.2fr_0.8fr_1.2fr]">
         <div>
           <Logo size={30} />

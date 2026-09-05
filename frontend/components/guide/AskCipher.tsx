@@ -48,7 +48,7 @@ export function AskCipher() {
       <motion.button
         aria-label={open ? "Close Ask Cipher" : "Ask Cipher"}
         aria-expanded={open}
-        className="fixed bottom-5 right-5 z-[70] grid h-14 w-14 place-items-center rounded-full bg-accent text-black shadow-[0_0_0_1px_rgb(120_90_0/0.5),0_12px_30px_-8px_rgb(255_214_0/0.7)]"
+        className="fixed bottom-20 right-4 z-[70] grid h-14 w-14 md:bottom-5 md:right-5 place-items-center rounded-full bg-accent text-black shadow-[0_0_0_1px_rgb(120_90_0/0.5),0_12px_30px_-8px_rgb(255_214_0/0.7)]"
         whileHover={{ scale: 1.06 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => { setOpen((o) => !o); sfx.click(); }}
@@ -72,7 +72,7 @@ export function AskCipher() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.98 }}
             transition={{ type: "spring", stiffness: 380, damping: 32 }}
-            className="glass fixed bottom-24 right-5 z-[70] flex h-[min(72vh,560px)] w-[min(92vw,380px)] flex-col overflow-hidden"
+            className="glass fixed bottom-[9.5rem] right-4 z-[70] flex h-[min(64vh,560px)] w-[min(92vw,380px)] flex-col overflow-hidden md:bottom-24 md:right-5 md:h-[min(72vh,560px)]"
           >
             <div className="flex items-center gap-2.5 border-b border-line px-4 py-3">
               <LogoMark size={24} />

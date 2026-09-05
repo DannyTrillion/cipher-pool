@@ -17,7 +17,7 @@ export function Hero() {
   return (
     <section className="relative" aria-label="Cipher Pool">
       {/* headline block — centred, Syne, yellow "Win" */}
-      <div className="mx-auto max-w-3xl pt-10 text-center md:pt-16">
+      <div className="mx-auto flex min-h-[calc(100dvh-4rem)] max-w-3xl flex-col justify-center pt-6 text-center md:block md:min-h-0 md:pt-16">
         <h1 className="display text-[1.9rem] leading-[1.0] xs:text-[2.1rem] sm:text-5xl md:text-[3.5rem]">
           Save privately.
           <br />

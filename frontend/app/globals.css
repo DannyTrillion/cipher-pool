@@ -354,3 +354,28 @@ body::before {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* --- phones: bottom tab bar, safe areas, and a lighter render path --- */
+.mobile-tabbar {
+  padding-bottom: env(safe-area-inset-bottom);
+  background: rgb(var(--base) / 0.92);
+  border-top: 1px solid rgb(var(--line) / 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+@media (max-width: 767px) {
+  /* backdrop blur on many stacked cards is the main scroll cost on phones: use solid surfaces instead */
+  .glass, .card, .tile {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: linear-gradient(180deg, rgb(20 22 30 / 0.92), rgb(14 15 20 / 0.94));
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06);
+  }
+  :root[data-theme="light"] .glass, :root[data-theme="light"] .card, :root[data-theme="light"] .tile { background: rgb(255 255 255 / 0.96); }
+  body::after { display: none; }          /* grain */
+  body::before { display: none; }         /* vignette */
+  .card-hover:hover { transform: none; }
+  .hero-bleed { will-change: auto; }
+}
+/* let the browser skip layout/paint for far-below-fold sections */
+.defer-render { content-visibility: auto; contain-intrinsic-size: 1px 600px; }

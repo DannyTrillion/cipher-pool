@@ -34,8 +34,11 @@ export function AmbientBackground() {
       }));
     }
 
+    const mobile = window.innerWidth < 768;
+    let lastT = 0;
     function draw(t: number) {
-      if (document.hidden) { raf = requestAnimationFrame(draw); return; }
+      if (document.hidden || (mobile && t - lastT < 50)) { raf = requestAnimationFrame(draw); return; }
+      lastT = t;
       ctx!.clearRect(0, 0, canvas!.width, canvas!.height);
       ctx!.fillStyle = "#CFE9DF";
       for (const st of stars) {
