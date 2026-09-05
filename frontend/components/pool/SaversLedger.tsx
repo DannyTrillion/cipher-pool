@@ -83,7 +83,7 @@ export function SaversLedger() {
         <div className="rounded-2xl border border-line bg-black/25 px-4 py-3">
           <div className="label">Total saved in the pool</div>
           <div className="mt-1.5 flex items-baseline gap-2">
-            <span className="cipher-mask inline-block h-9 w-40 sm:h-10 sm:w-52" aria-label="Encrypted total" />
+            <span className="masked display text-3xl sm:text-4xl" aria-label="Encrypted total" title="Scrambled on the blockchain. Nobody can read the total.">********</span>
             <span className="font-mono text-sm text-ink-muted">{SYMBOL}</span>
           </div>
           <div className="mt-1.5 text-xs text-ink-faint">Even the total is secret. Prizes are public. Savings are not.</div>

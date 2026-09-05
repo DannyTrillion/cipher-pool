@@ -203,6 +203,20 @@ body::before {
   text-shadow: 0 0 30px rgb(var(--accent) / 0.35), 0 0 2px rgb(var(--accent) / 0.5);
 }
 
+/* An encrypted number nobody can read yet: real asterisks, softly blurred.
+   Never a spinner, never a blank pill. Swaps for the exact figure on reveal. */
+.masked {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  letter-spacing: 0.14em;
+  color: rgb(var(--cipher) / 0.9);
+  filter: blur(1.3px);
+  user-select: none;
+  animation: maskBreath 3.2s ease-in-out infinite;
+}
+:root[data-theme="light"] .masked { color: rgb(var(--cipher)); }
+@keyframes maskBreath { 0%, 100% { opacity: 0.75; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .masked { animation: none; } }
+
 /* --- controls: one button family, sharing the arcade cap's material --- */
 .btn {
   @apply relative inline-flex select-none items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold
@@ -376,6 +390,9 @@ body::before {
   body::before { display: none; }         /* vignette */
   .card-hover:hover { transform: none; }
   .hero-bleed { will-change: auto; }
+  .backdrop-blur-xl, .backdrop-blur-lg, .backdrop-blur-md, .backdrop-blur, .backdrop-blur-sm { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+  .prize-glow { text-shadow: none; }
+  .masked { filter: blur(1px); }
 }
 /* let the browser skip layout/paint for far-below-fold sections */
 .defer-render { content-visibility: auto; contain-intrinsic-size: 1px 600px; }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDecryptSession } from "@/lib/fhevm/useDecryptSession";
 import { publicDecrypt } from "@/lib/fhevm/instance";
 import { POOL, TOKEN } from "@/lib/contracts";
@@ -40,33 +40,52 @@ export function useReveal() {
   return { reveal, get, busy, hasSession };
 }
 
-/** Public reveal for handles made publicly decryptable on-chain (prize, seed). */
+/**
+ * Public reveal for handles made publicly decryptable on-chain (prize, seed).
+ * One module-level cache serves every component, so the prize reads the same
+ * everywhere and the relayer is asked once per handle, not once per card.
+ */
+const pubCache: Record<string, bigint> = {};
+const pubPending: Record<string, boolean> = {};
+const pubErrors: Record<string, string> = {};
+const pubSubs = new Set<() => void>();
+const notify = () => pubSubs.forEach((f) => f());
+
 export function usePublicReveal() {
-  const [values, setValues] = useState<Record<string, bigint>>({});
-  const [pending, setPending] = useState<Record<string, boolean>>({});
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [version, bump] = useState(0);
+  useEffect(() => {
+    const f = () => bump((n) => n + 1);
+    pubSubs.add(f);
+    return () => { pubSubs.delete(f); };
+  }, []);
+  // Fresh snapshots per change, stable between changes, so effects keyed on them behave.
+  const snap = useMemo(() => ({ values: { ...pubCache }, pending: { ...pubPending }, errors: { ...pubErrors } }), [version]);
 
   const reveal = useCallback(async (handles: (string | null | undefined)[]) => {
     // Never auto-retry a handle that already failed (the relayer may still be
     // processing it); callers use `retry` on a timer or a user action instead.
-    const want = handles.filter((h): h is string => !!h && !(h in values) && !pending[h] && !(h in errors));
+    const want = handles.filter((h): h is string => !!h && !(h in pubCache) && !pubPending[h] && !(h in pubErrors));
     if (want.length === 0) return;
-    setPending((p) => ({ ...p, ...Object.fromEntries(want.map((h) => [h, true])) }));
+    want.forEach((h) => { pubPending[h] = true; });
+    notify();
     try {
       const res = await publicDecrypt(want);
-      setValues((v) => ({ ...v, ...res }));
-      setErrors((e) => { const n = { ...e }; want.forEach((h) => delete n[h]); return n; });
+      Object.assign(pubCache, res);
+      want.forEach((h) => { delete pubErrors[h]; });
     } catch (e) {
-      setErrors((prev) => ({ ...prev, ...Object.fromEntries(want.map((h) => [h, humanizeError(e)])) }));
+      const msg = humanizeError(e);
+      want.forEach((h) => { pubErrors[h] = msg; });
     } finally {
-      setPending((p) => { const n = { ...p }; want.forEach((h) => delete n[h]); return n; });
+      want.forEach((h) => { delete pubPending[h]; });
+      notify();
     }
-  }, [values, pending, errors]);
+  }, []);
 
   /** Clear a failed handle so the next `reveal` tries it again. */
   const retry = useCallback((handle: string) => {
-    setErrors((e) => { const n = { ...e }; delete n[handle]; return n; });
+    delete pubErrors[handle];
+    notify();
   }, []);
 
-  return { reveal, retry, values, pending, errors };
+  return { reveal, retry, ...snap };
 }

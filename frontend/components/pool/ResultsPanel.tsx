@@ -241,7 +241,7 @@ export function ResultsPanel() {
                   <div className="mb-2 text-ink-faint">Each prize has its own random number, published when the draw starts. Winners are picked from these numbers.</div>
                   <ul className="space-y-1">
                     {seeds.map((h, i) => { const amt = latestPrize !== undefined ? slotAmounts(latestPrize, latest.tiers)[i] : undefined; return (
-                      <li key={h} className="flex gap-3"><span className="w-16 shrink-0 text-ink-faint">{amt !== undefined ? formatAmount(amt, DECIMALS, { maxFractionDigits: 2 }) : `prize ${i + 1}`}</span><span className="truncate">{pub.values[h] !== undefined ? pub.values[h].toString() : <span className="cipher-mask">••••••••••</span>}</span></li>
+                      <li key={h} className="flex gap-3"><span className="w-16 shrink-0 text-ink-faint">{amt !== undefined ? formatAmount(amt, DECIMALS, { maxFractionDigits: 2 }) : `prize ${i + 1}`}</span><span className="truncate">{pub.values[h] !== undefined ? pub.values[h].toString() : <span className="masked">**********</span>}</span></li>
                     ); })}
                   </ul>
                   <a className="mt-2 inline-block text-cipher underline" href={etherscanAddr(POOL.address)} target="_blank" rel="noreferrer">Pool contract on Etherscan ↗</a>

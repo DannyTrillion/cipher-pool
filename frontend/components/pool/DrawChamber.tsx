@@ -35,6 +35,8 @@ function Drum({ savers, you, drawing, slots }: { savers: string[]; you?: string;
     const ro = new ResizeObserver(resize); ro.observe(canvas);
     let visible = true;
     const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; }, { threshold: 0.05 }); io.observe(canvas);
+    const mobile = window.innerWidth < 768;
+    let lastFrame = 0;
     const off = onScene((e) => {
       const s = st.current;
       if (e.type === "drawDone") { s.drop = performance.now(); s.flash = 1; }
@@ -46,6 +48,8 @@ function Drum({ savers, you, drawing, slots }: { savers: string[]; you?: string;
     const frame = (now: number) => {
       raf = requestAnimationFrame(frame);
       if (document.hidden || !visible) return;
+      if (mobile && now - lastFrame < 33) return; // ~30fps on phones
+      lastFrame = now;
       const dt = Math.min(0.05, (now - t0) / 1000); t0 = now;
       const s = st.current;
       const target = s.drawing ? 4.5 : 0.35;
@@ -79,7 +83,7 @@ function Drum({ savers, you, drawing, slots }: { savers: string[]; you?: string;
           y = cy + R * 0.72 - row * br * 1.9 - br + Math.sin(now / 900 + i) * 1.5;
         }
         const mine = s.you && sameAddress(addr, s.you);
-        ctx.shadowBlur = mine ? 16 : 6; ctx.shadowColor = mine ? "rgba(255,214,0,0.9)" : "rgba(0,0,0,0.5)";
+        ctx.shadowBlur = mobile && !s.drawing ? (mine ? 10 : 0) : mine ? 16 : 6; ctx.shadowColor = mine ? "rgba(255,214,0,0.9)" : "rgba(0,0,0,0.5)";
         ctx.fillStyle = mine ? "#FFD600" : hashColor(addr); ctx.beginPath(); ctx.arc(x, y, br, 0, Math.PI * 2); ctx.fill();
         ctx.shadowBlur = 0;
         ctx.fillStyle = "rgba(255,255,255,0.35)"; ctx.beginPath(); ctx.arc(x - br * 0.3, y - br * 0.3, br * 0.32, 0, Math.PI * 2); ctx.fill();
@@ -134,11 +138,11 @@ export function DrawChamber() {
 
   return (
     <section id="console" className="glass relative scroll-mt-24 overflow-hidden p-5 sm:p-7" aria-label="Draw chamber">
-      <div className="grid items-center gap-8 md:grid-cols-[1fr_1.15fr_1fr] md:gap-8">
+      <div className="grid gap-6 md:grid-cols-[1fr_1.15fr_1fr] md:items-center md:gap-8">
         <div className="order-2 md:order-1">
           <div className="label">Prize this round</div>
           <div className="mt-2 flex items-baseline gap-3">
-            {prize !== undefined ? <span className="display prize-glow text-5xl tabular">{formatAmount(prize, DECIMALS, { maxFractionDigits: 2 })}</span> : <span className="cipher-mask inline-block h-12 w-40" />}
+            {prize !== undefined ? <span className="display prize-glow text-5xl tabular">{formatAmount(prize, DECIMALS, { maxFractionDigits: 2 })}</span> : <span className="masked display text-5xl" aria-label="Reading the prize" title="Reading the public prize figure from Zama's relayer">*****</span>}
             <span className="font-mono text-lg text-ink-muted">{SYMBOL}</span>
           </div>
           <div className="mt-2 text-sm text-ink-muted">Split between <span className="text-ink">{state?.winnerSlots ?? 5} winners</span> every {state ? formatDuration(Number(state.drawPeriod)).replace(/^00:/, "") : "…"}. Grows about {formatAmount(state ? state.dripPerSecond * 3600n : DRIP_PER_HOUR, DECIMALS, { maxFractionDigits: 0 })} {SYMBOL} an hour from interest (simulated on testnet).</div>
@@ -149,7 +153,7 @@ export function DrawChamber() {
         </div>
 
         <div className="order-1 flex flex-col items-center md:order-2">
-          <div className="relative h-[240px] w-full max-w-[360px] sm:h-[280px]">
+          <div className="relative h-[220px] w-full max-w-[360px] sm:h-[280px]">
             <Drum savers={rows.map((r) => r.address)} you={address} drawing={drawing} slots={state?.winnerSlots ?? 5} />
           </div>
           <div className="-mt-2">

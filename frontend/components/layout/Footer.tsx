@@ -30,8 +30,8 @@ function AddressRow({ label, address }: { label: string; address: string }) {
 export function Footer() {
   const c = deployment.contracts;
   return (
-    <footer className="defer-render mt-16 border-t border-line">
-      <div className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[1.2fr_0.8fr_1.2fr]">
+    <footer className="defer-render mt-8 border-t border-line pb-20 md:mt-16 md:pb-0">
+      <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-10 sm:px-6 md:grid-cols-[1.2fr_0.8fr_1.2fr] md:gap-10 md:py-12">
         <div>
           <Logo size={30} />
           <p className="mt-3 max-w-xs text-sm text-ink-muted">A shared savings pool where the interest is given out as prizes and nobody can see what you hold. Built with Zama&apos;s encryption.</p>

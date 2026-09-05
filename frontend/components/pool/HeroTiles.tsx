@@ -169,7 +169,7 @@ function DrawPane() {
           <div className="mt-4 rounded-xl border border-line px-3.5 py-3">
             <div className="text-[11px] text-ink-faint">Last draw #{draw.epoch.toString()}</div>
             <div className="mt-0.5 font-mono text-sm">
-              {prize !== undefined ? `${formatAmount(prize, DECIMALS, { maxFractionDigits: 2 })} ${SYMBOL}` : <span className="cipher-mask">•••••</span>}
+              {prize !== undefined ? `${formatAmount(prize, DECIMALS, { maxFractionDigits: 2 })} ${SYMBOL}` : <span className="masked">*****</span>}
               <span className="text-ink-faint"> shared by {draw.winnerSlots} winners · {draw.participants} savers took part</span>
             </div>
           </div>

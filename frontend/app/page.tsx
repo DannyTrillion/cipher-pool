@@ -7,11 +7,11 @@ import { GlyphConfetti } from "@/components/fx/GlyphConfetti";
 
 export default function Home() {
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 md:space-y-8">
       <FlyingCoins />
       <GlyphConfetti />
       <Hero />
-      <div className="stagger space-y-8">
+      <div className="stagger space-y-6 md:space-y-8">
         <GrandSlam />
         <SaversLedger />
         <AdminPanel />

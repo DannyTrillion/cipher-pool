@@ -145,8 +145,8 @@ export function DrawButton({
         }}
       >
         {state === "armed" && !pressed && <span className="absolute inset-0 animate-pulseRing rounded-full border-2 border-accent/70" aria-hidden="true" />}
-        <span className={cn("display tabular", label.length > 6 ? "text-[15px]" : "text-[19px]")}>{label}</span>
-        <span className="mt-0.5 font-mono text-[9px] uppercase tracking-[0.2em] opacity-80">{sub}</span>
+        <span className="display tabular leading-none" style={{ fontSize: Math.round(size * (label.length > 6 ? 0.082 : 0.108)) }}>{label}</span>
+        <span className="mt-1 max-w-[70%] text-center font-mono uppercase leading-tight tracking-[0.16em] opacity-80" style={{ fontSize: Math.max(7, Math.round(size * 0.05)) }}>{sub}</span>
       </motion.button>
 
       {state === "live" && (

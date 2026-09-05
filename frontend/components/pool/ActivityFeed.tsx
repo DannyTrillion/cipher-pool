@@ -36,16 +36,16 @@ export function ActivityFeed({ compact = false }: { compact?: boolean }) {
       <ul className="mt-2 space-y-1.5 text-[13px]">
         <AnimatePresence initial={false}>
           {rows.map((r) => (
-            <motion.li key={r.id} initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="flex min-w-0 items-center justify-between gap-3 rounded-lg border border-line bg-black/20 px-3 py-1.5">
-              <span className="flex min-w-0 items-center gap-2 truncate">
-                <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", LABEL[r.kind].c)} />
+            <motion.li key={r.id} initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="flex min-w-0 items-start justify-between gap-3 rounded-lg border border-line bg-black/20 px-3 py-1.5">
+              <span className="flex min-w-0 flex-1 items-start gap-2 leading-snug">
+                <span className={cn("mt-[6px] h-1.5 w-1.5 shrink-0 rounded-full", LABEL[r.kind].c)} />
                 {r.who ? (
-                  <span className="truncate"><span className="font-mono text-ink-muted">{truncateAddress(r.who)}</span> {LABEL[r.kind].t} <span className="text-ink-faint">(amount hidden)</span></span>
+                  <span className="min-w-0"><span className="font-mono text-ink-muted">{truncateAddress(r.who)}</span> {LABEL[r.kind].t} <span className="text-ink-faint">(amount hidden)</span></span>
                 ) : (
-                  <span className="truncate">{LABEL[r.kind].t}{r.epoch !== undefined ? ` #${r.epoch.toString()}` : ""}</span>
+                  <span className="min-w-0">{LABEL[r.kind].t}{r.epoch !== undefined ? ` #${r.epoch.toString()}` : ""}</span>
                 )}
               </span>
-              <span className="shrink-0 font-mono text-[11px] text-ink-faint">{ago(r.ts)}</span>
+              <span className="mt-px shrink-0 font-mono text-[11px] text-ink-faint">{ago(r.ts)}</span>
             </motion.li>
           ))}
         </AnimatePresence>
