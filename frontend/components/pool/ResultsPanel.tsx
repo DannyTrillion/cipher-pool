@@ -2,198 +2,259 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAccount } from "wagmi";
-import { usePoolState, useUserState, useDraw, useDraws, useDrawSeeds, useUserDrawCredits, Phase } from "@/lib/hooks/usePoolData";
+import { useAccount, useConnect } from "wagmi";
+import { usePoolState, useUserState, useDraws, useDrawSeeds, useUserDrawCredits, Phase, type DrawRecord } from "@/lib/hooks/usePoolData";
 import { usePublicReveal, useReveal } from "@/lib/hooks/useReveal";
 import { usePoolActions } from "@/lib/hooks/usePoolActions";
 import { useActionFlow } from "@/lib/useActionFlow";
+import { useCountUp } from "@/lib/hooks/useCountUp";
 import { EncryptedValue } from "@/components/ui/EncryptedValue";
 import { FlowStatus } from "@/components/ui/FlowStatus";
-import { formatAmount } from "@/lib/format";
-import { DECIMALS, POOL, SYMBOL, etherscanAddr } from "@/lib/contracts";
-import { slotAmounts } from "@/lib/tiers";
+import { useNow, formatDuration } from "@/components/ui/Countdown";
 import { ReelReveal, facesFor } from "@/components/fx/ReelReveal";
 import { OddsMeter } from "@/components/pool/OddsMeter";
 import { ActivityFeed } from "@/components/pool/ActivityFeed";
+import { formatAmount } from "@/lib/format";
+import { DECIMALS, POOL, SYMBOL, etherscanAddr } from "@/lib/contracts";
+import { slotAmounts } from "@/lib/tiers";
 import { fire } from "@/lib/scene";
 import { sfx } from "@/lib/sound";
 import { cn } from "@/lib/cn";
 
-/** Your results: the latest draw for you, your arc, past draws, and a verify drawer. */
+type Situation = "disconnected" | "noDraw" | "running" | "notIn" | "check" | "won" | "lost";
+
+/** Your results: one clear situation at the top, the win moment as the hero, then history. */
 export function ResultsPanel() {
   const { isConnected } = useAccount();
+  const { connect, connectors } = useConnect();
   const { state } = usePoolState();
-  const { user } = useUserState(state?.epoch);
-  const { draw } = useDraw(state?.epoch);
-  const { seeds } = useDrawSeeds(state?.epoch);
+  const { user, refetch } = useUserState(state?.epoch);
   const { draws } = useDraws(state?.epoch);
   const done = useMemo(() => draws.filter((d) => d.completedAt > 0n), [draws]);
   const { credits } = useUserDrawCredits(done.map((d) => d.epoch));
+  const { seeds } = useDrawSeeds(done[0]?.epoch);
   const pub = usePublicReveal();
   const { reveal, get, busy } = useReveal();
   const actions = usePoolActions();
-  const revealFlow = useActionFlow();
-  const [verify, setVerify] = useState(false);
+  const claimFlow = useActionFlow();
+  const proofFlow = useActionFlow();
+  const now = useNow();
   const [spinning, setSpinning] = useState(false);
+  const [verify, setVerify] = useState(false);
+  const [history, setHistory] = useState(false);
+  const [checkingAll, setCheckingAll] = useState(false);
 
   useEffect(() => { if (done.length) void pub.reveal(done.map((d) => d.prize)); }, [done, pub.reveal]);
   useEffect(() => { if (verify && seeds.length) void pub.reveal(seeds); }, [verify, seeds, pub.reveal]);
 
   const latest = done[0];
-  const latestCredit = latest ? credits[0] : null;
-  const myCredit = get(latestCredit);
+  const latestCredit = latest ? credits[0] ?? null : null;
+  const mine = get(latestCredit);
   const latestPrize = latest ? pub.values[latest.prize] : undefined;
-  const winnings = get(user?.winnings);
   const claimable = get(user?.claimable);
-  const claimFlow = useActionFlow();
-  const inProgress = !!state && state.phase !== Phase.Open;
+  const winnings = get(user?.winnings);
+  const running = !!state && state.phase !== Phase.Open;
+  const nextIn = state ? Math.max(0, Number(state.nextDrawAt) - now) : 0;
 
-  const steps = user
-    ? [
-        { t: "Funded", on: !!user.walletBalance || !!user.poolBalance },
-        { t: "Saver", on: !!user.poolBalance },
-        { t: "In the draw", on: !!user.poolBalance && !!state && user.lastTouchedEpoch !== state.epoch + 1n },
-        { t: "Winner", on: winnings !== undefined && winnings > 0n },
-      ]
-    : [];
+  const situation: Situation = !isConnected ? "disconnected" : !latest ? "noDraw" : running ? "running" : !latestCredit ? "notIn" : mine === undefined ? "check" : mine > 0n ? "won" : "lost";
+
+  const entered = credits.filter(Boolean).length;
+  const checked = credits.filter((h) => h && get(h) !== undefined).length;
+  const wins = credits.filter((h) => { const v = h ? get(h) : undefined; return v !== undefined && v > 0n; }).length;
+  const wonAnim = useCountUp(winnings);
+
+  const check = async (h: `0x${string}`, key: string) => {
+    sfx.click(); fire({ type: "reveal" }); setSpinning(true);
+    const v = await reveal(POOL.address, h, key);
+    setSpinning(false);
+    if (v !== null && v !== undefined) { fire(v > 0n ? { type: "win", amount: v } : { type: "lose" }); if (v === 0n) sfx.lose(); }
+  };
+  const checkAll = async () => {
+    setCheckingAll(true);
+    for (let i = 0; i < done.length; i++) { const h = credits[i]; if (h && get(h) === undefined) await reveal(POOL.address, h, `d-${done[i].epoch}`); }
+    setCheckingAll(false);
+  };
+  const collect = () => claimFlow.run(async (s) => { await actions.claim(s); await refetch(); await reveal(POOL.address, user?.claimable ?? null, "claim"); }, { successMessage: "Collected. Your prize is in your wallet as cUSD." });
 
   return (
     <section className="card min-w-0 overflow-hidden p-6 sm:p-7">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="display text-2xl">Your results</h2>
-          <div className="mt-1 text-xs text-ink-faint">Only you can see if you won. Anyone can check the draw was fair.</div>
+          <div className="mt-1 text-xs text-ink-faint">Only you can see if you won. Anyone can check a draw was fair.</div>
         </div>
-        {isConnected && steps.length > 0 && (
-          <div className="hidden flex-wrap justify-end gap-1.5 sm:flex" aria-label="Your progress">
-            {steps.map((s, i) => (
-              <span key={s.t} className={cn("pill py-1", s.on && "border-accent/40 bg-accent-faint text-ink")}><span className={cn("grid h-3.5 w-3.5 place-items-center rounded-full text-[8px] font-bold", s.on ? "bg-accent text-black" : "bg-white/10 text-ink-faint")}>{s.on ? "✓" : i + 1}</span>{s.t}</span>
-            ))}
-          </div>
-        )}
+        {isConnected && entered > 0 && <span className="pill">{checked}/{entered} checked</span>}
       </div>
 
-      {/* latest draw for you */}
-      <div className="mt-5 rounded-xl border border-line bg-black/20 p-4">
-        {!latest ? (
-          <div className="text-sm text-ink-muted">No draw has run yet. When the countdown ends, anyone can press the button.</div>
-        ) : (
-          <>
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="text-sm font-semibold">Draw #{latest.epoch.toString()}{inProgress ? " · a new draw is running" : ""}</div>
-              <div className="text-xs text-ink-faint">{latestPrize !== undefined ? `${formatAmount(latestPrize, DECIMALS, { maxFractionDigits: 2 })} ${SYMBOL} shared by ${latest.winnerSlots} winners` : "…"} · {new Date(Number(latest.startedAt) * 1000).toLocaleString()}</div>
-            </div>
-            <div className="mt-3">
-              {!isConnected ? (
-                <div className="text-sm text-ink-muted">Connect to see if you won. Nobody else can see your result.</div>
-              ) : !latestCredit ? (
-                <div className="text-sm text-ink-muted">You were not in this draw. Put money in before the next one to take part.</div>
-              ) : myCredit === undefined ? (
-                <div className="flex flex-wrap items-center gap-4">
-                  <ReelReveal spinning={spinning} />
-                  <button
-                    className="btn-primary btn-lg shine"
-                    disabled={!!busy || spinning}
-                    onClick={async () => {
-                      sfx.click(); fire({ type: "reveal" }); setSpinning(true);
-                      const v = await reveal(POOL.address, latestCredit, "won");
-                      setSpinning(false);
-                      if (v !== null && v !== undefined) fire(v > 0n ? { type: "win", amount: v } : { type: "lose" });
-                      if (v === 0n) sfx.lose();
-                    }}
-                  >
-                    {spinning ? "Checking…" : "Did I win?"}
-                  </button>
+      {/* unclaimed prizes banner */}
+      <AnimatePresence>
+        {isConnected && claimable !== undefined && claimable > 0n && (
+          <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-mint/40 bg-mint/10 px-4 py-3">
+            <div className="text-sm"><span className="font-semibold text-mint">{formatAmount(claimable, DECIMALS, { maxFractionDigits: 2 })} {SYMBOL}</span> is waiting for you.</div>
+            <button className="btn-mint btn-sm" disabled={claimFlow.state.status === "pending"} onClick={collect}>{claimFlow.state.status === "pending" ? "Collecting…" : "Collect to wallet"}</button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <FlowStatus state={claimFlow.state} className="mt-2" />
+
+      {/* the situation */}
+      <div className="mt-4 rounded-2xl border border-line bg-black/20 p-5">
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div key={situation} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.22 }}>
+            {situation === "disconnected" && (
+              <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <div className="text-lg font-semibold">See if you won</div>
+                  <div className="mt-1 text-sm text-ink-muted">Your result is scrambled. Only your wallet can read it.</div>
                 </div>
-              ) : myCredit > 0n ? (
+                {connectors.length > 0 && <button className="btn-primary btn-arrow" onClick={() => { sfx.click(); connect({ connector: connectors[0] }); }}>Connect</button>}
+              </div>
+            )}
+            {situation === "noDraw" && (
+              <div>
+                <div className="label">First draw</div>
+                <div className="mt-1 font-mono text-3xl tabular">{nextIn > 0 ? formatDuration(nextIn) : "ready"}</div>
+                <div className="mt-2 text-sm text-ink-muted">No draw has run yet. When the countdown ends, anyone can press the big button.</div>
+              </div>
+            )}
+            {situation === "running" && (
+              <div>
+                <div className="flex items-center gap-2 text-sm font-semibold"><span className="h-2 w-2 animate-pulse rounded-full bg-mint" />Draw running now</div>
+                <div className="mt-1 text-sm text-ink-muted">{state?.phase === Phase.Selecting ? "Picking winners in secret…" : "Paying prizes in secret…"} Your result appears here when it finishes.</div>
+                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/10"><div className="progress-stripes h-full rounded-full bg-mint" style={{ width: `${(state?.phase === Phase.Selecting ? 0 : 50) + (Number(state?.drawCursor ?? 0n) / Math.max(1, Number(state?.participantCount ?? 1n))) * 50}%` }} /></div>
+              </div>
+            )}
+            {situation === "notIn" && (
+              <div>
+                <div className="text-lg font-semibold">You were not in draw #{latest?.epoch.toString()}</div>
+                <div className="mt-1 text-sm text-ink-muted">{user?.poolBalance ? `You are in the next one, in ${formatDuration(nextIn)}.` : "Put money in to join the next one."}</div>
+              </div>
+            )}
+            {situation === "check" && (
+              <div>
+                <div className="flex items-center gap-2 text-sm text-accent"><span className="h-2 w-2 animate-pulse rounded-full bg-accent" />New result to check</div>
+                <div className="mt-1 text-lg font-semibold">Draw #{latest?.epoch.toString()} paid {latestPrize !== undefined ? `${formatAmount(latestPrize, DECIMALS, { maxFractionDigits: 2 })} ${SYMBOL}` : "…"} to {latest?.winnerSlots} winners.</div>
+                <div className="mt-4 flex flex-wrap items-center gap-4">
+                  <ReelReveal spinning={spinning} size={56} />
+                  <button className="btn-primary btn-lg shine" disabled={!!busy || spinning} onClick={() => latestCredit && check(latestCredit, "won")}>{spinning ? "Checking…" : "Did I win?"}</button>
+                </div>
+              </div>
+            )}
+            {situation === "won" && mine !== undefined && latest && (
+              <div>
                 <div className="flex flex-wrap items-center gap-4">
-                  <ReelReveal spinning={false} faces={facesFor(myCredit, latestPrize !== undefined ? slotAmounts(latestPrize, latest.tiers) : [], latest.tiers)} />
-                  <motion.div initial={{ rotateX: 90, opacity: 0 }} animate={{ rotateX: 0, opacity: 1 }} transition={{ type: "spring", stiffness: 260, damping: 18, delay: 0.7 }} className="rounded-xl border border-accent/40 bg-accent-soft px-3 py-2 text-sm font-semibold text-accent shadow-[0_0_30px_rgb(255_214_0/0.25)]">
-                    You won <EncryptedValue value={myCredit} revealed size="sm" className="text-accent" />. Collect it below.
+                  <ReelReveal spinning={false} faces={facesFor(mine, latestPrize !== undefined ? slotAmounts(latestPrize, latest.tiers) : [], latest.tiers)} size={56} />
+                  <motion.div initial={{ rotateX: 90, opacity: 0 }} animate={{ rotateX: 0, opacity: 1 }} transition={{ type: "spring", stiffness: 260, damping: 18, delay: 0.6 }}>
+                    <div className="label">Draw #{latest.epoch.toString()}</div>
+                    <div className="display prize-glow text-3xl text-accent">You won <EncryptedValue value={mine} revealed size="lg" className="text-accent" /></div>
                   </motion.div>
-                  <button className="btn-mint btn-sm" disabled={claimFlow.state.status === "pending"} onClick={() => claimFlow.run(async (s) => { await actions.claim(s); await reveal(POOL.address, user?.claimable ?? null, "claim"); }, { successMessage: "Collected. Your prize is in your wallet as cUSD." })}>{claimFlow.state.status === "pending" ? "Collecting…" : "Collect prize"}</button>
-                  <button className="btn-ghost text-xs" onClick={() => revealFlow.run((s) => actions.revealWin(latest.epoch, s), { successMessage: "Your win is now public." })} disabled={revealFlow.state.status === "pending"}>Announce my win</button>
                 </div>
-              ) : (
-                <div className="flex flex-wrap items-center gap-4">
-                  <ReelReveal spinning={false} faces={["none", "none", "none"]} />
-                  <motion.div initial={{ y: 6, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.7 }} className="text-sm text-ink-muted">Not this time. <span className="text-ok">Your money is untouched</span> and you are in the next draw.</motion.div>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <button className="btn-mint" disabled={claimFlow.state.status === "pending"} onClick={collect}>{claimFlow.state.status === "pending" ? "Collecting…" : "Collect prize"}</button>
+                  <button className="btn-glass" disabled={proofFlow.state.status === "pending"} onClick={() => proofFlow.run((s) => actions.revealWin(latest.epoch, s), { successMessage: "Your win is now public." })}>Announce my win</button>
                 </div>
-              )}
-              <FlowStatus state={revealFlow.state} className="mt-2" />
-              <FlowStatus state={claimFlow.state} className="mt-2" />
-              {isConnected && claimable !== undefined && claimable > 0n && myCredit !== undefined && myCredit === 0n && (
-                <div className="mt-2 text-xs text-ink-muted">You still have {formatAmount(claimable, DECIMALS, { maxFractionDigits: 2 })} {SYMBOL} to collect from earlier draws.</div>
-              )}
+                <FlowStatus state={proofFlow.state} className="mt-2" />
+              </div>
+            )}
+            {situation === "lost" && (
+              <div className="flex flex-wrap items-center gap-4">
+                <ReelReveal spinning={false} faces={["none", "none", "none"]} size={56} />
+                <div>
+                  <div className="text-lg font-semibold">Not this time</div>
+                  <div className="mt-1 text-sm text-ink-muted"><span className="text-ok">Your money is untouched.</span> Next draw in {formatDuration(nextIn)}.</div>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      {/* your record */}
+      {isConnected && (
+        <div className="mt-4 grid grid-cols-3 overflow-hidden rounded-2xl border border-line bg-black/20 [&>*]:border-line [&>*:not(:last-child)]:border-r">
+          <div className="px-4 py-3"><div className="text-[12px] text-ink-muted">Draws entered</div><div className="mt-1 font-mono text-[15px] tabular">{entered}</div></div>
+          <div className="px-4 py-3"><div className="text-[12px] text-ink-muted">Prizes won</div><div className="mt-1 font-mono text-[15px] tabular">{checked > 0 ? wins : "—"}<span className="text-ink-faint">{checked > 0 && checked < entered ? ` of ${checked} checked` : ""}</span></div></div>
+          <div className="group px-4 py-3">
+            <div className="text-[12px] text-ink-muted">Total won</div>
+            <div className="mt-1 flex items-center gap-2 text-[15px]">
+              {user?.winnings ? <EncryptedValue value={wonAnim} revealed={winnings !== undefined} size="sm" /> : <span className="font-mono text-ink-faint">—</span>}
+              {user?.winnings && winnings === undefined && <button className="text-[11px] text-accent opacity-0 group-hover:opacity-100 focus:opacity-100" disabled={!!busy} onClick={() => reveal(POOL.address, user.winnings, "win")}>show</button>}
             </div>
-            <button className="mt-3 text-xs text-ink-faint underline-offset-4 hover:text-ink hover:underline" onClick={() => { setVerify((v) => !v); sfx.click(); }} aria-expanded={verify}>
-              {verify ? "Hide the numbers" : "Check this draw"}
-            </button>
-            <AnimatePresence initial={false}>
-              {verify && (
-                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                  <div className="mt-3 rounded-lg border border-line p-3 font-mono text-[11px] text-ink-muted">
-                    <div className="mb-2 text-ink-faint">Each prize has its own random number, published when the draw starts. Winners are picked from these numbers.</div>
-                    <ul className="space-y-1">
-                      {seeds.map((h, i) => {
-                        const amt = latestPrize !== undefined ? slotAmounts(latestPrize, latest.tiers)[i] : undefined;
-                        return (
-                          <li key={h} className="flex gap-3">
-                            <span className="w-16 shrink-0 text-ink-faint">{amt !== undefined ? formatAmount(amt, DECIMALS, { maxFractionDigits: 2 }) : `slot ${i + 1}`}</span>
-                            <span className="truncate">{pub.values[h] !== undefined ? pub.values[h].toString() : <span className="cipher-mask">••••••••••</span>}</span>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                    <a className="mt-2 inline-block text-cipher underline" href={etherscanAddr(POOL.address)} target="_blank" rel="noreferrer">Pool contract on Etherscan ↗</a>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </>
-        )}
-      </div>
-
-      {/* odds + recent results */}
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <OddsMeter savers={Number(state?.participantCount ?? 0n)} slots={state?.winnerSlots ?? 5} />
-        <div className="rounded-xl border border-line bg-black/20 px-3.5 py-3">
-          <div className="text-[10px] uppercase tracking-[0.18em] text-ink-faint">Recent draws</div>
-          <ul className="mt-2 space-y-1 font-mono text-xs">
-            {done.slice(0, 4).map((d) => (
-              <li key={d.epoch.toString()} className="flex items-center justify-between"><span className="text-ink-muted">#{d.epoch.toString()}</span><span>{pub.values[d.prize] !== undefined ? `${formatAmount(pub.values[d.prize], DECIMALS, { maxFractionDigits: 2 })} ${SYMBOL}` : "…"} <span className="text-ink-faint">· {d.winnerSlots} winners</span></span></li>
-            ))}
-            {done.length === 0 && <li className="text-ink-faint">none yet</li>}
-          </ul>
-        </div>
-      </div>
-      <div className="mt-4"><ActivityFeed compact /></div>
-
-      {/* past draws */}
-      {isConnected && done.length > 1 && (
-        <div className="mt-5">
-          <div className="label">Past draws</div>
-          <ul className="mt-2 divide-y divide-line text-sm">
-            {done.slice(1, 6).map((d, idx) => {
-              const i = idx + 1;
-              const h = credits[i];
-              const v = h ? get(h) : undefined;
-              const prize = pub.values[d.prize];
-              return (
-                <li key={d.epoch.toString()} className="flex items-center justify-between gap-3 py-2">
-                  <span className="font-mono text-xs text-ink-muted">#{d.epoch.toString()} · {prize !== undefined ? `${formatAmount(prize, DECIMALS, { maxFractionDigits: 2 })} ${SYMBOL}` : "…"}</span>
-                  <span>
-                    {!h ? <span className="text-xs text-ink-faint">not in this draw</span>
-                      : v === undefined ? <button className="text-xs text-accent hover:underline" disabled={!!busy} onClick={() => reveal(POOL.address, h, `draw-${d.epoch}`)}>reveal</button>
-                      : v > 0n ? <span className="font-mono text-xs text-accent">+{formatAmount(v, DECIMALS, { maxFractionDigits: 2 })}</span>
-                      : <span className="text-xs text-ink-faint">no prize</span>}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
+          </div>
         </div>
       )}
+
+      {/* odds + next draw */}
+      <div className="mt-4 grid gap-3 sm:grid-cols-[1.4fr_1fr]">
+        <OddsMeter savers={Number(state?.participantCount ?? 0n)} slots={state?.winnerSlots ?? 5} />
+        <div className="rounded-xl border border-line bg-black/20 px-3.5 py-3">
+          <div className="text-[10px] uppercase tracking-[0.18em] text-ink-faint">{running ? "Draw" : "Next draw in"}</div>
+          <div className="mt-1 font-mono text-2xl tabular">{!state ? "…" : running ? "running" : nextIn > 0 ? formatDuration(nextIn) : "ready"}</div>
+          <div className="mt-1 text-[11px] text-ink-faint">{state?.winnerSlots ?? 5} prizes per draw</div>
+        </div>
+      </div>
+
+      {/* past draws (collapsible) */}
+      {isConnected && done.length > 0 && (
+        <div className="mt-4 rounded-2xl border border-line bg-black/20">
+          <button className="flex w-full items-center justify-between px-4 py-3 text-sm" onClick={() => { setHistory((h) => !h); sfx.click(); }} aria-expanded={history}>
+            <span className="font-semibold">Past draws <span className="font-normal text-ink-faint">· {done.length}</span></span>
+            <span className="flex items-center gap-3">
+              {history && checked < entered && <button className="text-[11px] text-accent hover:underline" disabled={checkingAll} onClick={(e) => { e.stopPropagation(); void checkAll(); }}>{checkingAll ? "Checking…" : "Check all"}</button>}
+              <span className={cn("transition", history && "rotate-180")}>▾</span>
+            </span>
+          </button>
+          <AnimatePresence initial={false}>
+            {history && (
+              <motion.ul initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden border-t border-line">
+                {done.slice(0, 8).map((d, i) => <HistoryRow key={d.epoch.toString()} d={d} h={credits[i] ?? null} prize={pub.values[d.prize]} v={credits[i] ? get(credits[i]) : undefined} busy={!!busy} onCheck={() => credits[i] && check(credits[i]!, `d-${d.epoch}`)} />)}
+              </motion.ul>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
+
+      {/* verify latest */}
+      {latest && (
+        <div className="mt-3">
+          <button className="text-xs text-ink-faint underline-offset-4 hover:text-ink hover:underline" onClick={() => { setVerify((v) => !v); sfx.click(); }} aria-expanded={verify}>{verify ? "Hide the numbers" : `Check draw #${latest.epoch.toString()} was fair`}</button>
+          <AnimatePresence initial={false}>
+            {verify && (
+              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                <div className="mt-2 rounded-lg border border-line p-3 font-mono text-[11px] text-ink-muted">
+                  <div className="mb-2 text-ink-faint">Each prize has its own random number, published when the draw starts. Winners are picked from these numbers.</div>
+                  <ul className="space-y-1">
+                    {seeds.map((h, i) => { const amt = latestPrize !== undefined ? slotAmounts(latestPrize, latest.tiers)[i] : undefined; return (
+                      <li key={h} className="flex gap-3"><span className="w-16 shrink-0 text-ink-faint">{amt !== undefined ? formatAmount(amt, DECIMALS, { maxFractionDigits: 2 }) : `prize ${i + 1}`}</span><span className="truncate">{pub.values[h] !== undefined ? pub.values[h].toString() : <span className="cipher-mask">••••••••••</span>}</span></li>
+                    ); })}
+                  </ul>
+                  <a className="mt-2 inline-block text-cipher underline" href={etherscanAddr(POOL.address)} target="_blank" rel="noreferrer">Pool contract on Etherscan ↗</a>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
+
+      <div className="mt-5"><ActivityFeed compact /></div>
     </section>
+  );
+}
+
+function HistoryRow({ d, h, prize, v, busy, onCheck }: { d: DrawRecord; h: `0x${string}` | null; prize?: bigint; v?: bigint; busy: boolean; onCheck: () => void }) {
+  return (
+    <li className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm [&:not(:last-child)]:border-b [&:not(:last-child)]:border-line">
+      <span className="flex items-center gap-3">
+        <span className="font-mono text-xs text-ink-muted">#{d.epoch.toString()}</span>
+        <span className="font-mono text-xs">{prize !== undefined ? `${formatAmount(prize, DECIMALS, { maxFractionDigits: 2 })} ${SYMBOL}` : "…"}</span>
+        <span className="text-[11px] text-ink-faint">{d.winnerSlots} winners</span>
+      </span>
+      <span>
+        {!h ? <span className="text-[11px] text-ink-faint">not in</span>
+          : v === undefined ? <button className="btn-glass btn-sm" disabled={busy} onClick={onCheck}>Check</button>
+          : v > 0n ? <span className="rounded-full bg-accent-soft px-2 py-0.5 font-mono text-xs text-accent">+{formatAmount(v, DECIMALS, { maxFractionDigits: 2 })}</span>
+          : <span className="text-[11px] text-ink-faint">no prize</span>}
+      </span>
+    </li>
   );
 }
