@@ -74,7 +74,7 @@ The pool uses **Zama's official Sepolia mock tokens**, not tokens of our own, so
 | USDTMock, Zama official test ERC-20 (public `mint`) | [`0xa7dA08FafDC9097Cc0E7D4f113A61e31d7e8e9b0`](https://sepolia.etherscan.io/address/0xa7dA08FafDC9097Cc0E7D4f113A61e31d7e8e9b0) |
 
 
-Draw period 10 minutes · prize drip ≈ 10 cUSDT/hour · faucet 1,000 USDT per hour per address.
+Draw period 5 minutes · prize drip ≈ 10 cUSDT/hour · faucet 1,000 USDT per hour per address.
 
 Both of our contracts are **source-verified on Sourcify** (exact match, creation and runtime bytecode):
 [ConfidentialPrizePool](https://repo.sourcify.dev/11155111/0x2E91CbcD154cffA4ac31f5BfDF186E536A9aDeF5) ·

@@ -69,7 +69,7 @@ export function Wizard({ onSkip }: { onSkip?: () => void } = {}) {
     { key: "shield", title: "Wrap it into cUSDT", why: "Wrapping turns public USDT into private cUSDT, one for one. After this, nobody can see your amounts.", done: fresh ? !!fresh.shield : !!user?.walletBalance || !!user?.poolBalance },
     { key: "deposit", title: "Make your first deposit", why: "Your amount is scrambled in your browser before it is sent. The pool never sees it.", done: fresh ? !!fresh.deposit : !!user?.poolBalance },
     { key: "unlock", title: "Decrypt your numbers", why: "One signature lets your wallet decrypt your own balance. Nobody else can.", done: fresh ? !!fresh.unlock : poolBal !== undefined },
-    { key: "draw", title: "Wait for the draw", why: "Every 10 minutes the pool picks winners in secret. If you win, the prize waits until you collect it. Your money is never at risk.", done: fresh ? !!fresh.deposit && eligible && !!user?.wonInDraw : eligible && !!user?.wonInDraw },
+    { key: "draw", title: "Wait for the draw", why: "Every 5 minutes the pool picks winners in secret. If you win, the prize waits until you collect it. Your money is never at risk.", done: fresh ? !!fresh.deposit && eligible && !!user?.wonInDraw : eligible && !!user?.wonInDraw },
   ];
   const current = Math.max(0, steps.findIndex((s) => !s.done));
   const allDone = steps.every((s) => s.done);

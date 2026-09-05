@@ -10,7 +10,7 @@ const STEPS = [
     <svg viewBox="0 0 48 48" className="h-10 w-10"><circle cx="24" cy="28" r="14" fill="rgba(255,214,0,0.15)" stroke="#FFD600" strokeWidth="2" /><path d="M24 8v12M18 14l6 6 6-6" fill="none" stroke="#FFD600" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>) },
   { t: "The interest becomes a prize", d: "The pool earns interest on the whole pile. That is the prize.", icon: (
     <svg viewBox="0 0 48 48" className="h-10 w-10"><rect x="10" y="26" width="6" height="12" rx="1.5" fill="rgba(255,255,255,0.2)" /><rect x="21" y="18" width="6" height="20" rx="1.5" fill="rgba(255,255,255,0.3)" /><rect x="32" y="10" width="6" height="28" rx="1.5" fill="#5EEAD4" /></svg>) },
-  { t: "A draw picks winners in secret", d: "Every 10 minutes. Bigger savers have bigger odds. Nobody learns who won.", icon: (
+  { t: "A draw picks winners in secret", d: "Every 5 minutes. Bigger savers have bigger odds. Nobody learns who won.", icon: (
     <svg viewBox="0 0 48 48" className="h-10 w-10"><circle cx="24" cy="24" r="16" fill="none" stroke="#8B9CFF" strokeWidth="2" strokeDasharray="4 5" /><circle cx="24" cy="24" r="5" fill="#FFD600" /></svg>) },
   { t: "Nobody loses their money", d: "Only the interest is given away. What you put in is never at risk.", icon: (
     <svg viewBox="0 0 48 48" className="h-10 w-10"><rect x="14" y="20" width="20" height="16" rx="3" fill="rgba(139,156,255,0.25)" stroke="#8B9CFF" strokeWidth="2" /><path d="M18 20v-4a6 6 0 0 1 12 0v4" fill="none" stroke="#8B9CFF" strokeWidth="2.5" /></svg>) },

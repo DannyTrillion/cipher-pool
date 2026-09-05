@@ -23,7 +23,7 @@ export function Hero() {
           <span className="text-accent">Win</span> verifiably.
         </h1>
         <p className="mx-auto mt-4 max-w-2xl text-[15px] leading-relaxed text-ink-muted sm:mt-6 sm:text-lg">
-          Put money into a shared pool and keep all of it. Every 10 minutes the pool&apos;s interest goes to a few winners. Nobody can see how much you saved, not even the pool. Anyone can check that a draw was fair.
+          Put money into a shared pool and keep all of it. Every 5 minutes the pool&apos;s interest goes to a few winners. Nobody can see how much you saved, not even the pool. Anyone can check that a draw was fair.
         </p>
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3 sm:mt-8">
           <a href="#play" className="btn-primary btn-lg btn-arrow shine min-w-[150px]">Play</a>
