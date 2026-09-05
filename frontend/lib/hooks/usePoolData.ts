@@ -2,13 +2,14 @@
 
 import { useCallback } from "react";
 import { useAccount, useReadContract, useReadContracts } from "wagmi";
+import { keepPreviousData } from "@tanstack/react-query";
 import { POOL, TOKEN, YIELD, TUSD, CHAIN_ID } from "@/lib/contracts";
 import { ZERO_HANDLE } from "@/lib/abis";
 
 export const Phase = { Open: 0, Selecting: 1, Awarding: 2 } as const;
 export type PhaseValue = (typeof Phase)[keyof typeof Phase];
 
-const REFRESH = 8_000;
+const REFRESH = 12_000;
 
 export interface PoolState {
   phase: PhaseValue;
@@ -135,7 +136,7 @@ export function useUserState(epoch: bigint | undefined) {
   const { address } = useAccount();
   const user = address ?? "0x0000000000000000000000000000000000000000";
   const q = useReadContracts({
-    allowFailure: false,
+    allowFailure: true,
     contracts: [
       { ...POOL, chainId: CHAIN_ID, functionName: "balanceOf", args: [user] },
       { ...POOL, chainId: CHAIN_ID, functionName: "winningsOf", args: [user] },
@@ -148,9 +149,17 @@ export function useUserState(epoch: bigint | undefined) {
       { ...TUSD, chainId: CHAIN_ID, functionName: "allowance", args: [user, TOKEN.address] },
       { ...POOL, chainId: CHAIN_ID, functionName: "claimableOf", args: [user] },
     ],
-    query: { enabled: !!address, refetchInterval: REFRESH },
+    query: { enabled: !!address, refetchInterval: REFRESH, placeholderData: keepPreviousData },
   });
   const norm = (h: unknown) => (h === ZERO_HANDLE ? null : (h as `0x${string}`));
+  // One failed read must not blank the whole account: unwrap per-call results,
+  // and treat the batch as unusable only if the reads that matter all failed.
+  const unwrap = (raw: unknown[] | undefined): unknown[] | undefined => {
+    if (!raw) return undefined;
+    const items = raw as { status: "success" | "failure"; result?: unknown }[];
+    if (items.every((r) => r.status === "failure")) return undefined;
+    return items.map((r) => (r.status === "success" ? r.result : undefined));
+  };
   const parse = (d: unknown[] | undefined) =>
     d
       ? {
@@ -162,13 +171,13 @@ export function useUserState(epoch: bigint | undefined) {
           walletBalance: norm(d[5]),
           isOperator: d[6] as boolean,
           faucetCooldown: 0n,
-          tusdBalance: d[8] as bigint,
-          tusdAllowance: d[9] as bigint,
+          tusdBalance: (d[8] as bigint | undefined) ?? 0n,
+          tusdAllowance: (d[9] as bigint | undefined) ?? 0n,
           claimable: norm(d[10]),
         }
       : undefined;
   const refetchQ = q.refetch;
-  const refetch = useCallback(async () => parse((await refetchQ()).data as unknown[] | undefined), [refetchQ]);
+  const refetch = useCallback(async () => parse(unwrap((await refetchQ()).data as unknown[] | undefined)), [refetchQ]);
   /**
    * Re-read until the chain reflects a change we just made. Public RPCs sit
    * behind load balancers, so the node that confirmed the receipt is not
@@ -182,7 +191,7 @@ export function useUserState(epoch: bigint | undefined) {
     }
     return false;
   }, [refetch]);
-  return { user: parse(q.data as unknown[] | undefined), refetch, waitFor };
+  return { user: parse(unwrap(q.data as unknown[] | undefined)), refetch, waitFor, error: q.error ?? null };
 }
 
 export type UserState = NonNullable<ReturnType<typeof useUserState>["user"]>;

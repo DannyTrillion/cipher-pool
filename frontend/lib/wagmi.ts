@@ -8,11 +8,17 @@ export const wagmiConfig = createConfig({
   chains: [sepolia],
   connectors: [injected()],
   transports: {
-    [sepolia.id]: fallback([
-      ...(sepoliaRpc ? [http(sepoliaRpc)] : []),
-      http("https://ethereum-sepolia-rpc.publicnode.com"),
-      http("https://rpc.sepolia.org"),
-    ]),
+    // Batched JSON-RPC over a few public endpoints: one request per tick instead
+    // of a dozen, and a working fallback when one endpoint rate-limits the browser.
+    [sepolia.id]: fallback(
+      [
+        ...(sepoliaRpc ? [http(sepoliaRpc, { batch: true })] : []),
+        http("https://ethereum-sepolia-rpc.publicnode.com", { batch: true }),
+        http("https://1rpc.io/sepolia", { batch: true }),
+        http("https://sepolia.gateway.tenderly.co", { batch: true }),
+      ],
+      { rank: false, retryCount: 2 },
+    ),
   },
   ssr: true,
 });

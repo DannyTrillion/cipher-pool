@@ -148,8 +148,8 @@ export function Wizard({ onSkip }: { onSkip?: () => void } = {}) {
                 )}
                 {step.key === "shield" && (
                   <div className="space-y-3">
-                    <button data-anchor="shield" className="btn-primary btn-lg shine w-full" disabled={flow.state.status === "pending" || (user?.tusdBalance ?? 0n) === 0n} onClick={doShield}>
-                      {flow.state.status === "pending" ? "Working…" : `Wrap ${formatUnits(user?.tusdBalance ?? 0n, DECIMALS)} ${UNDERLYING_SYMBOL} into cUSDT`}
+                    <button data-anchor="shield" className="btn-primary btn-lg shine w-full" disabled={flow.state.status === "pending" || !user || user.tusdBalance === 0n} onClick={doShield}>
+                      {flow.state.status === "pending" ? "Working…" : !user ? "Reading your wallet…" : `Wrap ${formatUnits(user.tusdBalance, DECIMALS)} ${UNDERLYING_SYMBOL} into cUSDT`}
                     </button>
                     <p className="text-xs text-ink-faint">Two confirmations: an approval, then the wrap.</p>
                   </div>
