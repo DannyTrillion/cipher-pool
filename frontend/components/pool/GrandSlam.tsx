@@ -10,6 +10,8 @@ import { DECIMALS, SYMBOL } from "@/lib/contracts";
 import { cn } from "@/lib/cn";
 import { PlayPanel } from "@/components/pool/PlayPanel";
 import { ResultsPanel } from "@/components/pool/ResultsPanel";
+import { DrawChamber } from "@/components/pool/DrawChamber";
+import { PrizeTray } from "@/components/pool/PrizeTray";
 
 /** The Grand Slam: one stage with a live status bar, the Play machine and the Results machine. */
 export function GrandSlam() {
@@ -43,9 +45,15 @@ export function GrandSlam() {
             <span className="hidden sm:inline">{state?.winnerSlots ?? 5} prizes per draw</span>
           </div>
         </div>
-        <div className="mt-4 grid gap-4 lg:grid-cols-2 lg:gap-6 [&>*]:min-w-0">
+        {/* the machine: feed → drum → tray, joined by a light rail */}
+        <div className="relative mt-4 space-y-4 [&>*]:min-w-0">
+          <div className={cn("pointer-events-none absolute left-1/2 top-0 hidden h-full w-px -translate-x-1/2 md:block", drawing ? "bg-[linear-gradient(180deg,rgb(255_214_0/0.5),rgb(94_234_212/0.6))]" : "bg-[linear-gradient(180deg,rgb(255_214_0/0.25),rgb(139_156_255/0.15),transparent)]")} />
           <PlayPanel />
-          <ResultsPanel />
+          <DrawChamber />
+          <div>
+            <PrizeTray slots={state?.winnerSlots ?? 5} live={drawing} />
+            <ResultsPanel />
+          </div>
         </div>
       </div>
     </section>

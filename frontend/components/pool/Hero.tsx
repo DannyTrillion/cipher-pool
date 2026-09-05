@@ -4,7 +4,6 @@ import Link from "next/link";
 import { openExplainer } from "@/components/guide/Explainer";
 import { usePoolState, useUserState, Phase } from "@/lib/hooks/usePoolData";
 import { CipherSphere } from "@/components/fx/CipherSphere";
-import { StatConsole } from "@/components/pool/StatConsole";
 import { Annotation } from "@/components/fx/Annotation";
 import { GameCard } from "@/components/pool/HeroTiles";
 
@@ -52,7 +51,6 @@ export function Hero() {
         </div>
       </div>
 
-      <StatConsole />
     </section>
   );
 }
