@@ -76,6 +76,21 @@ The pool uses **Zama's official Sepolia mock tokens**, not tokens of our own, so
 
 Draw period 10 minutes · prize drip ≈ 10 cUSDT/hour · faucet 1,000 USDT per hour per address.
 
+Both of our contracts are **source-verified on Sourcify** (exact match, creation and runtime bytecode):
+[ConfidentialPrizePool](https://repo.sourcify.dev/11155111/0x22663590018DcBD33c8F51326FF44b0Bb47Fd424) ·
+[MockYieldSource](https://repo.sourcify.dev/11155111/0x5A63fb14f01d1eDfA70aa6dCF580c10B0c87C39E).
+
+## Evidence that this runs on Zama FHE
+
+Anyone can check these without trusting us:
+
+1. **The verified source.** `ConfidentialPrizePool` inherits `ZamaEthereumConfig` and every balance, weight, ticket and prize is an `euint64` operated on through `FHE.add / sub / le / select / min / randEuint64`. Open the verified source above and search for `FHE.`.
+2. **Every pool transaction talks to Zama's Sepolia coprocessor.** Open any deposit or draw tx on Etherscan and look at the event logs: besides the pool itself, logs are emitted by Zama's ACL `0xf0Ffdc93b7E186bC2f8CB3dAA75D86d1930A433D` and Coprocessor `0x92C920834Ec8941d2C77D188936E1f7A6f49c127`. Those are the addresses hard-coded in `@fhevm/solidity/config/ZamaConfig.sol` for chain 11155111. A plain-Solidity contract never touches them.
+3. **What the chain stores is ciphertext handles, not numbers.** Call `balanceOf(anyone)` or `prizeReserve()` on the pool: you get a 32-byte handle such as `0x0406…a70500` (the tail encodes the chain id and type), never an amount. The same is true of `confidentialBalanceOf` on Zama's official cUSDT wrapper.
+4. **Decryption goes through Zama's KMS.** Reading your own balance requires an EIP-712 signature over the handle, sent to Zama's relayer, which returns a value only if the ACL says your wallet is allowed. The savers ledger on the site lets anyone try to read someone else's balance and shows the relayer's refusal verbatim. Public values (the prize, draw seeds) come back with KMS signatures, and `finalizeUnwrap` verifies such a proof on-chain with `FHE.checkSignatures`.
+5. **The tokens are Zama's.** Deposits are ERC-7984 `confidentialTransferFrom` calls on Zama's official `cUSDTMock`, and the test USDT comes from Zama's official `USDTMock`. Neither is ours.
+6. **The tests run on Zama's FHEVM mock.** `contracts/test` uses `@fhevm/hardhat-plugin`, which executes the same FHE opcodes locally; the 17 tests would not compile or pass against a non-FHE contract.
+
 ## Repository layout
 
 ```

@@ -8,11 +8,11 @@ import { truncateAddress } from "@/lib/format";
 
 const GITHUB = process.env.NEXT_PUBLIC_GITHUB_URL;
 
-function AddressRow({ label, address }: { label: string; address: string }) {
+function AddressRow({ label, address, verified }: { label: string; address: string; verified?: boolean }) {
   const [copied, setCopied] = useState(false);
   return (
     <li className="flex items-center justify-between gap-3 py-1.5">
-      <span className="text-ink-muted">{label}</span>
+      <span className="text-ink-muted">{label}{verified && <a className="ml-2 rounded-md border border-ok/40 px-1.5 py-0.5 font-mono text-[10px] text-ok hover:bg-ok/10" href={`https://repo.sourcify.dev/11155111/${address}`} target="_blank" rel="noreferrer" title="Source verified on Sourcify (exact match)">verified source</a>}</span>
       <span className="flex items-center gap-2 font-mono text-xs">
         <a className="text-ink-muted hover:text-ink" href={etherscanAddr(address)} target="_blank" rel="noreferrer">{truncateAddress(address, 8, 6)}</a>
         <button
@@ -53,10 +53,10 @@ export function Footer() {
         <div>
           <div className="label">Contracts · Sepolia</div>
           <ul className="mt-3 divide-y divide-line text-sm">
-            <AddressRow label="Prize pool" address={c.ConfidentialPrizePool.address} />
+            <AddressRow label="Prize pool" address={c.ConfidentialPrizePool.address} verified />
             <AddressRow label="USDT (Zama official mock)" address={c.MockUSD.address} />
             <AddressRow label="cUSDT (Zama official wrapper)" address={c.ConfidentialUSD.address} />
-            <AddressRow label="Yield source (mock)" address={c.MockYieldSource.address} />
+            <AddressRow label="Yield source (mock)" address={c.MockYieldSource.address} verified />
           </ul>
           <p className="mt-3 text-xs text-ink-faint">Test network only. The tokens have no real value.</p>
         </div>
