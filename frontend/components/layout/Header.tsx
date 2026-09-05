@@ -21,6 +21,7 @@ import { useNow } from "@/components/ui/Countdown";
 const NAV = [
   { href: "/", label: "Pool" },
   { href: "/draws", label: "Prizes" },
+  { href: "/wallet", label: "Wallet" },
   { href: "/how-it-works", label: "How it works" },
 ];
 
@@ -137,6 +138,7 @@ export function Header() {
               {wrongChain && (
                 <button className="menu-item text-warn" role="menuitem" onClick={() => switchChain({ chainId: sepolia.id })}>Switch to Sepolia</button>
               )}
+              <Link className="menu-item" role="menuitem" href="/wallet">My wallet page</Link>
               <button className="menu-item" role="menuitem" onClick={copy}>Copy address</button>
               <a className="menu-item" role="menuitem" href={etherscanAddr(address!)} target="_blank" rel="noreferrer">View on Etherscan ↗</a>
               <button className="menu-item flex items-center justify-between" role="menuitemcheckbox" aria-checked={sound} onClick={() => { const v = !sound; setSoundOn(v); setSound(v); if (v) sfx.click(); }}>

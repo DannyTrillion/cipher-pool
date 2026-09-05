@@ -43,7 +43,8 @@ export function Footer() {
           <div className="label">Explore</div>
           <ul className="mt-3 space-y-2 text-sm">
             <li><Link className="text-ink-muted hover:text-ink" href="/">Pool</Link></li>
-            <li><Link className="text-ink-muted hover:text-ink" href="/draws">Draws</Link></li>
+            <li><Link className="text-ink-muted hover:text-ink" href="/draws">Prizes</Link></li>
+            <li><Link className="text-ink-muted hover:text-ink" href="/wallet">Wallet</Link></li>
             <li><Link className="text-ink-muted hover:text-ink" href="/how-it-works">How it works</Link></li>
             {GITHUB && <li><a className="text-ink-muted hover:text-ink" href={GITHUB} target="_blank" rel="noreferrer">Source on GitHub ↗</a></li>}
             <li><a className="text-ink-muted hover:text-ink" href="https://docs.zama.org/protocol" target="_blank" rel="noreferrer">Zama Protocol docs ↗</a></li>

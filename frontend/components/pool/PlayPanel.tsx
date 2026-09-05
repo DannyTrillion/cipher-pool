@@ -50,7 +50,9 @@ export function PlayPanel() {
   useEffect(() => {
     try { const m = localStorage.getItem("cipherpool.mode"); if (m === "pro" || m === "new") setMode(m); } catch {}
     const onHash = () => {
-      if (window.location.hash === "#deposit") { setMode("pro"); setTab("deposit"); setTimeout(() => inputRef.current?.focus(), 400); }
+      const map: Record<string, Tab> = { "#deposit": "deposit", "#withdraw": "withdraw", "#wrap": "shield", "#unwrap": "unwrap", "#sponsor": "sponsor" };
+      const t = map[window.location.hash];
+      if (t) { setMode("pro"); setTab(t); setTimeout(() => { document.getElementById("deposit")?.scrollIntoView({ block: "start", behavior: "smooth" }); inputRef.current?.focus(); }, 400); }
     };
     onHash();
     window.addEventListener("hashchange", onHash);
