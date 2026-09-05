@@ -59,7 +59,7 @@ export function humanizeError(err: unknown): string {
   if (lower.includes("erc7984zerobalance")) return "That account holds no cUSDT yet — use the faucet first.";
   if (lower.includes("ownableunauthorizedaccount")) return "Only the pool owner can do that.";
   if (lower.includes("connector not found") || lower.includes("no injected provider") || lower.includes("provider not found"))
-    return "No wallet detected. Install MetaMask (or another EIP-1193 wallet) and reload.";
+    return "No wallet detected. Install a wallet such as MetaMask or Rabby and reload.";
   if (lower.includes("handle is not initialized"))
     return "This balance was never initialized — there's nothing to reveal yet.";
   if (lower.includes("is not authorized to user decrypt"))

@@ -72,7 +72,7 @@ export function WalletView() {
         {connectors.length > 0 ? (
           <button className="btn-primary btn-lg btn-arrow shine mt-5" disabled={isPending} onClick={() => { sfx.click(); connect({ connector: connectors[0] }); }}>{isPending ? "Connecting…" : "Connect wallet"}</button>
         ) : (
-          <a className="btn-primary btn-lg btn-arrow shine mt-5" href="https://metamask.io/download/" target="_blank" rel="noreferrer">Get MetaMask</a>
+          <a className="btn-primary btn-lg btn-arrow shine mt-5" href="https://metamask.io/download/" target="_blank" rel="noreferrer">Get a wallet (MetaMask or Rabby)</a>
         )}
       </div>
     );
