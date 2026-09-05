@@ -11,7 +11,7 @@ import { FlowStatus } from "@/components/ui/FlowStatus";
 import { EncryptedValue } from "@/components/ui/EncryptedValue";
 import { POOL, TOKEN, DECIMALS, UNDERLYING_SYMBOL } from "@/lib/contracts";
 import { humanizeError } from "@/lib/format";
-import { formatUnits } from "viem";
+import { formatUnits, parseUnits } from "viem";
 import { formatDuration, useNow } from "@/components/ui/Countdown";
 import { cn } from "@/lib/cn";
 import { sfx } from "@/lib/sound";
@@ -77,7 +77,15 @@ export function Wizard({ onSkip }: { onSkip?: () => void } = {}) {
 
   const doFaucet = () => flow.run(async (s) => { const before = user?.tusdBalance ?? 0n; await actions.faucet(s); celebrate(); s("Confirmed. Reading your new balance…"); await waitFor((u) => u.tusdBalance > before); mark("faucet"); }, { successMessage: "1,000 test USDT is in your wallet." });
   const doShield = () => flow.run(async (s) => { const before = user?.walletBalance ?? null; await actions.shield(formatUnits(user?.tusdBalance ?? 0n, DECIMALS), s); celebrate(); s("Confirmed. Reading your new balance…"); await waitFor((u) => !!u.walletBalance && u.walletBalance !== before); mark("shield"); }, { successMessage: "Wrapped. Your cUSDT is private now." });
-  const doDeposit = () => flow.run(async (s) => { const before = user?.poolBalance ?? null; await actions.deposit(amount, s); celebrate(); s("Confirmed. Reading your new balance…"); await Promise.all([waitFor((u) => !!u.poolBalance && u.poolBalance !== before), refetchPool()]); mark("deposit"); }, { successMessage: "Done. Your money is in the pool, scrambled." });
+  const doDeposit = () => flow.run(async (s) => {
+    const before = user?.poolBalance ?? null;
+    if (!user?.walletBalance) throw new Error("You have no cUSDT in your wallet yet. Go back one step and wrap some USDT first.");
+    let have = get(user.walletBalance);
+    if (have === undefined) { s("Decrypting your wallet balance first so the amount can be checked…"); const v = await reveal(TOKEN.address, user.walletBalance, "wallet"); if (v === null || v === undefined) throw new Error("Could not decrypt your balance. Try again."); have = v; }
+    const want = parseUnits(amount || "0", DECIMALS);
+    if (want <= 0n) throw new Error("Enter an amount greater than zero.");
+    if (want > have) throw new Error(`You have ${formatUnits(have, DECIMALS)} cUSDT in your wallet. Anything above that would not move, so nothing was sent.`);
+    await actions.deposit(amount, s); celebrate(); s("Confirmed. Reading your new balance…"); await Promise.all([waitFor((u) => !!u.poolBalance && u.poolBalance !== before), refetchPool()]); mark("deposit"); }, { successMessage: "Done. Your money is in the pool, scrambled." });
   const doUnlock = () => flow.run(async (s) => { s("Waiting for your signature, then Zama's relayer decrypts for you…"); await reveal(POOL.address, user?.poolBalance ?? null, "pool"); await reveal(TOKEN.address, user?.walletBalance ?? null, "wallet"); await reveal(POOL.address, user?.claimable ?? null, "claim"); celebrate(); mark("unlock"); }, { successMessage: "Here they are. Only you can see these." });
 
   return (

@@ -84,6 +84,22 @@ export function PlayPanel() {
   const submit = () =>
     flow.run(async (setStep) => {
       const before = { pool: user?.poolBalance ?? null, wallet: user?.walletBalance ?? null, tusd: user?.tusdBalance ?? 0n };
+      // The pool never reverts on an amount you cannot cover (a revert would leak your
+      // balance); it moves zero instead. So check the real figure here, before sending.
+      if (tab !== "shield") {
+        const fromPool = tab === "withdraw";
+        const handle = fromPool ? user?.poolBalance : user?.walletBalance;
+        if (!handle) throw new Error(fromPool ? "You have nothing in the pool yet." : "You have no cUSDT in your wallet yet. Wrap some USDT first.");
+        let have = fromPool ? poolBal : walletBal;
+        if (have === undefined) {
+          setStep("Decrypting your balance first so the amount can be checked…");
+          const v = await reveal(fromPool ? POOL.address : TOKEN.address, handle, fromPool ? "pool" : "wallet");
+          if (v === null || v === undefined) throw new Error("Could not decrypt your balance. Try again.");
+          have = v;
+        }
+        if (value > have) throw new Error(`You have ${formatUnits(have, DECIMALS)} cUSDT ${fromPool ? "in the pool" : "in your wallet"}. Anything above that would not move, so nothing was sent.`);
+      }
+      const beforeValue = tab === "withdraw" ? poolBal : tab === "deposit" ? poolBal : undefined;
       if (tab === "shield") await actions.shield(amount, setStep);
       else if (tab === "deposit") await actions.deposit(amount, setStep);
       else if (tab === "withdraw") await actions.withdraw(amount, setStep);
@@ -99,6 +115,11 @@ export function PlayPanel() {
         : u.walletBalance !== before.wallet;
       await Promise.all([waitFor(changed), refetchPool()]);
       if (revealedAll || poolBal !== undefined) await revealAll();
+      if ((tab === "deposit" || tab === "withdraw") && beforeValue !== undefined) {
+        const u = await refetch();
+        const after = u?.poolBalance ? await reveal(POOL.address, u.poolBalance, "pool") : null;
+        if (after !== null && after !== undefined && after === beforeValue) throw new Error("The transaction went through but nothing moved. The pool moves zero when the amount is more than you hold.");
+      }
       if (isConvert(tab)) setTimeout(() => setTab("deposit"), 1600); // back to the main actions
     }, { successMessage: tab === "shield" ? "Wrapped. Your cUSDT is private now." : tab === "deposit" ? "Done. Your money is in the pool, scrambled." : tab === "withdraw" ? "Done. It is back in your wallet as cUSDT." : tab === "unwrap" ? "Done. Your USDT is back in your wallet." : "Added to the prize. Thank you!" });
   const claimFaucet = () =>
