@@ -6,7 +6,7 @@ Runs 2:58, under the bounty's 3:00 cap. Real person on camera at the start and e
 
 - Browser at 1440 × 900, bookmarks bar hidden, dark theme.
 - One wallet only: the owner `0xB3Bf…7A58`. The pool is brand new (`0x2E91…DeF5`); nobody else is in it.
-- **Prep round first, about 12 minutes:** connect, press Start over in the guide, do Get USDT, Wrap, Put in 300, Show my numbers. When the countdown hits zero, hold the button once (draw #1, you win it all). Do not collect. Press Start over again.
+- **Prep round first, about 12 minutes:** connect, press Start over in the guide, do Get USDT, Wrap, Put in 300, Decrypt my numbers. When the countdown hits zero, hold the button once (draw #1, you win it all). Do not collect. Press Start over again.
 - Money put in during a round counts from the next round, so the on-camera deposit is not in draw #2. Your prep deposit is. The prize from draw #1 is the guaranteed claim.
 - Start the screen part when the countdown reads about 1:20. The first scenes take ~75 s and land you at the button as it turns yellow. If it already reads RUN DRAW, that is fine too.
 - Tabs open: the app, the pool on Etherscan, the Sourcify page (optional).
@@ -66,7 +66,7 @@ Runs 2:58, under the bounty's 3:00 cap. Real person on camera at the start and e
 
 1. Step 4: type **300**, press **Put in 300 cUSDT**. Confirm the one-time approval, then the deposit.
    *On screen:* "Encrypting with Zama's FHE key…", "Sending your encrypted deposit to the pool on Zama FHEVM…", then "Done. Your money is in the pool, scrambled." Coins fly into the sphere. Step 5.
-2. Step 5: press **Show my numbers**. Sign the one message in Rabby.
+2. Step 5: press **Decrypt my numbers**. Sign the one message in Rabby.
    *On screen:* The asterisks unscramble everywhere on the page: savings 600 (300 from the prep round plus this 300). Point at the savings figure.
 
 **Say:**
@@ -83,14 +83,14 @@ Runs 2:58, under the bounty's 3:00 cap. Real person on camera at the start and e
 
 1. Press and **hold** the big button for one second. Confirm "startDraw", then each "advanceDraw" batch as Rabby asks (two or three).
    *On screen:* Drum spins, balls tumble. Status: "Zama's coprocessor is drawing the encrypted random seeds…", then "Selecting the winner over encrypted balances", then "Crediting the prize to the encrypted winner". Prize balls drop into the tray.
-2. Scroll to **Your results**, press **Did I win?**
+2. Scroll to **Your results**, press **Decrypt: did I win?**
    *On screen:* You are the only saver, so the reel lands on a prize.
 
 ![Your results: see if you won, odds, next draw, live activity](storyboard/04_results.png)
 
 **Say:**
 
-> The countdown is at zero, so anyone can run the draw, and the runner has no say in who wins. The pool harvests the interest, draws random seeds inside Zama's coprocessor, and walks every encrypted balance with an encrypted running total. Bigger savers win more often, but nothing is ever decrypted. Every saver gets an encrypted result written, winners and non-winners alike, so from outside every account looks identical. Now, did I win?
+> The countdown is at zero, so anyone can run the draw, and the runner has no say in who wins. The pool harvests the interest, draws random seeds inside Zama's coprocessor, and walks every encrypted balance with an encrypted running total. Bigger savers win more often, but nothing is ever decrypted. Every saver gets an encrypted result written, winners and non-winners alike, so from outside every account looks identical. Now I decrypt my result: did I win?
 
 ---
 
@@ -117,7 +117,7 @@ Runs 2:58, under the bounty's 3:00 cap. Real person on camera at the start and e
 
 **Do, in order:**
 
-1. Click **Experienced**. The balance strip already shows your numbers from the earlier signature.
+1. Click **Experienced**. The balance strip is already decrypted from the earlier signature.
    *On screen:* Savings 600, wallet cUSDT, prizes to collect 0.
 2. Tab **Withdraw**: type **100**, press **Withdraw 100 cUSDT**. Confirm.
    *On screen:* "Withdrawing through Zama FHEVM, amount stays encrypted…", then "Done. It is back in your wallet as cUSDT." Savings drop to 500, wallet goes up by 100.
@@ -135,7 +135,7 @@ Runs 2:58, under the bounty's 3:00 cap. Real person on camera at the start and e
 **Do, in order:**
 
 1. Click **Prizes**. Point at the draw you just ran, its public prize and split.
-2. Back on **Pool**, scroll to the savers ledger. Click a row that is not yours, press **Try to read it**.
+2. Back on **Pool**, scroll to the savers ledger. Click a row that is not yours, press **Try to decrypt it**.
    *On screen:* The relayer's refusal, word for word.
 
 ![Prizes page: prize building up, totals, past draws](storyboard/06_prizes.png)
