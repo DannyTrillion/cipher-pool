@@ -121,7 +121,7 @@ export function Wizard({ onSkip }: { onSkip?: () => void } = {}) {
                 {step.key === "connect" && (hasWallet ? (
                   <button className="btn-primary btn-lg btn-arrow shine w-full" disabled={isPending} onClick={() => { sfx.click(); connect({ connector: connectors[0] }); }}>{isPending ? "Connecting…" : "Connect wallet"}</button>
                 ) : (
-                  <a className="btn-primary btn-lg btn-arrow shine w-full" href="https://metamask.io/download/" target="_blank" rel="noreferrer">Install MetaMask, then come back</a>
+                  <a className="btn-primary btn-lg btn-arrow shine w-full" href="https://metamask.io/download/" target="_blank" rel="noreferrer">Install MetaMask</a>
                 ))}
                 {step.key === "faucet" && (
                   <button data-anchor="faucet" className="btn-primary btn-lg shine w-full" disabled={flow.state.status === "pending" || Number(user?.faucetCooldown ?? 0n) > 0} onClick={doFaucet}>
