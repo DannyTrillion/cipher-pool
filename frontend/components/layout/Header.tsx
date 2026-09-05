@@ -8,6 +8,7 @@ import { useAccount, useConnect, useDisconnect, useSwitchChain } from "wagmi";
 import { sepolia } from "wagmi/chains";
 import { cn } from "@/lib/cn";
 import { truncateAddress } from "@/lib/format";
+import { clearRevealedValues } from "@/lib/hooks/useReveal";
 import { clearDecryptSessions } from "@/lib/fhevm/useDecryptSession";
 import { Logo, LogoMark } from "@/components/brand/Logo";
 import { Identicon } from "@/components/layout/Identicon";
@@ -46,7 +47,7 @@ export function Header() {
   const [pending, setPending] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { clearDecryptSessions(); }, [address]);
+  useEffect(() => { clearDecryptSessions(); clearRevealedValues(); }, [address]);
   useEffect(() => {
     setHasInjected(!!(window as unknown as { ethereum?: unknown }).ethereum);
     setSoundOn(initSoundPref());

@@ -12,11 +12,27 @@ import { humanizeError } from "@/lib/format";
  * signature per session covers both the pool and the token). Results are kept
  * per-handle so a re-render after polling doesn't hide a value already revealed.
  */
+// Decrypted user values live module-wide: one signature in any card reveals the
+// same handle everywhere (balance strip, hero card, results banner).
+const userCache: Record<string, bigint> = {};
+const userSubs = new Set<() => void>();
+const notifyUser = () => userSubs.forEach((f) => f());
+/** Forget every decrypted value (on disconnect or account change). */
+export function clearRevealedValues() {
+  for (const k of Object.keys(userCache)) delete userCache[k];
+  notifyUser();
+}
+
 export function useReveal() {
   const { decryptHandle, hasSession } = useDecryptSession();
   const toast = useToast();
-  const [values, setValues] = useState<Record<string, bigint>>({});
+  const [version, bump] = useState(0);
   const [busy, setBusy] = useState<string | null>(null);
+  useEffect(() => {
+    const f = () => bump((n) => n + 1);
+    userSubs.add(f);
+    return () => { userSubs.delete(f); };
+  }, []);
 
   const reveal = useCallback(
     async (contract: `0x${string}`, handle: string | null, key: string) => {
@@ -24,7 +40,7 @@ export function useReveal() {
       setBusy(key);
       try {
         const v = await decryptHandle(contract, handle, [POOL.address, TOKEN.address]);
-        if (v !== null) setValues((prev) => ({ ...prev, [handle]: v }));
+        if (v !== null) { userCache[handle] = v; notifyUser(); }
         return v;
       } catch (e) {
         toast.push({ kind: "error", title: "Could not reveal", body: humanizeError(e) });
@@ -36,7 +52,8 @@ export function useReveal() {
     [decryptHandle, toast],
   );
 
-  const get = useCallback((handle: string | null | undefined) => (handle ? values[handle] : undefined), [values]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const get = useCallback((handle: string | null | undefined) => (handle ? userCache[handle] : undefined), [version]);
   return { reveal, get, busy, hasSession };
 }
 

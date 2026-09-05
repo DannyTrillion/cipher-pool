@@ -69,6 +69,7 @@ export function ResultsPanel() {
   const check = async (h: `0x${string}`, key: string) => {
     sfx.click(); fire({ type: "reveal" }); setSpinning(true);
     const v = await reveal(POOL.address, h, key);
+    if (user?.claimable) await reveal(POOL.address, user.claimable, "claim");
     setSpinning(false);
     if (v !== null && v !== undefined) { fire(v > 0n ? { type: "win", amount: v } : { type: "lose" }); if (v === 0n) sfx.lose(); }
   };
