@@ -12,13 +12,11 @@ export const wagmiConfig = createConfig({
     // of a dozen, and a working fallback when one endpoint rate-limits the browser.
     [sepolia.id]: fallback(
       [
-        // First choice: the connected wallet's own node (the one that confirmed
-        // your transactions), so reads never lag behind what the wallet just did.
-        unstable_connector(injected),
         ...(sepoliaRpc ? [http(sepoliaRpc, { batch: true })] : []),
-        http("https://ethereum-sepolia-rpc.publicnode.com", { batch: true }),
-        http("https://1rpc.io/sepolia", { batch: true }),
         http("https://sepolia.gateway.tenderly.co", { batch: true }),
+        http("https://ethereum-sepolia-rpc.publicnode.com", { batch: true }),
+        // Last resort: the connected wallet's own node.
+        unstable_connector(injected),
       ],
       { rank: false, retryCount: 2 },
     ),

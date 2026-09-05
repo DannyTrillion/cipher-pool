@@ -10,9 +10,8 @@ import { POOL, TUSD, TOKEN } from "@/lib/contracts";
  * app can use, side by side, so a stale or blocked endpoint shows up at once.
  */
 const RPCS = [
-  ["publicnode", "https://ethereum-sepolia-rpc.publicnode.com"],
-  ["1rpc", "https://1rpc.io/sepolia"],
   ["tenderly", "https://sepolia.gateway.tenderly.co"],
+  ["publicnode", "https://ethereum-sepolia-rpc.publicnode.com"],
 ] as const;
 
 type Row = { name: string; chain?: string; block?: string; usdt?: string; savings?: string; savers?: string; cusdt?: string; error?: string; ms?: number };

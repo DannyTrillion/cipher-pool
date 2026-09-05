@@ -135,9 +135,9 @@ export function Wizard({ onSkip }: { onSkip?: () => void } = {}) {
               <p className="mt-2 text-sm leading-relaxed text-ink-muted">{step.why}</p>
 
               <NetworkAlert className="mt-4" />
-              {isConnected && !user && readError && (
+              {isConnected && readError && (
                 <div className="mt-4 rounded-xl border border-warn/40 bg-warn/10 px-3.5 py-2.5 text-xs text-warn">
-                  Could not read your wallet from the network. {humanizeError(readError)} <button className="underline" onClick={() => void refetch()}>Try again</button>
+                  {user ? "Your numbers may be out of date: the last refresh from the network failed." : "Could not read your wallet from the network."} {humanizeError(readError)} <button className="underline" onClick={() => void refetch()}>Try again</button>
                 </div>
               )}
               <div className="relative mt-4">
