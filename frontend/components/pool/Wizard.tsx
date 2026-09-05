@@ -15,6 +15,7 @@ import { formatDuration, useNow } from "@/components/ui/Countdown";
 import { cn } from "@/lib/cn";
 import { sfx } from "@/lib/sound";
 import { SuccessTick } from "@/components/ui/SuccessTick";
+import { NetworkAlert } from "@/components/ui/NetworkAlert";
 
 /** Guided flow for new savers: five steps, each auto-completing from chain state. */
 export function Wizard({ onSkip }: { onSkip?: () => void } = {}) {
@@ -114,6 +115,7 @@ export function Wizard({ onSkip }: { onSkip?: () => void } = {}) {
               </div>
               <p className="mt-2 text-sm leading-relaxed text-ink-muted">{step.why}</p>
 
+              <NetworkAlert className="mt-4" />
               <div className="relative mt-4">
                 <SuccessTick show={tick} />
                 {step.key === "connect" && (hasWallet ? (

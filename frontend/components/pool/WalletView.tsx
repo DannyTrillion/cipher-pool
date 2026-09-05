@@ -19,6 +19,7 @@ import { truncateAddress, sameAddress, formatAmount } from "@/lib/format";
 import { POOL, TOKEN, TUSD, DECIMALS, SYMBOL, UNDERLYING_SYMBOL, etherscanAddr, etherscanTx } from "@/lib/contracts";
 import { getSessionInfo } from "@/lib/fhevm/useDecryptSession";
 import { sfx } from "@/lib/sound";
+import { NetworkAlert } from "@/components/ui/NetworkAlert";
 import { cn } from "@/lib/cn";
 
 const VERB: Record<string, string> = { deposit: "Put money in", withdraw: "Took money out", sponsor: "Added to the prize", claim: "Collected a prize" };
@@ -100,6 +101,7 @@ export function WalletView() {
         </div>
       </div>
 
+      <NetworkAlert />
       {/* prizes waiting */}
       <AnimatePresence>
         {claimable !== undefined && claimable > 0n && (

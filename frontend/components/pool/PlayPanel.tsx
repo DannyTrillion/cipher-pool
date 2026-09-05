@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Wizard } from "@/components/pool/Wizard";
 import { motion, AnimatePresence } from "framer-motion";
 import { SuccessTick } from "@/components/ui/SuccessTick";
+import { NetworkAlert } from "@/components/ui/NetworkAlert";
 import { useActivity } from "@/lib/hooks/useActivity";
 import { sameAddress } from "@/lib/format";
 import { useAccount, useConnect } from "wagmi";
@@ -90,6 +91,7 @@ export function PlayPanel() {
       celebrate();
       await Promise.all([refetch(), refetchPool()]);
       if (revealedAll || poolBal !== undefined) await revealAll();
+      if (isConvert(tab)) setTimeout(() => setTab("deposit"), 1600); // back to the main actions
     }, { successMessage: tab === "shield" ? "Wrapped. Your cUSD is private now." : tab === "deposit" ? "Done. Your money is in the pool, scrambled." : tab === "withdraw" ? "Done. It is back in your wallet as cUSD." : tab === "unwrap" ? "Done. Your tUSD is back in your wallet." : "Added to the prize. Thank you!" });
   const claimFaucet = () =>
     faucetFlow.run(async (setStep) => { await actions.faucet(setStep); await refetch(); }, { successMessage: "1,000 test tUSD is in your wallet. Wrap it into cUSD to use it." });
@@ -270,6 +272,7 @@ export function PlayPanel() {
           </motion.div>
           </AnimatePresence>
 
+          <NetworkAlert className="mt-4" />
           <div className="relative mt-4">
             <button data-anchor={tab === "shield" ? "shield" : "deposit"} className="btn-primary btn-lg shine w-full" onClick={submit} disabled={(!open && pausable) || value === 0n || flow.state.status === "pending"}>
               <AnimatePresence mode="wait" initial={false}>

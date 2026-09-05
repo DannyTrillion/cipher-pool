@@ -32,7 +32,7 @@ export function useActionFlow() {
   const run = useCallback(
     async <T,>(
       fn: (setStep: (s: string) => void) => Promise<T>,
-      opts?: { successMessage?: string },
+      opts?: { successMessage?: string; holdMs?: number },
     ): Promise<T | undefined> => {
       setState({ status: "pending", step: "Starting…", message: null, raw: null });
       const setStep = (s: string) =>
@@ -45,6 +45,9 @@ export function useActionFlow() {
           message: opts?.successMessage ?? "Done",
           raw: null,
         });
+        // Success lines clear themselves so the UI moves on; errors stay until dismissed.
+        const hold = opts?.holdMs ?? 3500;
+        setTimeout(() => setState((prev) => (prev.status === "success" ? IDLE : prev)), hold);
         return result;
       } catch (err) {
         // Full error + stack to the console for diagnosis (the UI shows a

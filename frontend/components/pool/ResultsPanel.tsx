@@ -21,7 +21,7 @@ import { fire } from "@/lib/scene";
 import { sfx } from "@/lib/sound";
 import { cn } from "@/lib/cn";
 
-type Situation = "disconnected" | "noDraw" | "running" | "notIn" | "check" | "won" | "lost";
+type Situation = "disconnected" | "noDraw" | "running" | "notIn" | "check" | "won" | "lost" | "settled";
 
 /** Your results: one clear situation at the top, the win moment as the hero, then history. */
 export function ResultsPanel() {
@@ -43,6 +43,8 @@ export function ResultsPanel() {
   const [verify, setVerify] = useState(false);
   const [history, setHistory] = useState(false);
   const [checkingAll, setCheckingAll] = useState(false);
+  const [settled, setSettled] = useState<string | null>(null);
+  useEffect(() => { try { setSettled(localStorage.getItem("cipherpool.settled")); } catch {} }, []);
 
   useEffect(() => { if (done.length) void pub.reveal(done.map((d) => d.prize)); }, [done, pub.reveal]);
   useEffect(() => { if (verify && seeds.length) void pub.reveal(seeds); }, [verify, seeds, pub.reveal]);
@@ -56,7 +58,7 @@ export function ResultsPanel() {
   const running = !!state && state.phase !== Phase.Open;
   const nextIn = state ? Math.max(0, Number(state.nextDrawAt) - now) : 0;
 
-  const situation: Situation = !isConnected ? "disconnected" : !latest ? "noDraw" : running ? "running" : !latestCredit ? "notIn" : mine === undefined ? "check" : mine > 0n ? "won" : "lost";
+  const situation: Situation = !isConnected ? "disconnected" : !latest ? "noDraw" : running ? "running" : !latestCredit ? "notIn" : mine === undefined ? "check" : mine > 0n ? (settled === latest.epoch.toString() ? "settled" : "won") : "lost";
 
   const entered = credits.filter(Boolean).length;
   const checked = credits.filter((h) => h && get(h) !== undefined).length;
@@ -74,7 +76,12 @@ export function ResultsPanel() {
     for (let i = 0; i < done.length; i++) { const h = credits[i]; if (h && get(h) === undefined) await reveal(POOL.address, h, `d-${done[i].epoch}`); }
     setCheckingAll(false);
   };
-  const collect = () => claimFlow.run(async (s) => { await actions.claim(s); await refetch(); await reveal(POOL.address, user?.claimable ?? null, "claim"); }, { successMessage: "Collected. Your prize is in your wallet as cUSD." });
+  const collect = () => claimFlow.run(async (s) => {
+    await actions.claim(s);
+    await refetch();
+    await reveal(POOL.address, user?.claimable ?? null, "claim");
+    if (latest) { const key = latest.epoch.toString(); try { localStorage.setItem("cipherpool.settled", key); } catch {} setTimeout(() => setSettled(key), 1200); }
+  }, { successMessage: "Collected. Your prize is in your wallet as cUSD." });
 
   return (
     <section className="card min-w-0 overflow-hidden p-6 sm:p-7">
@@ -154,6 +161,15 @@ export function ResultsPanel() {
                   <button className="btn-glass" disabled={proofFlow.state.status === "pending"} onClick={() => proofFlow.run((s) => actions.revealWin(latest.epoch, s), { successMessage: "Your win is now public." })}>Announce my win</button>
                 </div>
                 <FlowStatus state={proofFlow.state} className="mt-2" />
+              </div>
+            )}
+            {situation === "settled" && (
+              <div className="flex flex-wrap items-center gap-4">
+                <span className="grid h-12 w-12 place-items-center rounded-xl bg-mint/15 text-mint"><svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L20 7" /></svg></span>
+                <div>
+                  <div className="text-lg font-semibold">Prize collected</div>
+                  <div className="mt-1 text-sm text-ink-muted">It is in your wallet as cUSD. {user?.poolBalance ? `You are in the next draw, in ${formatDuration(nextIn)}.` : "Put money in to join the next draw."}</div>
+                </div>
               </div>
             )}
             {situation === "lost" && (
