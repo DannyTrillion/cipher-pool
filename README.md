@@ -52,7 +52,7 @@ reserve -= Σ_k select(winner_k < n, amount_k, 0)            // unfilled slots +
 Documented leakage:
 - **Participation is public** (addresses are iterated by the draw). Amounts are not.
 - **The wrap amount is public** — it is an ERC-20 transfer (inherent to the ERC-20 → ERC-7984 boundary). Everything after wrapping is encrypted.
-- **Prize reserve is public** by design so the app can show what is up for grabs. Because the mock yield is a fixed public drip (see below), the reserve does not reveal TVL.
+- **Prize reserve is public** by design so the app can show what is up for grabs, exactly as PoolTogether displays its prizes. Only the pool-level total is public; each winner's share is written into an encrypted pot, so the tier split tells you what the prizes were, never who received them. Because the mock yield is a fixed public drip (see below), the reserve does not reveal TVL. With a real yield source the prize would be `rate × TVL`, so it would leak an estimate of the pool total (not any individual balance). If that matters for a deployment, the pool can stop calling `FHE.makePubliclyDecryptable` on the reserve and instead publish only each draw's prize after the fact, rounded, or keep it encrypted and let winners learn their share on claim; none of that touches the draw logic.
 - **Transactions are visible**: that you deposited, withdrew, or called `claimPrize` is on-chain; the amounts (including a claim of zero) are ciphertext. Claim is safe for non-winners so a claim never singles out a winner.
 - **Timing side channels** (e.g. a user claiming right after a draw) are possible as in any on-chain system; the constant-cost claim mitigates them.
 
