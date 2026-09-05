@@ -6,7 +6,7 @@ export function AmountInput({
   value,
   onChange,
   placeholder = "0.00",
-  symbol = "cUSDC",
+  symbol = "cUSDT",
   disabled,
   onMax,
   id,

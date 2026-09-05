@@ -37,15 +37,15 @@ export function usePoolActions() {
     async (setStep: Step) => {
       need();
       setStep("Confirm the faucet transaction in your wallet…");
-      const hash = await write({ ...TUSD, chainId: CHAIN_ID, functionName: "faucet", onSent: () => setStep("Minting 1,000 tUSDC…") });
+      const hash = await write({ ...TUSD, chainId: CHAIN_ID, functionName: "mint", args: [address, 1_000_000_000n], onSent: () => setStep("Minting 1,000 test USDT from Zama's official mock…") });
       fire({ type: "faucet", amount: 1_000_000_000n });
-      txToast("Faucet claimed: 1,000 tUSDC", hash);
+      txToast("Faucet claimed: 1,000 USDT", hash);
       return hash;
     },
     [address, write],
   );
 
-  /** tUSDC → cUSDC: ERC-20 approval (if needed) then wrap. The wrapped amount becomes an encrypted balance. */
+  /** USDT → cUSDT: ERC-20 approval (if needed) then wrap. The wrapped amount becomes an encrypted balance. */
   const shield = useCallback(
     async (amount: string, setStep: Step) => {
       const user = need();
@@ -53,14 +53,14 @@ export function usePoolActions() {
       if (value <= 0n) throw new Error("Enter an amount greater than zero.");
       const allowance = (await readContract(config, { ...TUSD, chainId: CHAIN_ID, functionName: "allowance", args: [user, TOKEN.address] })) as bigint;
       if (allowance < value) {
-        setStep("Approve the wrapper to take your tUSDC…");
+        setStep("Approve the wrapper to take your USDT…");
         const h = await write({ ...TUSD, chainId: CHAIN_ID, functionName: "approve", args: [TOKEN.address, value], onSent: () => setStep("Confirming approval…") });
-        txToast("tUSDC approved", h);
+        txToast("USDT approved", h);
       }
       setStep("Confirm the wrap in your wallet…");
-      const hash = await write({ ...TOKEN, chainId: CHAIN_ID, functionName: "wrap", args: [user, value], onSent: () => setStep("Wrapping into cUSDC on Zama FHEVM, your balance becomes encrypted…") });
+      const hash = await write({ ...TOKEN, chainId: CHAIN_ID, functionName: "wrap", args: [user, value], onSent: () => setStep("Wrapping into cUSDT on Zama FHEVM, your balance becomes encrypted…") });
       fire({ type: "shield", amount: value });
-      txToast(`Shielded ${amount} tUSDC into cUSDC`, hash);
+      txToast(`Shielded ${amount} USDT into cUSDT`, hash);
       return hash;
     },
     [address, write, config],
@@ -84,7 +84,7 @@ export function usePoolActions() {
       const user = need();
       const ok = (await readContract(config, { ...TOKEN, chainId: CHAIN_ID, functionName: "isOperator", args: [user, POOL.address] })) as boolean;
       if (ok) return;
-      setStep("One-time approval: allow the pool to move your cUSDC…");
+      setStep("One-time approval: allow the pool to move your cUSDT…");
       const until = BigInt(Math.floor(Date.now() / 1000) + OPERATOR_TTL);
       const hash = await write({ ...TOKEN, chainId: CHAIN_ID, functionName: "setOperator", args: [POOL.address, until], onSent: () => setStep("Confirming approval…") });
       txToast("Pool approved as operator", hash);
@@ -103,7 +103,7 @@ export function usePoolActions() {
       setStep("Confirm the deposit in your wallet…");
       const hash = await write({ ...POOL, chainId: CHAIN_ID, functionName: "deposit", args: [handle, inputProof], onSent: () => setStep("Sending your encrypted deposit to the pool on Zama FHEVM…") });
       fire({ type: "deposit", amount: value });
-      txToast(`Deposited ${amount} cUSDC`, hash);
+      txToast(`Deposited ${amount} cUSDT`, hash);
       return hash;
     },
     [address, write, ensureOperator],
@@ -119,7 +119,7 @@ export function usePoolActions() {
       setStep("Confirm the withdrawal in your wallet…");
       const hash = await write({ ...POOL, chainId: CHAIN_ID, functionName: "withdraw", args: [handle, inputProof], onSent: () => setStep("Withdrawing through Zama FHEVM, amount stays encrypted…") });
       fire({ type: "withdraw", amount: value });
-      txToast(`Withdrew ${amount} cUSDC`, hash);
+      txToast(`Withdrew ${amount} cUSDT`, hash);
       return hash;
     },
     [address, write],
@@ -136,7 +136,7 @@ export function usePoolActions() {
       setStep("Confirm the sponsorship in your wallet…");
       const hash = await write({ ...POOL, chainId: CHAIN_ID, functionName: "donatePrize", args: [handle, inputProof], onSent: () => setStep("Adding your encrypted amount to the prize on Zama FHEVM…") });
       fire({ type: "sponsor", amount: value });
-      txToast(`Sponsored ${amount} cUSDC to the prize`, hash);
+      txToast(`Sponsored ${amount} cUSDT to the prize`, hash);
       return hash;
     },
     [address, write, ensureOperator],
@@ -192,7 +192,7 @@ export function usePoolActions() {
     [address, write],
   );
 
-  /** Unwrap cUSDC back to tUSDC: burn (encrypted) → relayer public decrypt of the burned amount → finalize with the proof. */
+  /** Unwrap cUSDT back to USDT: burn (encrypted) → relayer public decrypt of the burned amount → finalize with the proof. */
   const unwrap = useCallback(
     async (amount: string, setStep: Step) => {
       const user = need();
@@ -219,10 +219,10 @@ export function usePoolActions() {
         try { clear = await publicDecryptWithProof(requestId); } catch { await new Promise((r) => setTimeout(r, 6000)); }
       }
       if (!clear) throw new Error("The network has not confirmed the amount yet. Try again in a minute.");
-      setStep("Confirm step 2 of 2 in your wallet: receive your tUSDC…");
-      const hash2 = await write({ ...TOKEN, chainId: CHAIN_ID, functionName: "finalizeUnwrap", args: [requestId, clear.value, clear.proof], onSent: () => setStep("Sending your tUSDC…") });
+      setStep("Confirm step 2 of 2 in your wallet: receive your USDT…");
+      const hash2 = await write({ ...TOKEN, chainId: CHAIN_ID, functionName: "finalizeUnwrap", args: [requestId, clear.value, clear.proof], onSent: () => setStep("Sending your USDT…") });
       fire({ type: "withdraw", amount: value });
-      txToast(`Unwrapped ${amount} cUSDC to tUSDC`, hash2);
+      txToast(`Unwrapped ${amount} cUSDT to USDT`, hash2);
       return hash2;
     },
     [address, write, config],

@@ -13,7 +13,7 @@ export function EncryptedValue({
   value,
   revealed,
   decimals = 6,
-  symbol = "cUSDC",
+  symbol = "cUSDT",
   size = "md",
   className,
 }: {

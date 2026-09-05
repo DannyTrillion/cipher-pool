@@ -66,7 +66,7 @@ export function PlayPanel() {
   const walletBal = get(user?.walletBalance);
   const claimable = get(user?.claimable);
   const revealedAll = poolBal !== undefined && walletBal !== undefined && claimable !== undefined;
-  const max = tab === "withdraw" ? poolBal : tab === "shield" ? user?.tusdBalance : walletBal; // unwrap + deposit + sponsor draw from cUSDC in wallet
+  const max = tab === "withdraw" ? poolBal : tab === "shield" ? user?.tusdBalance : walletBal; // unwrap + deposit + sponsor draw from cUSDT in wallet
   const maxNum = max !== undefined ? Number(formatUnits(max, DECIMALS)) : undefined;
   const value = useMemo(() => { try { return amount ? parseUnits(amount, DECIMALS) : 0n; } catch { return 0n; } }, [amount]);
   const tooMuch = max !== undefined && value > max;
@@ -92,12 +92,12 @@ export function PlayPanel() {
       await Promise.all([refetch(), refetchPool()]);
       if (revealedAll || poolBal !== undefined) await revealAll();
       if (isConvert(tab)) setTimeout(() => setTab("deposit"), 1600); // back to the main actions
-    }, { successMessage: tab === "shield" ? "Wrapped. Your cUSDC is private now." : tab === "deposit" ? "Done. Your money is in the pool, scrambled." : tab === "withdraw" ? "Done. It is back in your wallet as cUSDC." : tab === "unwrap" ? "Done. Your tUSDC is back in your wallet." : "Added to the prize. Thank you!" });
+    }, { successMessage: tab === "shield" ? "Wrapped. Your cUSDT is private now." : tab === "deposit" ? "Done. Your money is in the pool, scrambled." : tab === "withdraw" ? "Done. It is back in your wallet as cUSDT." : tab === "unwrap" ? "Done. Your USDT is back in your wallet." : "Added to the prize. Thank you!" });
   const claimFaucet = () =>
-    faucetFlow.run(async (setStep) => { await actions.faucet(setStep); await refetch(); }, { successMessage: "1,000 test tUSDC is in your wallet. Wrap it into cUSDC to use it." });
+    faucetFlow.run(async (setStep) => { await actions.faucet(setStep); await refetch(); }, { successMessage: "1,000 test USDT is in your wallet. Wrap it into cUSDT to use it." });
 
   const verb = TABS.find((t) => t.key === tab)!.verb;
-  const unit = tab === "shield" ? UNDERLYING_SYMBOL : "cUSDC";
+  const unit = tab === "shield" ? UNDERLYING_SYMBOL : "cUSDT";
   const pausable = tab === "deposit" || tab === "withdraw" || tab === "sponsor";
   const buttonLabel = !open && pausable ? "Paused during the draw" : value > 0n ? `${verb} ${amount} ${unit}` : `${verb} ${unit}`;
 
@@ -133,7 +133,7 @@ export function PlayPanel() {
           {[
             { l: "Savings", v: user?.poolBalance ? poolBal : isConnected ? null : undefined, h: user?.poolBalance ?? null, c: POOL.address, k: "pool", anchor: "position-balance", icon: <svg viewBox="0 0 24 24" className="h-4 w-4 text-accent" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="13" r="7" /><path d="M12 3v6M9 6l3 3 3-3" /></svg> },
             { l: "Prizes to collect", v: user?.claimable ? claimable : isConnected ? null : undefined, h: user?.claimable ?? null, c: POOL.address, k: "claim", icon: <svg viewBox="0 0 24 24" className="h-4 w-4 text-mint" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M8 21h8M12 17v4M5 4h14v4a7 7 0 0 1-14 0z" /><path d="M5 6H3v2a3 3 0 0 0 3 3M19 6h2v2a3 3 0 0 1-3 3" /></svg> },
-            { l: "Wallet cUSDC", v: user?.walletBalance ? walletBal : isConnected ? null : undefined, h: user?.walletBalance ?? null, c: TOKEN.address, k: "wallet", icon: <svg viewBox="0 0 24 24" className="h-4 w-4 text-cipher" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="5" y="10" width="14" height="10" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg> },
+            { l: "Wallet cUSDT", v: user?.walletBalance ? walletBal : isConnected ? null : undefined, h: user?.walletBalance ?? null, c: TOKEN.address, k: "wallet", icon: <svg viewBox="0 0 24 24" className="h-4 w-4 text-cipher" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="5" y="10" width="14" height="10" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg> },
           ].map((x) => (
             <div key={x.l} className="group px-4 py-3" data-anchor={x.anchor}>
               <div className="flex items-center gap-1.5 text-[12px] text-ink-muted">{x.icon}<span>{x.l}</span></div>
@@ -151,16 +151,16 @@ export function PlayPanel() {
               </div>
               {isConnected && x.k === "wallet" && (
                 <div className="mt-1 flex gap-3 text-[11px]">
-                  <button className="text-ink-faint hover:text-ink hover:underline" onClick={() => { setTab("shield"); setAmount(""); flow.reset(); sfx.click(); }}>Wrap tUSDC</button>
+                  <button className="text-ink-faint hover:text-ink hover:underline" onClick={() => { setTab("shield"); setAmount(""); flow.reset(); sfx.click(); }}>Wrap USDT</button>
                   <button className="text-ink-faint hover:text-ink hover:underline" onClick={() => { setTab("unwrap"); setAmount(""); flow.reset(); sfx.click(); }}>Unwrap</button>
                 </div>
               )}
             </div>
           ))}
-          <div className="px-4 py-3" title="tUSDC is a plain test token. Anyone can see this number.">
+          <div className="px-4 py-3" title="USDT is a plain test token. Anyone can see this number.">
             <div className="flex items-center gap-1.5 text-[12px] text-ink-muted">
               <svg viewBox="0 0 24 24" className="h-4 w-4 text-ink-faint" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="5" y="10" width="14" height="10" rx="2" /><path d="M8 10V7a4 4 0 0 1 7.5-2" /></svg>
-              <span>Wallet tUSDC</span>
+              <span>Wallet USDT</span>
               <span className="rounded-full border border-line px-1.5 text-[9px] uppercase tracking-wider text-ink-faint">public</span>
             </div>
             <div className="mt-1.5 flex min-h-[28px] items-center font-mono text-[15px] tabular">{isConnected && user ? `${formatUnits(user.tusdBalance, DECIMALS)}` : <span className="text-ink-faint">—</span>}</div>
@@ -177,8 +177,8 @@ export function PlayPanel() {
         return verb ? <div className="mt-2 text-[11px] text-ink-faint">Last: you {verb} {when}.</div> : null;
       })()}
       {isConnected && claimable !== undefined && claimable > 0n && (
-        <button className="btn-mint btn-lg shine mt-3 w-full" disabled={flow.state.status === "pending"} onClick={() => flow.run(async (s) => { await actions.claim(s); await refetch(); await revealAll(); }, { successMessage: "Collected. Your prize is in your wallet as cUSDC." })}>
-          Collect my {formatUnits(claimable, DECIMALS)} cUSDC prize
+        <button className="btn-mint btn-lg shine mt-3 w-full" disabled={flow.state.status === "pending"} onClick={() => flow.run(async (s) => { await actions.claim(s); await refetch(); await revealAll(); }, { successMessage: "Collected. Your prize is in your wallet as cUSDT." })}>
+          Collect my {formatUnits(claimable, DECIMALS)} cUSDT prize
         </button>
       )}
       {isConnected && user?.isParticipant && (
@@ -203,7 +203,7 @@ export function PlayPanel() {
             {isConvert(tab) ? (
               <div className="flex items-center gap-2 text-sm">
                 <button className="btn-ghost btn-sm !px-2" onClick={() => { setTab("deposit"); setAmount(""); flow.reset(); sfx.click(); }} aria-label="Back to actions">←</button>
-                <span className="font-semibold">{tab === "shield" ? "Wrap tUSDC into cUSDC" : "Unwrap cUSDC into tUSDC"}</span>
+                <span className="font-semibold">{tab === "shield" ? "Wrap USDT into cUSDT" : "Unwrap cUSDT into USDT"}</span>
               </div>
             ) : (
               <div className="flex rounded-full bg-black/40 p-1">
@@ -217,7 +217,7 @@ export function PlayPanel() {
             )}
             {user && user.tusdBalance === 0n && !user.walletBalance && (
               <button data-anchor="faucet" className="pill py-1.5 text-accent hover:bg-accent-faint disabled:text-ink-faint" onClick={claimFaucet} disabled={faucetFlow.state.status === "pending" || cooldown > 0} title="Free test tokens on Sepolia">
-                {cooldown > 0 ? `More test tUSDC in ${formatDuration(cooldown)}` : "Need test tUSDC? Get 1,000"}
+                {cooldown > 0 ? `More test USDT in ${formatDuration(cooldown)}` : "Need test USDT? Get 1,000"}
               </button>
             )}
           </div>
@@ -236,7 +236,7 @@ export function PlayPanel() {
                 disabled={flow.state.status === "pending" || (!open && pausable)}
                 onChange={(e) => { const v = e.target.value.replace(/[^0-9.]/g, ""); if ((v.match(/\./g) ?? []).length > 1) return; setAmount(v); }}
               />
-              <span className="absolute inset-y-0 right-4 flex items-center font-mono text-sm text-ink-muted">{tab === "shield" ? UNDERLYING_SYMBOL : "cUSDC"}</span>
+              <span className="absolute inset-y-0 right-4 flex items-center font-mono text-sm text-ink-muted">{tab === "shield" ? UNDERLYING_SYMBOL : "cUSDT"}</span>
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-2">
               {(() => {
@@ -260,13 +260,13 @@ export function PlayPanel() {
             )}
             {tooMuch && <div className="mt-2 text-xs text-warn">That is more than you have. Only what you have will move.</div>}
             {!tooMuch && value > 0n && poolBal !== undefined && (tab === "deposit" || tab === "withdraw") && (
-              <div className="mt-2 text-xs text-ink-muted">After this you will have <span className="font-mono text-ink">{formatUnits(tab === "deposit" ? poolBal + value : poolBal > value ? poolBal - value : 0n, DECIMALS)} cUSDC</span> in the pool.</div>
+              <div className="mt-2 text-xs text-ink-muted">After this you will have <span className="font-mono text-ink">{formatUnits(tab === "deposit" ? poolBal + value : poolBal > value ? poolBal - value : 0n, DECIMALS)} cUSDT</span> in the pool.</div>
             )}
             <p className="mt-2 text-xs text-ink-faint">
-              {tab === "shield" && "Turns your public tUSDC into private cUSDC, one for one. Two quick confirmations. After this, nobody can see your amounts."}
+              {tab === "shield" && "Turns your public USDT into private cUSDT, one for one. Two quick confirmations. After this, nobody can see your amounts."}
               {tab === "deposit" && "Your amount is scrambled in your browser before it is sent. The first time asks for one extra approval."}
-              {tab === "withdraw" && "Take out any amount whenever the pool is open. It comes back as cUSDC. Use Unwrap to turn it back into tUSDC."}
-              {tab === "unwrap" && "Turns private cUSDC back into public tUSDC, one for one. Two confirmations, with a short wait in between while the network confirms the amount."}
+              {tab === "withdraw" && "Take out any amount whenever the pool is open. It comes back as cUSDT. Use Unwrap to turn it back into USDT."}
+              {tab === "unwrap" && "Turns private cUSDT back into public USDT, one for one. Two confirmations, with a short wait in between while the network confirms the amount."}
               {tab === "sponsor" && "Goes straight into the next prize. It cannot be taken back."}
             </p>
           </motion.div>

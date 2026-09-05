@@ -11,15 +11,15 @@ Built for the **Zama Developer Program — Mainnet Season 4 Bounty Track** (Conf
 
 | Step | What happens | Where |
 |---|---|---|
-| **Get test tokens** | `tUSDC` is a plain 6-decimal test ERC-20 with a public faucet (1,000 per hour per address). | `MockUSD.faucet()` — "Need test tUSDC?" in the app |
-| **Shield** | `tUSDC.approve(cUSDC, amount)` → `cUSD.wrap(you, amount)`. `cUSDC` is an OpenZeppelin **ERC-7984 wrapper** over `tUSDC`; your cUSDC balance is an encrypted `euint64`, backed 1:1 by tUSDC locked in the wrapper. | Shield tab / wizard step 3 |
+| **Get test tokens** | `USDT` is a plain 6-decimal test ERC-20 with a public faucet (1,000 per hour per address). | `MockUSD.faucet()` — "Need test USDT?" in the app |
+| **Shield** | `USDT.approve(cUSDT, amount)` → `cUSD.wrap(you, amount)`. `cUSDT` is an OpenZeppelin **ERC-7984 wrapper** over `USDT`; your cUSDT balance is an encrypted `euint64`, backed 1:1 by USDT locked in the wrapper. | Shield tab / wizard step 3 |
 | **Deposit** | One-time `cUSD.setOperator(pool)`, then the app encrypts your amount in the browser (bound to you and the pool) and calls `deposit(externalEuint64, proof)`. The pool pulls it with `confidentialTransferFrom` and adds it to your encrypted balance with `FHE.add`. Over-requests move zero and never revert (a revert would leak your balance). | Deposit tab |
 | **Hold a confidential balance** | `balanceOf(you)` is a ciphertext handle only you (and the pool) are allowed on. Not even the pool's total is readable. | "Unlock my numbers" (EIP-712 user decryption, one signature per session) |
 | **Draw** | Permissionless. After `drawPeriod`, anyone calls `startDraw()` then `advanceDraw(batch)` until complete — the app's hold-to-run button does this, or run `npm run keeper:sepolia`. | Launch console |
 | **Win** | Tiered prizes (default grand 40% ×1, 20% ×2, 10% ×2). Each slot gets its own `FHE.randEuint64()` seed; selection is a deposit-weighted walk over encrypted balances (below). Prizes land in each winner's **encrypted claimable pot**. | Results panel: reel reveal |
 | **Claim** | Decrypt `claimableOf(you)` (EIP-712) to learn you won, then `claimPrize()` moves it to your wallet by **confidential transfer**. Anyone can call claim at constant cost — non-winners move an encrypted zero — so claiming reveals nothing. | "Claim to wallet" |
 | **Withdraw** | `withdraw(externalEuint64, proof)` any time the pool is open. Principal is never at risk. | Withdraw tab |
-| **Unwrap** | Back to the original ERC-20: `cUSD.unwrap(you, you, encAmount, proof)` burns and publishes the burned amount; the app fetches the relayer's public decryption + proof and calls `finalizeUnwrap(requestId, amount, proof)`, which releases tUSDC 1:1. | Unwrap tab |
+| **Unwrap** | Back to the original ERC-20: `cUSD.unwrap(you, you, encAmount, proof)` burns and publishes the burned amount; the app fetches the relayer's public decryption + proof and calls `finalizeUnwrap(requestId, amount, proof)`, which releases USDT 1:1. | Unwrap tab |
 
 ## How winner selection works (all encrypted unless noted)
 
@@ -58,7 +58,7 @@ Documented leakage:
 
 ## Yield-source mock, and how a real one plugs in
 
-`MockYieldSource` is an **admin-funded prize drip**: a public fixed rate of tUSDC per second (`ratePerSecond`, default 2,777 units ≈ 10 cUSDC/hour) is minted, wrapped into cUSDC and handed to the pool's encrypted prize reserve on every `harvest()` (called automatically at draw start; callable by anyone). It does *not* compute APY on the encrypted principal, because a plaintext mock cannot do that without leaking TVL. Every dripped cUSDC is backed by tUSDC held in the wrapper.
+`MockYieldSource` is an **admin-funded prize drip**: a public fixed rate of USDT per second (`ratePerSecond`, default 2,777 units ≈ 10 cUSDT/hour) is minted, wrapped into cUSDT and handed to the pool's encrypted prize reserve on every `harvest()` (called automatically at draw start; callable by anyone). It does *not* compute APY on the encrypted principal, because a plaintext mock cannot do that without leaking TVL. Every dripped cUSDT is backed by USDT held in the wrapper.
 
 Production: implement `IYieldSource.harvest(euint64 principal, uint256 elapsed) → euint64` with an adapter that deposits the pool's underlying into an ERC-4626 vault and harvests realised yield into the wrapper, then point the pool at a registry-listed confidential token (e.g. cUSDT) via `setYieldSource`. The pool only depends on `IERC7984` and `IYieldSource`.
 
@@ -67,18 +67,18 @@ Production: implement `IYieldSource.harvest(euint64 principal, uint256 elapsed) 
 | Contract | Address |
 |---|---|
 | ConfidentialPrizePool | [`0xAE4a6f8c8e3F0B76F07968C34064BA65A5F0bc9b`](https://sepolia.etherscan.io/address/0xAE4a6f8c8e3F0B76F07968C34064BA65A5F0bc9b) |
-| ConfidentialUSD (cUSDC, ERC-7984 wrapper) | [`0xAb953cAC2DF2Fd46F8296cff6eE420f73733410F`](https://sepolia.etherscan.io/address/0xAb953cAC2DF2Fd46F8296cff6eE420f73733410F) |
-| MockUSD (tUSDC, test ERC-20) | [`0x4324b6425E1714C6a7cE5CDAEBf32aBa18AB6d0E`](https://sepolia.etherscan.io/address/0x4324b6425E1714C6a7cE5CDAEBf32aBa18AB6d0E) |
+| ConfidentialUSD (cUSDT, ERC-7984 wrapper) | [`0xAb953cAC2DF2Fd46F8296cff6eE420f73733410F`](https://sepolia.etherscan.io/address/0xAb953cAC2DF2Fd46F8296cff6eE420f73733410F) |
+| MockUSD (USDT, test ERC-20) | [`0x4324b6425E1714C6a7cE5CDAEBf32aBa18AB6d0E`](https://sepolia.etherscan.io/address/0x4324b6425E1714C6a7cE5CDAEBf32aBa18AB6d0E) |
 | MockYieldSource (prize drip) | [`0xDa9DdC9e1577e1a287bba8506a889FDA3F2515CA`](https://sepolia.etherscan.io/address/0xDa9DdC9e1577e1a287bba8506a889FDA3F2515CA) |
 
-Draw period 10 minutes · prize drip ≈ 10 cUSDC/hour · faucet 1,000 tUSDC per hour per address.
+Draw period 10 minutes · prize drip ≈ 10 cUSDT/hour · faucet 1,000 USDT per hour per address.
 
 ## Repository layout
 
 ```
 contracts/
   contracts/ConfidentialPrizePool.sol   encrypted balances, lazy eligibility, tiered batched blind draw, claimable pots, proof-of-win
-  contracts/ConfidentialUSD.sol         ERC-7984 wrapper over tUSDC (OpenZeppelin ERC7984ERC20Wrapper)
+  contracts/ConfidentialUSD.sol         ERC-7984 wrapper over USDT (OpenZeppelin ERC7984ERC20Wrapper)
   contracts/MockUSD.sol                 test ERC-20 with faucet + minter role
   contracts/MockYieldSource.sol         admin-funded prize drip behind IYieldSource
   contracts/interfaces/IYieldSource.sol adapter boundary for a real vault
@@ -115,7 +115,7 @@ The frontend reads every address and ABI from `frontend/lib/contracts/deployment
 - **Missing approval / operator**: the app detects allowance and operator state and asks for the one-off approval first, with a plain-words step narration.
 - **Insufficient balance**: deposits and withdrawals never revert on over-request (that would leak balances); the UI warns before sending and explains that anything above your balance won't move.
 - **Network mismatch**: the header shows an amber status and a one-click switch to Sepolia; all writes are pinned to chain 11155111.
-- **Unsupported tokens**: the pool is single-asset (cUSDC over tUSDC) by design; there is no token picker to misuse.
+- **Unsupported tokens**: the pool is single-asset (cUSDT over USDT) by design; there is no token picker to misuse.
 - **Relayer latency**: freshly changed public handles are retried automatically; every failure surfaces a human message with the raw error available.
 
 ## Versions

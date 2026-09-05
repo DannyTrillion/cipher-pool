@@ -56,14 +56,14 @@ export default function HowItWorks() {
         ))}
       </ol>
 
-      <Section n="01" title="Your deposit is scrambled before it leaves your browser" lead="You start with a plain test token, tUSDC. Wrapping it turns it into private cUSDC, one for one. The tUSDC stays locked in the wrapper, so every cUSDC is backed. When you deposit, the app scrambles your amount with the network's public encryption key, ties it to your address and the pool, and sends it with a proof. The pool moves the funds with a private transfer and adds the scrambled amount to your scrambled balance. If you ask for more than you have, nothing moves and nothing fails, because a failure would give away your balance.">
+      <Section n="01" title="Your deposit is scrambled before it leaves your browser" lead="You start with a plain test token, USDT. Wrapping it turns it into private cUSDT, one for one. The USDT stays locked in the wrapper, so every cUSDT is backed. When you deposit, the app scrambles your amount with the network's public encryption key, ties it to your address and the pool, and sends it with a proof. The pool moves the funds with a private transfer and adds the scrambled amount to your scrambled balance. If you ask for more than you have, nothing moves and nothing fails, because a failure would give away your balance.">
         <Code>{`euint64 moved = asset.confidentialTransferFrom(msg.sender, address(this), requested);
 _balances[msg.sender] = FHE.add(_balances[msg.sender], moved);
 FHE.allowThis(_balances[msg.sender]);
 FHE.allow(_balances[msg.sender], msg.sender);   // only you can decrypt`}</Code>
       </Section>
 
-      <Section n="02" title="Interest builds the prize" lead="The pool never learns the total saved, so on the test network a fake interest rate cannot be worked out from it without giving it away. Instead, the prize grows by a fixed public drip: a set amount of tUSDC per second is created, wrapped into cUSDC and added to the pool's scrambled prize. Only the prize is made public, so the app can show what is at stake, like PoolTogether does. Anyone can also add to the prize directly. In a real deployment the drip is replaced by real interest from a lending vault, through the same interface." />
+      <Section n="02" title="Interest builds the prize" lead="The pool never learns the total saved, so on the test network a fake interest rate cannot be worked out from it without giving it away. Instead, the prize grows by a fixed public drip: a set amount of USDT per second is created, wrapped into cUSDT and added to the pool's scrambled prize. Only the prize is made public, so the app can show what is at stake, like PoolTogether does. Anyone can also add to the prize directly. In a real deployment the drip is replaced by real interest from a lending vault, through the same interface." />
 
       <Section n="03" title="Winners are picked without unscrambling anything" lead="Each draw pays a set of prizes: one top prize of 40%, two of 20% and two of 10%. For every prize the contract draws a scrambled random number and turns it into a scrambled ticket between zero and the total saved. It then goes through the savers once, keeping a scrambled running total, and for each prize counts how many running totals sit below that ticket. That count is the winner's position in the list, still scrambled. In a second pass every saver is credited either the prize or a scrambled zero, so from the outside every account was touched the same way. Prizes wait in each winner's scrambled pot. Collecting moves the prize to the wallet with a private transfer. Anyone can collect, even with nothing to collect, so collecting never gives away who won.">
         <DrawIllustration />
@@ -116,8 +116,8 @@ for i in savers:                                                  // pass 2, bat
       <Section n="07" title="Contracts on Sepolia" lead="Everything runs on the Ethereum Sepolia test network with Zama's encryption service. The tokens are test tokens with no real value.">
         <ul className="space-y-1.5 font-mono text-sm">
           <li><a className="text-ink-muted hover:text-ink" href={etherscanAddr(POOL.address)} target="_blank" rel="noreferrer">Prize pool · {POOL.address}</a></li>
-          <li><a className="text-ink-muted hover:text-ink" href={etherscanAddr(TUSD.address)} target="_blank" rel="noreferrer">tUSDC test ERC-20 · {TUSD.address}</a></li>
-          <li><a className="text-ink-muted hover:text-ink" href={etherscanAddr(TOKEN.address)} target="_blank" rel="noreferrer">cUSDC (ERC-7984 wrapper) · {TOKEN.address}</a></li>
+          <li><a className="text-ink-muted hover:text-ink" href={etherscanAddr(TUSD.address)} target="_blank" rel="noreferrer">USDT test ERC-20 · {TUSD.address}</a></li>
+          <li><a className="text-ink-muted hover:text-ink" href={etherscanAddr(TOKEN.address)} target="_blank" rel="noreferrer">cUSDT (ERC-7984 wrapper) · {TOKEN.address}</a></li>
           <li><a className="text-ink-muted hover:text-ink" href={etherscanAddr(YIELD.address)} target="_blank" rel="noreferrer">Yield source (mock) · {YIELD.address}</a></li>
         </ul>
       </Section>

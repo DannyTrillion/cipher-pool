@@ -13,7 +13,7 @@
 
 | Requirement | Where |
 |---|---|
-| Deposit a test ERC-20 | tUSDC faucet → `approve` → `cUSD.wrap` (ERC-7984 wrapper) → `deposit` (encrypted input + `confidentialTransferFrom`) |
+| Deposit a test ERC-20 | USDT faucet → `approve` → `cUSD.wrap` (ERC-7984 wrapper) → `deposit` (encrypted input + `confidentialTransferFrom`) |
 | Yield distributed through periodic draws | `harvest` → encrypted prize reserve → `startDraw` / `advanceDraw` |
 | Withdraw principal at any time | `withdraw` (any time the pool is open; never reverts on over-request) |
 | Deposits, balances, winnings encrypted | `euint64` everywhere; ACL only to holder + pool; tests prove other users cannot decrypt |
@@ -24,9 +24,9 @@
 | Production quality | 14 mock tests, batched draws for HCU budget, sign-once reveal, graceful errors, no owner access to funds |
 
 ## Demo script (3 minutes)
-1. Connect → faucet 1,000 tUSDC → Shield into cUSDC (approve + wrap).
+1. Connect → faucet 1,000 USDT → Shield into cUSDT (approve + wrap).
 2. Deposit 400 → balance shows as cipher; Unlock (one signature) → 400.
-3. Second wallet deposits; sponsor 25 cUSDC to the prize → hero shows public prize.
+3. Second wallet deposits; sponsor 25 cUSDT to the prize → hero shows public prize.
 4. Countdown hits zero → Run draw: start (seed) → batches (progress bar) → complete.
 5. "Did I win?" → reel reveal; Claim to wallet (confidential transfer); optionally publish proof.
 6. Draws page: seed + prize public; Etherscan shows identical touches for every account.
