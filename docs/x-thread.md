@@ -32,7 +32,7 @@ From the outside, every account was touched identically. Not even the contract o
 • Sign once, reveal everything for the session
 • 14 FHEVM tests, no owner access to funds
 
-9/ Try it on Sepolia: take test tUSD, shield it into cUSD, deposit, hold the big button to run a draw, reveal privately whether you won, claim, withdraw any time.
+9/ Try it on Sepolia: take test tUSDC, shield it into cUSDC, deposit, hold the big button to run a draw, reveal privately whether you won, claim, withdraw any time.
 
 Demo: https://cipher-pool-beta.vercel.app
 Code: https://github.com/DannyTrillion/cipher-pool

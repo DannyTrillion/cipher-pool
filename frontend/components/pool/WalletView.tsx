@@ -107,7 +107,7 @@ export function WalletView() {
         {claimable !== undefined && claimable > 0n && (
           <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-mint/40 bg-mint/10 px-5 py-4">
             <div><div className="text-sm text-ink-muted">Prize waiting for you</div><div className="display text-2xl text-mint">{formatAmount(claimable, DECIMALS, { maxFractionDigits: 2 })} {SYMBOL}</div></div>
-            <button className="btn-mint" disabled={flow.state.status === "pending"} onClick={() => flow.run(async (s) => { await actions.claim(s); await refetch(); await reveal(POOL.address, user?.claimable ?? null, "claim"); await reveal(TOKEN.address, user?.walletBalance ?? null, "wallet"); }, { successMessage: "Collected. It is in your wallet as cUSD." })}>{flow.state.status === "pending" ? "Collecting…" : "Collect to wallet"}</button>
+            <button className="btn-mint" disabled={flow.state.status === "pending"} onClick={() => flow.run(async (s) => { await actions.claim(s); await refetch(); await reveal(POOL.address, user?.claimable ?? null, "claim"); await reveal(TOKEN.address, user?.walletBalance ?? null, "wallet"); }, { successMessage: "Collected. It is in your wallet as cUSDC." })}>{flow.state.status === "pending" ? "Collecting…" : "Collect to wallet"}</button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -121,7 +121,7 @@ export function WalletView() {
             {[
               { l: "Savings in the pool", v: user?.poolBalance ? poolBal : null, h: user?.poolBalance ?? null, c: POOL.address, k: "pool", tone: "bg-accent" },
               { l: "Prizes to collect", v: user?.claimable ? claimable : null, h: user?.claimable ?? null, c: POOL.address, k: "claim", tone: "bg-mint" },
-              { l: "cUSD in wallet", v: user?.walletBalance ? walletBal : null, h: user?.walletBalance ?? null, c: TOKEN.address, k: "wallet", tone: "bg-cipher" },
+              { l: "cUSDC in wallet", v: user?.walletBalance ? walletBal : null, h: user?.walletBalance ?? null, c: TOKEN.address, k: "wallet", tone: "bg-cipher" },
               { l: "Total won so far", v: user?.winnings ? winnings : null, h: user?.winnings ?? null, c: POOL.address, k: "win", tone: "bg-accent" },
             ].map((x) => (
               <div key={x.l} className="group px-4 py-3">
@@ -134,7 +134,7 @@ export function WalletView() {
             ))}
           </div>
           <div className="mt-3 flex items-center justify-between rounded-xl border border-line bg-black/20 px-4 py-3">
-            <div className="text-[12px] text-ink-muted">tUSD in wallet <span className="ml-1 rounded-full border border-line px-1.5 text-[9px] uppercase tracking-wider text-ink-faint">public</span></div>
+            <div className="text-[12px] text-ink-muted">tUSDC in wallet <span className="ml-1 rounded-full border border-line px-1.5 text-[9px] uppercase tracking-wider text-ink-faint">public</span></div>
             <div className="font-mono text-[15px] tabular">{user ? formatUnits(user.tusdBalance, DECIMALS) : "…"} {UNDERLYING_SYMBOL}</div>
           </div>
         </div>
@@ -146,8 +146,8 @@ export function WalletView() {
             {[
               { l: "Deposit", d: "Put money in", href: "/#deposit", primary: true },
               { l: "Withdraw", d: "Take money out", href: "/#withdraw" },
-              { l: "Wrap", d: "tUSD → cUSD", href: "/#wrap" },
-              { l: "Unwrap", d: "cUSD → tUSD", href: "/#unwrap" },
+              { l: "Wrap", d: "tUSDC → cUSDC", href: "/#wrap" },
+              { l: "Unwrap", d: "cUSDC → tUSDC", href: "/#unwrap" },
             ].map((a) => (
               <Link key={a.l} href={a.href} className={cn("rounded-xl border px-4 py-3 transition hover:-translate-y-0.5", a.primary ? "border-accent/50 bg-accent-faint" : "border-line bg-black/20 hover:border-line-strong")} onClick={() => sfx.click()}>
                 <div className={cn("font-semibold", a.primary && "text-accent")}>{a.l}</div>
@@ -192,7 +192,7 @@ export function WalletView() {
         </div>
       </div>
 
-      <div className="text-[11px] text-ink-faint">Contracts: <a className="hover:text-ink" href={etherscanAddr(POOL.address)} target="_blank" rel="noreferrer">pool</a> · <a className="hover:text-ink" href={etherscanAddr(TOKEN.address)} target="_blank" rel="noreferrer">cUSD</a> · <a className="hover:text-ink" href={etherscanAddr(TUSD.address)} target="_blank" rel="noreferrer">tUSD</a></div>
+      <div className="text-[11px] text-ink-faint">Contracts: <a className="hover:text-ink" href={etherscanAddr(POOL.address)} target="_blank" rel="noreferrer">pool</a> · <a className="hover:text-ink" href={etherscanAddr(TOKEN.address)} target="_blank" rel="noreferrer">cUSDC</a> · <a className="hover:text-ink" href={etherscanAddr(TUSD.address)} target="_blank" rel="noreferrer">tUSDC</a></div>
     </div>
   );
 }

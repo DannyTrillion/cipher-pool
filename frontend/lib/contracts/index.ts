@@ -26,8 +26,8 @@ export const TOKEN = deployment.contracts.ConfidentialUSD;
 export const YIELD = deployment.contracts.MockYieldSource;
 export const CHAIN_ID = 11155111 as const; // Sepolia — matches deployment.chainId
 export const DECIMALS = 6;
-export const SYMBOL = "cUSD";
-export const UNDERLYING_SYMBOL = "tUSD";
+export const SYMBOL = "cUSDC";
+export const UNDERLYING_SYMBOL = "tUSDC";
 /** Simulated prize drip per hour, in base units. */
 export const DRIP_PER_HOUR = BigInt(deployment.dripPerSecond ?? "2777") * 3600n;
 

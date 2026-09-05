@@ -29,7 +29,7 @@ export function AdminPanel() {
           <button className="btn-secondary" disabled={!period} onClick={() => flow.run(async (s) => { s("Confirm…"); await write({ ...POOL, chainId: CHAIN_ID, functionName: "setDrawPeriod", args: [BigInt(period)] }); await refetch(); }, { successMessage: "Draw period updated." })}>Set</button>
         </div>
         <div className="flex gap-2">
-          <input className="input !text-sm" placeholder={`Prize drip · tUSD units/sec · now ${state.dripPerSecond}`} value={drip} onChange={(e) => setDrip(e.target.value.replace(/\D/g, ""))} />
+          <input className="input !text-sm" placeholder={`Prize drip · tUSDC units/sec · now ${state.dripPerSecond}`} value={drip} onChange={(e) => setDrip(e.target.value.replace(/\D/g, ""))} />
           <button className="btn-secondary" disabled={!drip} onClick={() => flow.run(async (s) => { s("Confirm…"); await write({ ...YIELD, chainId: CHAIN_ID, functionName: "setRate", args: [BigInt(drip)] }); await refetch(); }, { successMessage: "Prize drip updated." })}>Set</button>
         </div>
       </div>

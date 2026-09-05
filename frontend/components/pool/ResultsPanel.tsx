@@ -81,7 +81,7 @@ export function ResultsPanel() {
     await refetch();
     await reveal(POOL.address, user?.claimable ?? null, "claim");
     if (latest) { const key = latest.epoch.toString(); try { localStorage.setItem("cipherpool.settled", key); } catch {} setTimeout(() => setSettled(key), 1200); }
-  }, { successMessage: "Collected. Your prize is in your wallet as cUSD." });
+  }, { successMessage: "Collected. Your prize is in your wallet as cUSDC." });
 
   return (
     <section className="card min-w-0 overflow-hidden p-6 sm:p-7">
@@ -168,7 +168,7 @@ export function ResultsPanel() {
                 <span className="grid h-12 w-12 place-items-center rounded-xl bg-mint/15 text-mint"><svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L20 7" /></svg></span>
                 <div>
                   <div className="text-lg font-semibold">Prize collected</div>
-                  <div className="mt-1 text-sm text-ink-muted">It is in your wallet as cUSD. {user?.poolBalance ? `You are in the next draw, in ${formatDuration(nextIn)}.` : "Put money in to join the next draw."}</div>
+                  <div className="mt-1 text-sm text-ink-muted">It is in your wallet as cUSDC. {user?.poolBalance ? `You are in the next draw, in ${formatDuration(nextIn)}.` : "Put money in to join the next draw."}</div>
                 </div>
               </div>
             )}

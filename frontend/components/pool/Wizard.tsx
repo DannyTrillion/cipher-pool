@@ -45,12 +45,12 @@ export function Wizard({ onSkip }: { onSkip?: () => void } = {}) {
     unlock: <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></svg>,
     draw: <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>,
   };
-  const SHORT: Record<string, string> = { connect: "Connect", faucet: "Get tUSD", shield: "Wrap", deposit: "Deposit", unlock: "Numbers", draw: "Draw" };
+  const SHORT: Record<string, string> = { connect: "Connect", faucet: "Get tUSDC", shield: "Wrap", deposit: "Deposit", unlock: "Numbers", draw: "Draw" };
 
   const steps = [
     { key: "connect", title: "Connect a wallet", why: "Your wallet is your login. It is also the only key that can read your numbers.", done: isConnected },
-    { key: "faucet", title: "Get 1,000 test tUSD", why: "Free play money on the Sepolia test network. Nothing here is real money.", done: (user?.tusdBalance ?? 0n) > 0n || !!user?.walletBalance || !!user?.poolBalance },
-    { key: "shield", title: "Wrap it into cUSD", why: "Wrapping turns public tUSD into private cUSD, one for one. After this, nobody can see your amounts.", done: !!user?.walletBalance || !!user?.poolBalance },
+    { key: "faucet", title: "Get 1,000 test tUSDC", why: "Free play money on the Sepolia test network. Nothing here is real money.", done: (user?.tusdBalance ?? 0n) > 0n || !!user?.walletBalance || !!user?.poolBalance },
+    { key: "shield", title: "Wrap it into cUSDC", why: "Wrapping turns public tUSDC into private cUSDC, one for one. After this, nobody can see your amounts.", done: !!user?.walletBalance || !!user?.poolBalance },
     { key: "deposit", title: "Make your first deposit", why: "Your amount is scrambled in your browser before it is sent. The pool never sees it.", done: !!user?.poolBalance },
     { key: "unlock", title: "See your numbers", why: "One signature lets your wallet read your own balance. Nobody else can.", done: poolBal !== undefined },
     { key: "draw", title: "Wait for the draw", why: "Every 10 minutes the pool picks winners in secret. If you win, the prize waits until you collect it. Your money is never at risk.", done: eligible && !!user?.wonInDraw },
@@ -59,10 +59,10 @@ export function Wizard({ onSkip }: { onSkip?: () => void } = {}) {
   const allDone = steps.every((s) => s.done);
   const step = steps[Math.min(current, steps.length - 1)];
 
-  const doFaucet = () => flow.run(async (s) => { await actions.faucet(s); celebrate(); await refetch(); }, { successMessage: "1,000 test tUSD is in your wallet." });
-  const doShield = () => flow.run(async (s) => { await actions.shield(formatUnits(user?.tusdBalance ?? 0n, DECIMALS), s); celebrate(); await refetch(); }, { successMessage: "Wrapped. Your cUSD is private now." });
+  const doFaucet = () => flow.run(async (s) => { await actions.faucet(s); celebrate(); await refetch(); }, { successMessage: "1,000 test tUSDC is in your wallet." });
+  const doShield = () => flow.run(async (s) => { await actions.shield(formatUnits(user?.tusdBalance ?? 0n, DECIMALS), s); celebrate(); await refetch(); }, { successMessage: "Wrapped. Your cUSDC is private now." });
   const doDeposit = () => flow.run(async (s) => { await actions.deposit(amount, s); celebrate(); await Promise.all([refetch(), refetchPool()]); }, { successMessage: "Done. Your money is in the pool, scrambled." });
-  const doUnlock = () => flow.run(async (s) => { s("Waiting for your signature…"); await reveal(POOL.address, user?.poolBalance ?? null, "pool"); await reveal(TOKEN.address, user?.walletBalance ?? null, "wallet"); celebrate(); }, { successMessage: "Here they are. Only you can see these." });
+  const doUnlock = () => flow.run(async (s) => { s("Waiting for your signature, then Zama's relayer decrypts for you…"); await reveal(POOL.address, user?.poolBalance ?? null, "pool"); await reveal(TOKEN.address, user?.walletBalance ?? null, "wallet"); celebrate(); }, { successMessage: "Here they are. Only you can see these." });
 
   return (
     <div>
@@ -125,13 +125,13 @@ export function Wizard({ onSkip }: { onSkip?: () => void } = {}) {
                 ))}
                 {step.key === "faucet" && (
                   <button data-anchor="faucet" className="btn-primary btn-lg shine w-full" disabled={flow.state.status === "pending" || Number(user?.faucetCooldown ?? 0n) > 0} onClick={doFaucet}>
-                    {Number(user?.faucetCooldown ?? 0n) > 0 ? `Try again in ${formatDuration(Number(user!.faucetCooldown))}` : flow.state.status === "pending" ? "Minting…" : "Get 1,000 test tUSD"}
+                    {Number(user?.faucetCooldown ?? 0n) > 0 ? `Try again in ${formatDuration(Number(user!.faucetCooldown))}` : flow.state.status === "pending" ? "Minting…" : "Get 1,000 test tUSDC"}
                   </button>
                 )}
                 {step.key === "shield" && (
                   <div className="space-y-3">
                     <button data-anchor="shield" className="btn-primary btn-lg shine w-full" disabled={flow.state.status === "pending" || (user?.tusdBalance ?? 0n) === 0n} onClick={doShield}>
-                      {flow.state.status === "pending" ? "Working…" : `Wrap ${formatUnits(user?.tusdBalance ?? 0n, DECIMALS)} ${UNDERLYING_SYMBOL} into cUSD`}
+                      {flow.state.status === "pending" ? "Working…" : `Wrap ${formatUnits(user?.tusdBalance ?? 0n, DECIMALS)} ${UNDERLYING_SYMBOL} into cUSDC`}
                     </button>
                     <p className="text-xs text-ink-faint">Two confirmations: an approval, then the wrap.</p>
                   </div>
@@ -140,13 +140,13 @@ export function Wizard({ onSkip }: { onSkip?: () => void } = {}) {
                   <div className="space-y-3">
                     <div className="flex gap-2">
                       {["50", "100", "250"].map((c) => (
-                        <button key={c} className={cn("pill flex-1 justify-center py-2", amount === c && "border-accent/50 text-accent")} onClick={() => { setAmount(c); sfx.click(); }}>{c} cUSD</button>
+                        <button key={c} className={cn("pill flex-1 justify-center py-2", amount === c && "border-accent/50 text-accent")} onClick={() => { setAmount(c); sfx.click(); }}>{c} cUSDC</button>
                       ))}
                     </div>
                     <button data-anchor="deposit" className="btn-primary btn-lg shine w-full" disabled={flow.state.status === "pending" || drawing} onClick={doDeposit}>
-                      {drawing ? "Paused during the draw" : flow.state.status === "pending" ? "Working…" : `Put in ${amount} cUSD`}
+                      {drawing ? "Paused during the draw" : flow.state.status === "pending" ? "Working…" : `Put in ${amount} cUSDC`}
                     </button>
-                    <p className="text-xs text-ink-faint">Two confirmations the first time: one lets the pool move your cUSD, one is the deposit.</p>
+                    <p className="text-xs text-ink-faint">Two confirmations the first time: one lets the pool move your cUSDC, one is the deposit.</p>
                   </div>
                 )}
                 {step.key === "unlock" && (

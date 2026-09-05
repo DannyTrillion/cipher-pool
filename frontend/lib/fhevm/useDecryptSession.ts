@@ -113,7 +113,7 @@ export function useDecryptSession() {
         return existing;
       }
 
-      onStep?.("Preparing decryption keys…");
+      onStep?.("Preparing your Zama decryption keys…");
       const instance = await getFhevmInstance();
       const keypair = instance.generateKeypair();
 
@@ -126,7 +126,7 @@ export function useDecryptSession() {
 
       const eip712 = instance.createEIP712(keypair.publicKey, union, startTs, DURATION_DAYS);
 
-      onStep?.("Waiting for signature…");
+      onStep?.("Waiting for your signature (EIP-712)…");
       // Sign through the raw EIP-1193 provider (like ethers' signTypedData).
       // The relayer's UserDecrypt EIP-712 domain uses the GATEWAY chainId, not
       // Sepolia, so wagmi/viem's signTypedData (which enforces domain.chainId ==
@@ -191,7 +191,7 @@ export function useDecryptSession() {
         opts?.onStep,
       );
 
-      opts?.onStep?.("Decrypting with the relayer…");
+      opts?.onStep?.("Zama's relayer is decrypting for you…");
       const instance = await getFhevmInstance();
       const result = await instance.userDecrypt(
         [{ handle, contractAddress }],

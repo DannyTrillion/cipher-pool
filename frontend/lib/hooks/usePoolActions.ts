@@ -37,15 +37,15 @@ export function usePoolActions() {
     async (setStep: Step) => {
       need();
       setStep("Confirm the faucet transaction in your wallet…");
-      const hash = await write({ ...TUSD, chainId: CHAIN_ID, functionName: "faucet", onSent: () => setStep("Minting 1,000 tUSD…") });
+      const hash = await write({ ...TUSD, chainId: CHAIN_ID, functionName: "faucet", onSent: () => setStep("Minting 1,000 tUSDC…") });
       fire({ type: "faucet", amount: 1_000_000_000n });
-      txToast("Faucet claimed: 1,000 tUSD", hash);
+      txToast("Faucet claimed: 1,000 tUSDC", hash);
       return hash;
     },
     [address, write],
   );
 
-  /** tUSD → cUSD: ERC-20 approval (if needed) then wrap. The wrapped amount becomes an encrypted balance. */
+  /** tUSDC → cUSDC: ERC-20 approval (if needed) then wrap. The wrapped amount becomes an encrypted balance. */
   const shield = useCallback(
     async (amount: string, setStep: Step) => {
       const user = need();
@@ -53,14 +53,14 @@ export function usePoolActions() {
       if (value <= 0n) throw new Error("Enter an amount greater than zero.");
       const allowance = (await readContract(config, { ...TUSD, chainId: CHAIN_ID, functionName: "allowance", args: [user, TOKEN.address] })) as bigint;
       if (allowance < value) {
-        setStep("Approve the wrapper to take your tUSD…");
+        setStep("Approve the wrapper to take your tUSDC…");
         const h = await write({ ...TUSD, chainId: CHAIN_ID, functionName: "approve", args: [TOKEN.address, value], onSent: () => setStep("Confirming approval…") });
-        txToast("tUSD approved", h);
+        txToast("tUSDC approved", h);
       }
       setStep("Confirm the wrap in your wallet…");
-      const hash = await write({ ...TOKEN, chainId: CHAIN_ID, functionName: "wrap", args: [user, value], onSent: () => setStep("Shielding into encrypted cUSD…") });
+      const hash = await write({ ...TOKEN, chainId: CHAIN_ID, functionName: "wrap", args: [user, value], onSent: () => setStep("Wrapping into cUSDC on Zama FHEVM, your balance becomes encrypted…") });
       fire({ type: "shield", amount: value });
-      txToast(`Shielded ${amount} tUSD into cUSD`, hash);
+      txToast(`Shielded ${amount} tUSDC into cUSDC`, hash);
       return hash;
     },
     [address, write, config],
@@ -71,7 +71,7 @@ export function usePoolActions() {
     async (setStep: Step) => {
       need();
       setStep("Confirm the claim in your wallet…");
-      const hash = await write({ ...POOL, chainId: CHAIN_ID, functionName: "claimPrize", onSent: () => setStep("Moving your prize to your wallet (encrypted)…") });
+      const hash = await write({ ...POOL, chainId: CHAIN_ID, functionName: "claimPrize", onSent: () => setStep("Sending your prize by confidential transfer on Zama FHEVM…") });
       fire({ type: "claim" });
       txToast("Prize claimed to your wallet", hash);
       return hash;
@@ -84,7 +84,7 @@ export function usePoolActions() {
       const user = need();
       const ok = (await readContract(config, { ...TOKEN, chainId: CHAIN_ID, functionName: "isOperator", args: [user, POOL.address] })) as boolean;
       if (ok) return;
-      setStep("One-time approval: allow the pool to move your cUSD…");
+      setStep("One-time approval: allow the pool to move your cUSDC…");
       const until = BigInt(Math.floor(Date.now() / 1000) + OPERATOR_TTL);
       const hash = await write({ ...TOKEN, chainId: CHAIN_ID, functionName: "setOperator", args: [POOL.address, until], onSent: () => setStep("Confirming approval…") });
       txToast("Pool approved as operator", hash);
@@ -98,12 +98,12 @@ export function usePoolActions() {
       const value = parseUnits(amount, DECIMALS);
       if (value <= 0n) throw new Error("Enter an amount greater than zero.");
       await ensureOperator(setStep);
-      setStep("Encrypting your amount locally…");
+      setStep("Encrypting your amount with Zama's FHE key…");
       const { handle, inputProof } = await encryptUint64(POOL.address, user, value);
       setStep("Confirm the deposit in your wallet…");
-      const hash = await write({ ...POOL, chainId: CHAIN_ID, functionName: "deposit", args: [handle, inputProof], onSent: () => setStep("Depositing (encrypted)…") });
+      const hash = await write({ ...POOL, chainId: CHAIN_ID, functionName: "deposit", args: [handle, inputProof], onSent: () => setStep("Sending your encrypted deposit to the pool on Zama FHEVM…") });
       fire({ type: "deposit", amount: value });
-      txToast(`Deposited ${amount} cUSD`, hash);
+      txToast(`Deposited ${amount} cUSDC`, hash);
       return hash;
     },
     [address, write, ensureOperator],
@@ -114,12 +114,12 @@ export function usePoolActions() {
       const user = need();
       const value = parseUnits(amount, DECIMALS);
       if (value <= 0n) throw new Error("Enter an amount greater than zero.");
-      setStep("Encrypting your amount locally…");
+      setStep("Encrypting your amount with Zama's FHE key…");
       const { handle, inputProof } = await encryptUint64(POOL.address, user, value);
       setStep("Confirm the withdrawal in your wallet…");
-      const hash = await write({ ...POOL, chainId: CHAIN_ID, functionName: "withdraw", args: [handle, inputProof], onSent: () => setStep("Withdrawing (encrypted)…") });
+      const hash = await write({ ...POOL, chainId: CHAIN_ID, functionName: "withdraw", args: [handle, inputProof], onSent: () => setStep("Withdrawing through Zama FHEVM, amount stays encrypted…") });
       fire({ type: "withdraw", amount: value });
-      txToast(`Withdrew ${amount} cUSD`, hash);
+      txToast(`Withdrew ${amount} cUSDC`, hash);
       return hash;
     },
     [address, write],
@@ -131,12 +131,12 @@ export function usePoolActions() {
       const value = parseUnits(amount, DECIMALS);
       if (value <= 0n) throw new Error("Enter an amount greater than zero.");
       await ensureOperator(setStep);
-      setStep("Encrypting your amount locally…");
+      setStep("Encrypting your amount with Zama's FHE key…");
       const { handle, inputProof } = await encryptUint64(POOL.address, user, value);
       setStep("Confirm the sponsorship in your wallet…");
-      const hash = await write({ ...POOL, chainId: CHAIN_ID, functionName: "donatePrize", args: [handle, inputProof], onSent: () => setStep("Adding to the prize…") });
+      const hash = await write({ ...POOL, chainId: CHAIN_ID, functionName: "donatePrize", args: [handle, inputProof], onSent: () => setStep("Adding your encrypted amount to the prize on Zama FHEVM…") });
       fire({ type: "sponsor", amount: value });
-      txToast(`Sponsored ${amount} cUSD to the prize`, hash);
+      txToast(`Sponsored ${amount} cUSDC to the prize`, hash);
       return hash;
     },
     [address, write, ensureOperator],
@@ -159,7 +159,7 @@ export function usePoolActions() {
       const phase = Number(await readContract(config, { ...POOL, chainId: CHAIN_ID, functionName: "phase" }));
       if (phase === 0) {
         setStep("Confirm: start the draw (harvest yield + draw the encrypted seed)…");
-        const hash = await write({ ...POOL, chainId: CHAIN_ID, functionName: "startDraw", onSent: () => setStep("Drawing the on-chain FHE random seed…") });
+        const hash = await write({ ...POOL, chainId: CHAIN_ID, functionName: "startDraw", onSent: () => setStep("Zama's coprocessor is drawing the encrypted random seeds…") });
         fire({ type: "drawStart" });
         txToast("Draw started", hash);
         onProgress?.();
@@ -186,19 +186,19 @@ export function usePoolActions() {
     async (epoch: bigint, setStep: Step) => {
       need();
       setStep("Confirm in your wallet…");
-      const hash = await write({ ...POOL, chainId: CHAIN_ID, functionName: "revealWin", args: [epoch], onSent: () => setStep("Publishing your proof of win…") });
+      const hash = await write({ ...POOL, chainId: CHAIN_ID, functionName: "revealWin", args: [epoch], onSent: () => setStep("Publishing your proof of win through Zama FHEVM…") });
       txToast("Proof of win published", hash);
     },
     [address, write],
   );
 
-  /** Unwrap cUSD back to tUSD: burn (encrypted) → relayer public decrypt of the burned amount → finalize with the proof. */
+  /** Unwrap cUSDC back to tUSDC: burn (encrypted) → relayer public decrypt of the burned amount → finalize with the proof. */
   const unwrap = useCallback(
     async (amount: string, setStep: Step) => {
       const user = need();
       const value = parseUnits(amount, DECIMALS);
       if (value <= 0n) throw new Error("Enter an amount greater than zero.");
-      setStep("Scrambling your amount in the browser…");
+      setStep("Encrypting your amount with Zama's FHE key…");
       const { handle, inputProof } = await encryptUint64(TOKEN.address, user, value);
       setStep("Confirm step 1 of 2 in your wallet: unwrap…");
       const hash = await writeContract(config, { ...TOKEN, chainId: CHAIN_ID, functionName: "unwrap", args: [user, user, handle, inputProof] });
@@ -213,16 +213,16 @@ export function usePoolActions() {
         } catch { /* not ours */ }
       }
       if (!requestId) throw new Error("Could not find the unwrap request in the receipt.");
-      setStep("Waiting for the network to confirm the amount (up to a minute)…");
+      setStep("Zama's relayer is decrypting the unwrap amount (up to a minute)…");
       let clear: { value: bigint; proof: `0x${string}` } | undefined;
       for (let i = 0; i < 15 && !clear; i++) {
         try { clear = await publicDecryptWithProof(requestId); } catch { await new Promise((r) => setTimeout(r, 6000)); }
       }
       if (!clear) throw new Error("The network has not confirmed the amount yet. Try again in a minute.");
-      setStep("Confirm step 2 of 2 in your wallet: receive your tUSD…");
-      const hash2 = await write({ ...TOKEN, chainId: CHAIN_ID, functionName: "finalizeUnwrap", args: [requestId, clear.value, clear.proof], onSent: () => setStep("Sending your tUSD…") });
+      setStep("Confirm step 2 of 2 in your wallet: receive your tUSDC…");
+      const hash2 = await write({ ...TOKEN, chainId: CHAIN_ID, functionName: "finalizeUnwrap", args: [requestId, clear.value, clear.proof], onSent: () => setStep("Sending your tUSDC…") });
       fire({ type: "withdraw", amount: value });
-      txToast(`Unwrapped ${amount} cUSD to tUSD`, hash2);
+      txToast(`Unwrapped ${amount} cUSDC to tUSDC`, hash2);
       return hash2;
     },
     [address, write, config],
