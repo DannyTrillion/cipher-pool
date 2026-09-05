@@ -48,7 +48,7 @@ export function GrandSlam() {
         </div>
         {/* the machine: Play beside the drum, the tray under the chute, Results centred beneath both */}
         <div className="relative mt-4 space-y-4 [&>*]:min-w-0">
-          <div className="grid gap-4 md:grid-cols-2 md:items-stretch">
+          <div className="grid gap-4 md:grid-cols-2 md:items-start">
             <PlayPanel />
             <div className="flex min-w-0 flex-col">
               <DrawChamber />
