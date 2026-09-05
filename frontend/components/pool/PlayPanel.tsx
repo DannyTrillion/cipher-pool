@@ -1,4 +1,5 @@
 "use client";
+import { humanizeError } from "@/lib/format";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Wizard } from "@/components/pool/Wizard";
@@ -37,7 +38,7 @@ export function PlayPanel() {
   const { address, isConnected } = useAccount();
   const { connect, connectors, isPending } = useConnect();
   const { state, refetch: refetchPool } = usePoolState();
-  const { user, refetch, waitFor } = useUserState(state?.epoch);
+  const { user, refetch, waitFor, error: readError } = useUserState(state?.epoch);
   const actions = usePoolActions();
   const { reveal, get, busy } = useReveal();
   const flow = useActionFlow();
@@ -130,6 +131,11 @@ export function PlayPanel() {
       <>
 
 
+      {isConnected && !user && readError && (
+        <div className="mt-5 rounded-xl border border-warn/40 bg-warn/10 px-3.5 py-2.5 text-xs text-warn">
+          Could not read your wallet from the network. {humanizeError(readError)} <button className="underline" onClick={() => void refetch()}>Try again</button>
+        </div>
+      )}
       {/* balance strip: one row, four cells, hairlines between */}
       <div className="mt-5 overflow-hidden rounded-2xl border border-line bg-black/20">
         <div className="flex items-center justify-between border-b border-line px-4 py-2">

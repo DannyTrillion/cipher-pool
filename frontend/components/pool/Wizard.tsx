@@ -10,6 +10,7 @@ import { useActionFlow } from "@/lib/useActionFlow";
 import { FlowStatus } from "@/components/ui/FlowStatus";
 import { EncryptedValue } from "@/components/ui/EncryptedValue";
 import { POOL, TOKEN, DECIMALS, UNDERLYING_SYMBOL } from "@/lib/contracts";
+import { humanizeError } from "@/lib/format";
 import { formatUnits } from "viem";
 import { formatDuration, useNow } from "@/components/ui/Countdown";
 import { cn } from "@/lib/cn";
@@ -22,7 +23,7 @@ export function Wizard({ onSkip }: { onSkip?: () => void } = {}) {
   const { isConnected, address } = useAccount();
   const { connect, connectors, isPending } = useConnect();
   const { state, refetch: refetchPool } = usePoolState();
-  const { user, refetch, waitFor } = useUserState(state?.epoch);
+  const { user, refetch, waitFor, error: readError } = useUserState(state?.epoch);
   const actions = usePoolActions();
   const { reveal, get, busy } = useReveal();
   const flow = useActionFlow();
@@ -134,6 +135,11 @@ export function Wizard({ onSkip }: { onSkip?: () => void } = {}) {
               <p className="mt-2 text-sm leading-relaxed text-ink-muted">{step.why}</p>
 
               <NetworkAlert className="mt-4" />
+              {isConnected && !user && readError && (
+                <div className="mt-4 rounded-xl border border-warn/40 bg-warn/10 px-3.5 py-2.5 text-xs text-warn">
+                  Could not read your wallet from the network. {humanizeError(readError)} <button className="underline" onClick={() => void refetch()}>Try again</button>
+                </div>
+              )}
               <div className="relative mt-4">
                 <SuccessTick show={tick} />
                 {step.key === "connect" && (hasWallet ? (
