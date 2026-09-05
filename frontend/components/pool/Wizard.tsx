@@ -60,14 +60,14 @@ export function Wizard({ onSkip }: { onSkip?: () => void } = {}) {
     unlock: <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></svg>,
     draw: <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>,
   };
-  const SHORT: Record<string, string> = { connect: "Connect", faucet: "Get USDT", shield: "Wrap", deposit: "Deposit", unlock: "Numbers", draw: "Draw" };
+  const SHORT: Record<string, string> = { connect: "Connect", faucet: "Get USDT", shield: "Wrap", deposit: "Deposit", unlock: "Decrypt", draw: "Draw" };
 
   const steps = [
-    { key: "connect", title: "Connect a wallet", why: "Your wallet is your login. It is also the only key that can read your numbers.", done: isConnected },
+    { key: "connect", title: "Connect a wallet", why: "Your wallet is your login. It is also the only key that can decrypt your numbers.", done: isConnected },
     { key: "faucet", title: "Get 1,000 test USDT", why: "Free play money from Zama's official test token on Sepolia. Nothing here is real money.", done: fresh ? !!fresh.faucet : (user?.tusdBalance ?? 0n) > 0n || !!user?.walletBalance || !!user?.poolBalance },
     { key: "shield", title: "Wrap it into cUSDT", why: "Wrapping turns public USDT into private cUSDT, one for one. After this, nobody can see your amounts.", done: fresh ? !!fresh.shield : !!user?.walletBalance || !!user?.poolBalance },
     { key: "deposit", title: "Make your first deposit", why: "Your amount is scrambled in your browser before it is sent. The pool never sees it.", done: fresh ? !!fresh.deposit : !!user?.poolBalance },
-    { key: "unlock", title: "See your numbers", why: "One signature lets your wallet read your own balance. Nobody else can.", done: fresh ? !!fresh.unlock : poolBal !== undefined },
+    { key: "unlock", title: "Decrypt your numbers", why: "One signature lets your wallet decrypt your own balance. Nobody else can.", done: fresh ? !!fresh.unlock : poolBal !== undefined },
     { key: "draw", title: "Wait for the draw", why: "Every 10 minutes the pool picks winners in secret. If you win, the prize waits until you collect it. Your money is never at risk.", done: fresh ? !!fresh.deposit && eligible && !!user?.wonInDraw : eligible && !!user?.wonInDraw },
   ];
   const current = Math.max(0, steps.findIndex((s) => !s.done));
@@ -168,7 +168,7 @@ export function Wizard({ onSkip }: { onSkip?: () => void } = {}) {
                   </div>
                 )}
                 {step.key === "unlock" && (
-                  <button className="btn-primary btn-lg shine w-full" disabled={!!busy || flow.state.status === "pending"} onClick={doUnlock}>{busy ? "Loading…" : "Show my numbers"}</button>
+                  <button className="btn-primary btn-lg shine w-full" disabled={!!busy || flow.state.status === "pending"} onClick={doUnlock}>{busy ? "Loading…" : "Decrypt my numbers"}</button>
                 )}
                 {step.key === "draw" && (
                   <div className="rounded-xl border border-line bg-black/20 p-4">

@@ -92,12 +92,12 @@ export function WalletView() {
               <span className={cn("inline-flex items-center gap-1.5", wrongChain ? "text-warn" : "text-ink-muted")}><span className={cn("h-1.5 w-1.5 rounded-full", wrongChain ? "bg-warn" : "bg-ok")} />{wrongChain ? "Wrong network" : "Sepolia test network"}</span>
               {wrongChain && <button className="text-warn underline" onClick={() => switchChain({ chainId: sepolia.id })}>Switch</button>}
               <a className="text-ink-faint hover:text-ink" href={etherscanAddr(address!)} target="_blank" rel="noreferrer">Etherscan ↗</a>
-              <span className="text-ink-faint">{session.active ? `Numbers unlocked · ${session.daysLeft}d left` : "Numbers locked"}</span>
+              <span className="text-ink-faint">{session.active ? `Decryption session active · ${session.daysLeft}d left` : "Numbers encrypted"}</span>
             </div>
           </div>
         </div>
         <div className="flex gap-2">
-          <button className="btn-secondary btn-sm" onClick={showAll} disabled={!!busy}>{busy ? "Loading…" : "Show all numbers"}</button>
+          <button className="btn-secondary btn-sm" onClick={showAll} disabled={!!busy}>{busy ? "Loading…" : "Decrypt all numbers"}</button>
           <button className="btn-ghost btn-sm text-danger" onClick={() => disconnect()}>Disconnect</button>
         </div>
       </div>
@@ -172,7 +172,7 @@ export function WalletView() {
             {done.slice(0, 8).map((d, i) => { const h = credits[i] ?? null; const v = h ? get(h) : undefined; const prize = pub.values[d.prize]; return (
               <li key={d.epoch.toString()} className="flex items-center justify-between gap-3 py-2.5">
                 <span className="flex items-center gap-3"><span className="font-mono text-xs text-ink-muted">#{d.epoch.toString()}</span><span className="font-mono text-xs">{prize !== undefined ? `${formatAmount(prize, DECIMALS, { maxFractionDigits: 2 })} ${SYMBOL}` : <Reading />}</span></span>
-                <span>{!h ? <span className="text-[11px] text-ink-faint">not in</span> : v === undefined ? <button className="btn-glass btn-sm" disabled={!!busy} onClick={() => reveal(POOL.address, h, `d-${d.epoch}`)}>Check</button> : v > 0n ? <span className="rounded-full bg-accent-soft px-2 py-0.5 font-mono text-xs text-accent">+{formatAmount(v, DECIMALS, { maxFractionDigits: 2 })}</span> : <span className="text-[11px] text-ink-faint">no prize</span>}</span>
+                <span>{!h ? <span className="text-[11px] text-ink-faint">not in</span> : v === undefined ? <button className="btn-glass btn-sm" disabled={!!busy} onClick={() => reveal(POOL.address, h, `d-${d.epoch}`)}>Decrypt</button> : v > 0n ? <span className="rounded-full bg-accent-soft px-2 py-0.5 font-mono text-xs text-accent">+{formatAmount(v, DECIMALS, { maxFractionDigits: 2 })}</span> : <span className="text-[11px] text-ink-faint">no prize</span>}</span>
               </li>
             ); })}
             {done.length === 0 && <li className="py-2 text-xs text-ink-faint">No draws yet.</li>}

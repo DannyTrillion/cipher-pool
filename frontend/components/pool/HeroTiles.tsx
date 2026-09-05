@@ -118,12 +118,12 @@ function PositionPane() {
       <div className="border-t border-line px-5 py-2.5 text-[12px] text-ink-faint">
         {isConnected && user?.poolBalance ? (
           <button className="text-accent hover:underline" disabled={!!busy} onClick={() => { void reveal(POOL.address, user.poolBalance, "tile-pool"); void reveal(POOL.address, user.claimable, "tile-claim"); }}>
-            {busy ? "Loading…" : "Show my numbers (one signature)"}
+            {busy ? "Loading…" : "Decrypt my numbers (one signature)"}
           </button>
         ) : isConnected ? (
           "Put money in below to start."
         ) : (
-          "Connect a wallet to see your numbers."
+          "Connect a wallet to decrypt your numbers."
         )}
       </div>
     </>

@@ -92,7 +92,7 @@ export function ResultsPanel() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="display text-2xl">Your results</h2>
-          <div className="mt-1 text-xs text-ink-faint">Only you can see if you won. Anyone can check a draw was fair.</div>
+          <div className="mt-1 text-xs text-ink-faint">Only you can decrypt whether you won. Anyone can check a draw was fair.</div>
         </div>
         {isConnected && entered > 0 && <span className="pill">{checked}/{entered} checked</span>}
       </div>
@@ -115,8 +115,8 @@ export function ResultsPanel() {
             {situation === "disconnected" && (
               <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <div className="text-lg font-semibold">See if you won</div>
-                  <div className="mt-1 text-sm text-ink-muted">Your result is scrambled. Only your wallet can read it.</div>
+                  <div className="text-lg font-semibold">Decrypt your result</div>
+                  <div className="mt-1 text-sm text-ink-muted">Your result is encrypted. Only your wallet can decrypt it.</div>
                 </div>
                 {connectors.length > 0 && <button className="btn-primary btn-arrow" onClick={() => { sfx.click(); connect({ connector: connectors[0] }); }}>Connect</button>}
               </div>
@@ -147,7 +147,7 @@ export function ResultsPanel() {
                 <div className="mt-1 text-lg font-semibold">Draw #{latest?.epoch.toString()} paid {latestPrize !== undefined ? `${formatAmount(latestPrize, DECIMALS, { maxFractionDigits: 2 })} ${SYMBOL}` : <Reading />} to {latest?.winnerSlots} winners.</div>
                 <div className="mt-4 flex flex-wrap items-center gap-4">
                   <ReelReveal spinning={spinning} size={56} />
-                  <button className="btn-primary btn-lg shine" disabled={!!busy || spinning} onClick={() => latestCredit && check(latestCredit, "won")}>{spinning ? "Checking…" : "Did I win?"}</button>
+                  <button className="btn-primary btn-lg shine" disabled={!!busy || spinning} onClick={() => latestCredit && check(latestCredit, "won")}>{spinning ? "Decrypting…" : "Decrypt: did I win?"}</button>
                 </div>
               </div>
             )}
@@ -220,7 +220,7 @@ export function ResultsPanel() {
           <button className="flex w-full items-center justify-between px-4 py-3 text-sm" onClick={() => { setHistory((h) => !h); sfx.click(); }} aria-expanded={history}>
             <span className="font-semibold">Past draws <span className="font-normal text-ink-faint">· {done.length}</span></span>
             <span className="flex items-center gap-3">
-              {history && checked < entered && <button className="text-[11px] text-accent hover:underline" disabled={checkingAll} onClick={(e) => { e.stopPropagation(); void checkAll(); }}>{checkingAll ? "Checking…" : "Check all"}</button>}
+              {history && checked < entered && <button className="text-[11px] text-accent hover:underline" disabled={checkingAll} onClick={(e) => { e.stopPropagation(); void checkAll(); }}>{checkingAll ? "Decrypting…" : "Decrypt all"}</button>}
               <span className={cn("transition", history && "rotate-180")}>▾</span>
             </span>
           </button>
@@ -271,7 +271,7 @@ function HistoryRow({ d, h, prize, v, busy, onCheck }: { d: DrawRecord; h: `0x${
       </span>
       <span>
         {!h ? <span className="text-[11px] text-ink-faint">not in</span>
-          : v === undefined ? <button className="btn-glass btn-sm" disabled={busy} onClick={onCheck}>Check</button>
+          : v === undefined ? <button className="btn-glass btn-sm" disabled={busy} onClick={onCheck}>Decrypt</button>
           : v > 0n ? <span className="rounded-full bg-accent-soft px-2 py-0.5 font-mono text-xs text-accent">+{formatAmount(v, DECIMALS, { maxFractionDigits: 2 })}</span>
           : <span className="text-[11px] text-ink-faint">no prize</span>}
       </span>

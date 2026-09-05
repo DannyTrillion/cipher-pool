@@ -130,7 +130,7 @@ export function SaversLedger() {
                         {you && isConnected ? (
                           <button className="btn-primary btn-sm" disabled={!!busy} onClick={() => reveal(POOL.address, myHandle, "ledger-me")}>{busy ? "Loading…" : mine !== undefined ? "Shown. Only you could do that." : "Show mine"}</button>
                         ) : (
-                          <button className="btn-secondary btn-sm" disabled={attempt.status === "trying"} onClick={() => tryRead(r.handle)}>{attempt.status === "trying" ? "Trying…" : "Try to read it"}</button>
+                          <button className="btn-secondary btn-sm" disabled={attempt.status === "trying"} onClick={() => tryRead(r.handle)}>{attempt.status === "trying" ? "Trying…" : "Try to decrypt it"}</button>
                         )}
                         <a className="text-xs text-ink-faint underline-offset-4 hover:text-ink hover:underline" href={etherscanAddr(r.address)} target="_blank" rel="noreferrer">Saver on Etherscan ↗</a>
                       </div>

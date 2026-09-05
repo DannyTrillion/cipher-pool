@@ -181,7 +181,7 @@ function DrawCard({ draw, credit, prize, index, live }: { draw: DrawRecord; cred
             ) : mine === undefined ? (
               <>
                 <ReelReveal spinning={spinning} size={44} />
-                <button className="btn-secondary text-xs" disabled={!!busy || spinning} onClick={async () => { sfx.click(); setSpinning(true); const v = await reveal(POOL.address, credit, `d-${draw.epoch}`); setSpinning(false); if (v !== null && v !== undefined) { fire(v > 0n ? { type: "win", amount: v } : { type: "lose" }); if (v === 0n) sfx.lose(); } }}>{spinning ? "Checking…" : "Did I win this one?"}</button>
+                <button className="btn-secondary text-xs" disabled={!!busy || spinning} onClick={async () => { sfx.click(); setSpinning(true); const v = await reveal(POOL.address, credit, `d-${draw.epoch}`); setSpinning(false); if (v !== null && v !== undefined) { fire(v > 0n ? { type: "win", amount: v } : { type: "lose" }); if (v === 0n) sfx.lose(); } }}>{spinning ? "Checking…" : "Decrypt: did I win this one?"}</button>
               </>
             ) : mine > 0n ? (
               <>

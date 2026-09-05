@@ -11,7 +11,7 @@ const JOURNEY = [
     <svg viewBox="0 0 48 48" className="h-9 w-9"><path d="M6 36 Q18 30 24 22 T42 10" fill="none" stroke="#5EEAD4" strokeWidth="2" className="icon-flow" /><rect x="8" y="28" width="6" height="12" rx="1.5" fill="rgba(255,255,255,0.15)" /><rect x="21" y="22" width="6" height="18" rx="1.5" fill="rgba(255,255,255,0.25)" /><rect x="34" y="14" width="6" height="26" rx="1.5" fill="#FFD600" /></svg>) },
   { n: "03", t: "Winners picked in secret", d: "Five prizes per draw. Each has its own random number, and the pool picks winners from the scrambled balances without learning who.", icon: (
     <svg viewBox="0 0 48 48" className="h-9 w-9"><circle cx="24" cy="24" r="20" fill="none" stroke="rgba(255,255,255,0.1)" strokeDasharray="3 5" /><circle cx="24" cy="24" r="12" fill="none" stroke="#8B9CFF" strokeOpacity="0.6" /><g className="icon-orbit"><circle cx="24" cy="12" r="2.5" fill="#5EEAD4" /><circle cx="24" cy="36" r="2.5" fill="#5EEAD4" /></g><circle cx="24" cy="24" r="4" fill="#FFD600" className="icon-pulse" /></svg>) },
-  { n: "04", t: "Take money out any time", d: "Your money is always yours. See your numbers with one signature. Announce a win only if you want to.", icon: (
+  { n: "04", t: "Take money out any time", d: "Your money is always yours. Decrypt your numbers with one signature. Announce a win only if you want to.", icon: (
     <svg viewBox="0 0 48 48" className="h-9 w-9"><rect x="14" y="22" width="20" height="16" rx="3" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.3)" /><path d="M18 22v-5a6 6 0 0 1 12 0" fill="none" stroke="#FFD600" strokeWidth="2.5" /><path d="M24 26v9M20 31l4 4 4-4" fill="none" stroke="#5EEAD4" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="icon-pulse" /></svg>) },
 ];
 

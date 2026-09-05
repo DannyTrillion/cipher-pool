@@ -134,7 +134,7 @@ export function PlayPanel() {
       <div className="mt-5 overflow-hidden rounded-2xl border border-line bg-black/20">
         <div className="flex items-center justify-between border-b border-line px-4 py-2">
           <div className="text-[11px] text-ink-faint">{isConnected ? "Your numbers. Private to you." : "Your numbers. Connect to see yours."}</div>
-          {isConnected && <button className="text-[11px] text-accent hover:underline disabled:text-ink-faint" onClick={revealAll} disabled={!!busy || !user}>{busy ? "Loading…" : revealedAll ? "Refresh" : "Show all"}</button>}
+          {isConnected && <button className="text-[11px] text-accent hover:underline disabled:text-ink-faint" onClick={revealAll} disabled={!!busy || !user}>{busy ? "Loading…" : revealedAll ? "Refresh" : "Decrypt all"}</button>}
         </div>
         <div className="grid grid-cols-2 [&>*:nth-child(odd)]:border-r [&>*:nth-child(-n+2)]:border-b [&>*]:border-line">
           {[
