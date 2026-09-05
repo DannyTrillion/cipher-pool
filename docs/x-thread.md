@@ -1,38 +1,39 @@
-# X thread draft — Cipher Pool
+# X thread — Cipher Pool
 
 1/ PoolTogether, but nobody can see your balance.
 
-Cipher Pool is a no-loss prize savings pool where deposits, balances and winnings are encrypted end-to-end on Ethereum, built on @zama's FHEVM for the Developer Program Season 4 bounty.
+Cipher Pool is a no-loss prize savings pool where deposits, balances, odds and winnings are encrypted end to end on Ethereum, built on @zama's FHEVM for the Developer Program Season 4 bounty.
 
-[demo link] 🧵
+Try it: https://cipher-pool-beta.vercel.app 🧵
 
-2/ The game is the same one that made PoolTogether famous: deposit, keep your principal, and each round the pool's yield goes to one saver. Odds scale with your share.
+2/ Same game that made PoolTogether famous: deposit, keep your principal, and each round the pool's yield goes to a few savers. Five prizes across three tiers. Odds scale with your share.
 
 The difference: the chain never sees a single number.
 
-3/ You start with a plain test ERC-20 and wrap it into a confidential ERC-7984 token, one to one. From there, deposits are encrypted in your browser, bound to your address and the pool, and added to your encrypted balance with FHE.add.
+3/ You start with Zama's official test USDT and wrap it into their confidential cUSDT, one to one. From there every deposit is encrypted in your browser, bound to your wallet and the pool, and added to your encrypted balance with FHE.add.
 
 Even the pool's total stays encrypted.
 
-4/ The hard part: picking a winner weighted by balances you cannot read.
+4/ The hard part: picking winners weighted by balances you cannot read.
 
-The contract draws an FHE random seed from the coprocessor, derives an encrypted ticket, then walks the encrypted balances keeping an encrypted running sum. The count of prefix sums below the ticket IS the winner's index. Still encrypted.
+The contract draws FHE random seeds from Zama's coprocessor, derives encrypted tickets, then walks the encrypted balances keeping an encrypted running total. The count of totals below a ticket IS that winner's index. Still encrypted.
 
-5/ Then every participant's encrypted claimable pot gets select(index == i, prize, 0). Winners' pots grow; everyone else's by an encrypted zero. Claiming is a confidential transfer anyone can call at constant cost.
+5/ Then every saver's encrypted pot gets select(index == i, prize, 0). Winners' pots grow; everyone else's by an encrypted zero. Collecting is a confidential transfer anyone can call at constant cost.
 
 From the outside, every account was touched identically. Not even the contract owner learns who won.
 
-6/ Verifiable anyway: each draw publishes its FHE seed, prize and participant count for public decryption. A winner can publish a proof of win if they want to brag. Nobody else can.
+6/ Verifiable anyway: each draw publishes its FHE seeds, prize and saver count for public decryption. Anyone can check a draw was honest. A winner can announce a win if they want. Nobody else can.
 
-7/ Fairness built in: your weight for a draw is min(balance at epoch start, current balance), computed homomorphically. No sniping the prize with a last-second deposit.
+7/ Fairness built in: your weight for a draw is min(balance at round start, current balance), computed homomorphically. No sniping the prize with a last-second deposit.
 
 8/ Production details that matter:
-• Both draw passes run in bounded batches to stay under the FHE compute budget at any pool size
-• Withdrawals never revert on over-request (a revert would leak your balance)
-• Sign once, reveal everything for the session
-• 14 FHEVM tests, no owner access to funds
+• Draws run in bounded batches to stay under the FHE compute budget at any pool size
+• Withdrawals never revert on an over-request (a revert would leak your balance)
+• Sign once, decrypt everything for the session
+• 17 FHEVM tests, contracts source-verified, no owner access to funds
+• Keeper script for automated draws
 
-9/ Try it on Sepolia: take test USDT, shield it into cUSDT, deposit, hold the big button to run a draw, reveal privately whether you won, claim, withdraw any time.
+9/ Try it on Sepolia: get test USDT, wrap to cUSDT, deposit, hold the big button when the countdown ends, decrypt whether you won, collect, withdraw any time.
 
 Demo: https://cipher-pool-beta.vercel.app
 Code: https://github.com/DannyTrillion/cipher-pool
