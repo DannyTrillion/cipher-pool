@@ -31,7 +31,7 @@ export function WalletView() {
   const { disconnect } = useDisconnect();
   const { switchChain } = useSwitchChain();
   const { state } = usePoolState();
-  const { user, refetch } = useUserState(state?.epoch);
+  const { user, refetch, waitFor } = useUserState(state?.epoch);
   const { draws } = useDraws(state?.epoch);
   const done = useMemo(() => draws.filter((d) => d.completedAt > 0n), [draws]);
   const { credits } = useUserDrawCredits(done.map((d) => d.epoch));
@@ -108,7 +108,7 @@ export function WalletView() {
         {claimable !== undefined && claimable > 0n && (
           <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-mint/40 bg-mint/10 px-5 py-4">
             <div><div className="text-sm text-ink-muted">Prize waiting for you</div><div className="display text-2xl text-mint">{formatAmount(claimable, DECIMALS, { maxFractionDigits: 2 })} {SYMBOL}</div></div>
-            <button className="btn-mint" disabled={flow.state.status === "pending"} onClick={() => flow.run(async (s) => { await actions.claim(s); await refetch(); await reveal(POOL.address, user?.claimable ?? null, "claim"); await reveal(TOKEN.address, user?.walletBalance ?? null, "wallet"); }, { successMessage: "Collected. It is in your wallet as cUSDT." })}>{flow.state.status === "pending" ? "Collecting…" : "Collect to wallet"}</button>
+            <button className="btn-mint" disabled={flow.state.status === "pending"} onClick={() => flow.run(async (s) => { const before = user?.claimable ?? null; await actions.claim(s); s("Confirmed. Reading your new balance…"); const u = (await waitFor((x) => x.claimable !== before)) ? await refetch() : user; await reveal(POOL.address, u?.claimable ?? null, "claim"); await reveal(TOKEN.address, u?.walletBalance ?? null, "wallet"); }, { successMessage: "Collected. It is in your wallet as cUSDT." })}>{flow.state.status === "pending" ? "Collecting…" : "Collect to wallet"}</button>
           </motion.div>
         )}
       </AnimatePresence>

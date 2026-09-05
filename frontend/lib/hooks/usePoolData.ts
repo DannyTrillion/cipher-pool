@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { useAccount, useReadContract, useReadContracts } from "wagmi";
 import { POOL, TOKEN, YIELD, TUSD, CHAIN_ID } from "@/lib/contracts";
 import { ZERO_HANDLE } from "@/lib/abis";
@@ -149,10 +150,9 @@ export function useUserState(epoch: bigint | undefined) {
     ],
     query: { enabled: !!address, refetchInterval: REFRESH },
   });
-  const d = q.data as unknown[] | undefined;
   const norm = (h: unknown) => (h === ZERO_HANDLE ? null : (h as `0x${string}`));
-  return {
-    user: d
+  const parse = (d: unknown[] | undefined) =>
+    d
       ? {
           poolBalance: norm(d[0]),
           winnings: norm(d[1]),
@@ -166,10 +166,26 @@ export function useUserState(epoch: bigint | undefined) {
           tusdAllowance: d[9] as bigint,
           claimable: norm(d[10]),
         }
-      : undefined,
-    refetch: q.refetch,
-  };
+      : undefined;
+  const refetchQ = q.refetch;
+  const refetch = useCallback(async () => parse((await refetchQ()).data as unknown[] | undefined), [refetchQ]);
+  /**
+   * Re-read until the chain reflects a change we just made. Public RPCs sit
+   * behind load balancers, so the node that confirmed the receipt is not
+   * always the node that answers the next read; a few polls close that gap.
+   */
+  const waitFor = useCallback(async (ready: (u: UserState) => boolean, tries = 12, everyMs = 1500) => {
+    for (let i = 0; i < tries; i++) {
+      const u = await refetch();
+      if (u && ready(u)) return true;
+      await new Promise((r) => setTimeout(r, everyMs));
+    }
+    return false;
+  }, [refetch]);
+  return { user: parse(q.data as unknown[] | undefined), refetch, waitFor };
 }
+
+export type UserState = NonNullable<ReturnType<typeof useUserState>["user"]>;
 
 /** The connected user's encrypted prize credit for each of the given epochs (null = not in that draw). */
 export function useUserDrawCredits(epochs: bigint[]) {

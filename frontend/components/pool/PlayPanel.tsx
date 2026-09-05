@@ -9,7 +9,7 @@ import { useActivity } from "@/lib/hooks/useActivity";
 import { sameAddress } from "@/lib/format";
 import { useAccount, useConnect } from "wagmi";
 import { formatUnits, parseUnits } from "viem";
-import { usePoolState, useUserState, Phase } from "@/lib/hooks/usePoolData";
+import { usePoolState, useUserState, type UserState, Phase } from "@/lib/hooks/usePoolData";
 import { usePoolActions } from "@/lib/hooks/usePoolActions";
 import { useReveal } from "@/lib/hooks/useReveal";
 import { useActionFlow } from "@/lib/useActionFlow";
@@ -37,7 +37,7 @@ export function PlayPanel() {
   const { address, isConnected } = useAccount();
   const { connect, connectors, isPending } = useConnect();
   const { state, refetch: refetchPool } = usePoolState();
-  const { user, refetch } = useUserState(state?.epoch);
+  const { user, refetch, waitFor } = useUserState(state?.epoch);
   const actions = usePoolActions();
   const { reveal, get, busy } = useReveal();
   const flow = useActionFlow();
@@ -82,6 +82,7 @@ export function PlayPanel() {
   const celebrate = () => { setTick(true); setTimeout(() => setTick(false), 1400); };
   const submit = () =>
     flow.run(async (setStep) => {
+      const before = { pool: user?.poolBalance ?? null, wallet: user?.walletBalance ?? null, tusd: user?.tusdBalance ?? 0n };
       if (tab === "shield") await actions.shield(amount, setStep);
       else if (tab === "deposit") await actions.deposit(amount, setStep);
       else if (tab === "withdraw") await actions.withdraw(amount, setStep);
@@ -89,12 +90,18 @@ export function PlayPanel() {
       else await actions.donate(amount, setStep);
       setAmount("");
       celebrate();
-      await Promise.all([refetch(), refetchPool()]);
+      setStep("Confirmed. Reading your new balances…");
+      const changed = (u: UserState) =>
+        tab === "shield" ? u.tusdBalance < before.tusd
+        : tab === "unwrap" ? u.tusdBalance > before.tusd
+        : tab === "deposit" || tab === "withdraw" ? u.poolBalance !== before.pool || u.walletBalance !== before.wallet
+        : u.walletBalance !== before.wallet;
+      await Promise.all([waitFor(changed), refetchPool()]);
       if (revealedAll || poolBal !== undefined) await revealAll();
       if (isConvert(tab)) setTimeout(() => setTab("deposit"), 1600); // back to the main actions
     }, { successMessage: tab === "shield" ? "Wrapped. Your cUSDT is private now." : tab === "deposit" ? "Done. Your money is in the pool, scrambled." : tab === "withdraw" ? "Done. It is back in your wallet as cUSDT." : tab === "unwrap" ? "Done. Your USDT is back in your wallet." : "Added to the prize. Thank you!" });
   const claimFaucet = () =>
-    faucetFlow.run(async (setStep) => { await actions.faucet(setStep); await refetch(); }, { successMessage: "1,000 test USDT is in your wallet. Wrap it into cUSDT to use it." });
+    faucetFlow.run(async (setStep) => { const before = user?.tusdBalance ?? 0n; await actions.faucet(setStep); setStep("Confirmed. Reading your new balance…"); await waitFor((u) => u.tusdBalance > before); }, { successMessage: "1,000 test USDT is in your wallet. Wrap it into cUSDT to use it." });
 
   const verb = TABS.find((t) => t.key === tab)!.verb;
   const unit = tab === "shield" ? UNDERLYING_SYMBOL : "cUSDT";
@@ -177,7 +184,7 @@ export function PlayPanel() {
         return verb ? <div className="mt-2 text-[11px] text-ink-faint">Last: you {verb} {when}.</div> : null;
       })()}
       {isConnected && claimable !== undefined && claimable > 0n && (
-        <button className="btn-mint btn-lg shine mt-3 w-full" disabled={flow.state.status === "pending"} onClick={() => flow.run(async (s) => { await actions.claim(s); await refetch(); await revealAll(); }, { successMessage: "Collected. Your prize is in your wallet as cUSDT." })}>
+        <button className="btn-mint btn-lg shine mt-3 w-full" disabled={flow.state.status === "pending"} onClick={() => flow.run(async (s) => { const before = user?.claimable ?? null; await actions.claim(s); await waitFor((u) => u.claimable !== before); await revealAll(); }, { successMessage: "Collected. Your prize is in your wallet as cUSDT." })}>
           Collect my {formatUnits(claimable, DECIMALS)} cUSDT prize
         </button>
       )}

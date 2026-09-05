@@ -29,7 +29,7 @@ export function ResultsPanel() {
   const { isConnected } = useAccount();
   const { connect, connectors } = useConnect();
   const { state } = usePoolState();
-  const { user, refetch } = useUserState(state?.epoch);
+  const { user, refetch, waitFor } = useUserState(state?.epoch);
   const { draws } = useDraws(state?.epoch);
   const done = useMemo(() => draws.filter((d) => d.completedAt > 0n), [draws]);
   const { credits } = useUserDrawCredits(done.map((d) => d.epoch));
@@ -78,9 +78,11 @@ export function ResultsPanel() {
     setCheckingAll(false);
   };
   const collect = () => claimFlow.run(async (s) => {
+    const before = user?.claimable ?? null;
     await actions.claim(s);
-    await refetch();
-    await reveal(POOL.address, user?.claimable ?? null, "claim");
+    s("Confirmed. Reading your new balance…");
+    const u = await waitFor((x) => x.claimable !== before) ? await refetch() : user;
+    await reveal(POOL.address, u?.claimable ?? null, "claim");
     if (latest) { const key = latest.epoch.toString(); try { localStorage.setItem("cipherpool.settled", key); } catch {} setTimeout(() => setSettled(key), 1200); }
   }, { successMessage: "Collected. Your prize is in your wallet as cUSDT." });
 

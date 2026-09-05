@@ -22,7 +22,7 @@ export function Wizard({ onSkip }: { onSkip?: () => void } = {}) {
   const { isConnected } = useAccount();
   const { connect, connectors, isPending } = useConnect();
   const { state, refetch: refetchPool } = usePoolState();
-  const { user, refetch } = useUserState(state?.epoch);
+  const { user, refetch, waitFor } = useUserState(state?.epoch);
   const actions = usePoolActions();
   const { reveal, get, busy } = useReveal();
   const flow = useActionFlow();
@@ -59,9 +59,9 @@ export function Wizard({ onSkip }: { onSkip?: () => void } = {}) {
   const allDone = steps.every((s) => s.done);
   const step = steps[Math.min(current, steps.length - 1)];
 
-  const doFaucet = () => flow.run(async (s) => { await actions.faucet(s); celebrate(); await refetch(); }, { successMessage: "1,000 test USDT is in your wallet." });
-  const doShield = () => flow.run(async (s) => { await actions.shield(formatUnits(user?.tusdBalance ?? 0n, DECIMALS), s); celebrate(); await refetch(); }, { successMessage: "Wrapped. Your cUSDT is private now." });
-  const doDeposit = () => flow.run(async (s) => { await actions.deposit(amount, s); celebrate(); await Promise.all([refetch(), refetchPool()]); }, { successMessage: "Done. Your money is in the pool, scrambled." });
+  const doFaucet = () => flow.run(async (s) => { const before = user?.tusdBalance ?? 0n; await actions.faucet(s); celebrate(); s("Confirmed. Reading your new balance…"); await waitFor((u) => u.tusdBalance > before); }, { successMessage: "1,000 test USDT is in your wallet." });
+  const doShield = () => flow.run(async (s) => { const before = user?.walletBalance ?? null; await actions.shield(formatUnits(user?.tusdBalance ?? 0n, DECIMALS), s); celebrate(); s("Confirmed. Reading your new balance…"); await waitFor((u) => !!u.walletBalance && u.walletBalance !== before); }, { successMessage: "Wrapped. Your cUSDT is private now." });
+  const doDeposit = () => flow.run(async (s) => { const before = user?.poolBalance ?? null; await actions.deposit(amount, s); celebrate(); s("Confirmed. Reading your new balance…"); await Promise.all([waitFor((u) => !!u.poolBalance && u.poolBalance !== before), refetchPool()]); }, { successMessage: "Done. Your money is in the pool, scrambled." });
   const doUnlock = () => flow.run(async (s) => { s("Waiting for your signature, then Zama's relayer decrypts for you…"); await reveal(POOL.address, user?.poolBalance ?? null, "pool"); await reveal(TOKEN.address, user?.walletBalance ?? null, "wallet"); celebrate(); }, { successMessage: "Here they are. Only you can see these." });
 
   return (
