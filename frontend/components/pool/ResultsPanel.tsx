@@ -12,7 +12,6 @@ import { EncryptedValue } from "@/components/ui/EncryptedValue";
 import { FlowStatus } from "@/components/ui/FlowStatus";
 import { useNow, formatDuration } from "@/components/ui/Countdown";
 import { ReelReveal, facesFor } from "@/components/fx/ReelReveal";
-import { OddsMeter } from "@/components/pool/OddsMeter";
 import { ActivityFeed } from "@/components/pool/ActivityFeed";
 import { formatAmount } from "@/lib/format";
 import { Reading } from "@/components/ui/Reading";
@@ -204,9 +203,13 @@ export function ResultsPanel() {
         </div>
       )}
 
-      {/* odds + next draw */}
-      <div className="mt-4 grid gap-3 sm:grid-cols-[1.4fr_1fr]">
-        <OddsMeter savers={Number(state?.participantCount ?? 0n)} slots={state?.winnerSlots ?? 5} />
+      {/* next draw + who is in it. No odds meter: your real odds depend on your encrypted share and stay private. */}
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <div className="rounded-xl border border-line bg-black/20 px-3.5 py-3">
+          <div className="text-[10px] uppercase tracking-[0.18em] text-ink-faint">Savers in this draw</div>
+          <div className="mt-1 font-mono text-2xl tabular">{state ? Number(state.participantCount) : "…"}</div>
+          <div className="mt-1 text-[11px] text-ink-faint">Bigger savers win more often. Nobody can see who saved what.</div>
+        </div>
         <div className="rounded-xl border border-line bg-black/20 px-3.5 py-3">
           <div className="text-[10px] uppercase tracking-[0.18em] text-ink-faint">{running ? "Draw" : "Next draw in"}</div>
           <div className="mt-1 font-mono text-2xl tabular">{!state ? "…" : running ? "running" : nextIn > 0 ? formatDuration(nextIn) : "ready"}</div>
