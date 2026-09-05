@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  --base: 7 8 12;
+  --base: 6 8 10;
   --surface: 13 14 20;
   --raised: 20 22 30;
   --well: 5 6 9;
@@ -37,6 +37,8 @@
 }
 :root[data-theme="light"] body::after { display: none; }
 :root[data-theme="light"] body::before { background: radial-gradient(1200px 800px at 50% 40%, transparent 60%, rgb(0 0 0 / 0.06)); }
+:root[data-theme="light"] .stars-layer, :root[data-theme="light"] .ambient-glow { display: none; }
+:root[data-theme="light"] .dot-grid { background-image: radial-gradient(rgb(0 0 0 / 0.06) 1px, transparent 1px) !important; }
 :root[data-theme="light"] .glass,
 :root[data-theme="light"] .card,
 :root[data-theme="light"] .tile {

@@ -7,6 +7,7 @@ import { Footer } from "@/components/layout/Footer";
 import { THEME_SCRIPT } from "@/components/ui/ThemeToggle";
 import { AskCipher } from "@/components/guide/AskCipher";
 import { Explainer } from "@/components/guide/Explainer";
+import { AmbientBackground } from "@/components/fx/AmbientBackground";
 
 const sans = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap" });
@@ -38,6 +39,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="flex min-h-screen flex-col">
         <Providers>
+          <AmbientBackground />
           <Header />
           <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-16 pt-6 sm:px-6">{children}</main>
           <Footer />
