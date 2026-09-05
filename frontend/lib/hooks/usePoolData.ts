@@ -171,9 +171,9 @@ export function useUserState(epoch: bigint | undefined) {
           walletBalance: norm(d[5]),
           isOperator: d[6] as boolean,
           faucetCooldown: 0n,
-          tusdBalance: (d[8] as bigint | undefined) ?? 0n,
-          tusdAllowance: (d[9] as bigint | undefined) ?? 0n,
-          claimable: norm(d[10]),
+          tusdBalance: (d[7] as bigint | undefined) ?? 0n,
+          tusdAllowance: (d[8] as bigint | undefined) ?? 0n,
+          claimable: norm(d[9]),
         }
       : undefined;
   const refetchQ = q.refetch;
