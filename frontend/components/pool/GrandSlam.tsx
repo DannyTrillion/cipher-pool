@@ -30,7 +30,7 @@ export function GrandSlam() {
 
   return (
     <section id="play" className={cn("relative scroll-mt-20 rounded-[28px] p-[1px] transition-colors", drawing ? "bg-[linear-gradient(120deg,rgb(94_234_212/0.5),rgb(255_214_0/0.4),rgb(139_156_255/0.5))]" : "bg-[linear-gradient(120deg,rgb(255_214_0/0.25),rgb(255_255_255/0.06),rgb(139_156_255/0.25))]")} aria-label="Play">
-      <div className="overflow-hidden rounded-[27px] bg-[rgb(var(--base))]/85 p-4 backdrop-blur-xl sm:p-6">
+      <div className="overflow-hidden rounded-[27px] bg-[rgb(var(--base))]/85 p-4 backdrop-blur-xl sm:p-6 lg:p-8">
         {/* live status bar */}
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-black/30 px-4 py-2.5">
           <div className="flex items-center gap-2.5 text-sm">
@@ -48,14 +48,14 @@ export function GrandSlam() {
         </div>
         {/* the machine: Play beside the drum, the tray under the chute, Results centred beneath both */}
         <div className="relative mt-4 space-y-4 [&>*]:min-w-0">
-          <div className="grid gap-4 md:grid-cols-2 md:items-start">
+          <div className="grid gap-5 md:grid-cols-2 md:items-start lg:gap-6">
             <PlayPanel />
             <div className="flex min-w-0 flex-col">
               <DrawChamber />
               <PrizeTray slots={state?.winnerSlots ?? 5} live={drawing} />
             </div>
           </div>
-          <div className="mx-auto w-full max-w-4xl"><ResultsPanel /></div>
+          <div className="mx-auto w-full max-w-5xl"><ResultsPanel /></div>
         </div>
       </div>
     </section>

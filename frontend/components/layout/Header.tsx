@@ -181,7 +181,7 @@ export function Header() {
           hidden && "-translate-y-full",
         )}
       >
-        <div className={cn("mx-auto grid w-full max-w-6xl grid-cols-[1fr_auto_1fr] items-center px-4 transition-all duration-300 sm:px-6", scrolled ? "h-14" : "h-16")}>
+        <div className={cn("mx-auto grid w-full max-w-[1400px] grid-cols-[1fr_auto_1fr] items-center px-4 transition-all duration-300 sm:px-6 lg:px-8", scrolled ? "h-14" : "h-16")}>
           <div className="flex items-center gap-3">
             <Link href="/" className="group flex items-center" aria-label="Cipher Pool home">
               <span className="sm:hidden"><LogoMark size={32} /></span>

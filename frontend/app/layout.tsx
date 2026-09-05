@@ -42,7 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Providers>
           <AmbientBackground />
           <Header />
-          <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-8 pt-4 sm:px-6 sm:pt-6 md:pb-16">{children}</main>
+          <main className="mx-auto w-full max-w-[1400px] flex-1 px-4 pb-8 pt-4 sm:px-6 sm:pt-6 md:pb-16 lg:px-8">{children}</main>
           <Footer />
           <MobileTabBar />
           <AskCipher />
