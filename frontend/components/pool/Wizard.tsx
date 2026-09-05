@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAccount, useConnect } from "wagmi";
 import { usePoolState, useUserState, Phase } from "@/lib/hooks/usePoolData";
@@ -19,7 +19,7 @@ import { NetworkAlert } from "@/components/ui/NetworkAlert";
 
 /** Guided flow for new savers: five steps, each auto-completing from chain state. */
 export function Wizard({ onSkip }: { onSkip?: () => void } = {}) {
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
   const { connect, connectors, isPending } = useConnect();
   const { state, refetch: refetchPool } = usePoolState();
   const { user, refetch, waitFor } = useUserState(state?.epoch);
@@ -29,6 +29,21 @@ export function Wizard({ onSkip }: { onSkip?: () => void } = {}) {
   const now = useNow();
   const [amount, setAmount] = useState("100");
   const [tick, setTick] = useState(false);
+  // "Start over": ignore what the chain already knows about this wallet and tick
+  // steps only as they are done in this session (persisted per wallet).
+  const freshKey = address ? `cipherpool.guide.${address.toLowerCase()}` : null;
+  const [fresh, setFresh] = useState<Record<string, boolean> | null>(null);
+  useEffect(() => {
+    if (!freshKey) { setFresh(null); return; }
+    try { const raw = localStorage.getItem(freshKey); setFresh(raw ? JSON.parse(raw) : null); } catch { setFresh(null); }
+  }, [freshKey]);
+  const saveFresh = (next: Record<string, boolean> | null) => {
+    setFresh(next);
+    if (!freshKey) return;
+    try { if (next) localStorage.setItem(freshKey, JSON.stringify(next)); else localStorage.removeItem(freshKey); } catch {}
+  };
+  const startOver = () => { sfx.click(); saveFresh({}); };
+  const mark = (key: string) => { if (fresh) saveFresh({ ...fresh, [key]: true }); };
   const celebrate = () => { setTick(true); setTimeout(() => setTick(false), 1400); };
 
   const poolBal = get(user?.poolBalance);
@@ -49,20 +64,20 @@ export function Wizard({ onSkip }: { onSkip?: () => void } = {}) {
 
   const steps = [
     { key: "connect", title: "Connect a wallet", why: "Your wallet is your login. It is also the only key that can read your numbers.", done: isConnected },
-    { key: "faucet", title: "Get 1,000 test USDT", why: "Free play money from Zama's official test token on Sepolia. Nothing here is real money.", done: (user?.tusdBalance ?? 0n) > 0n || !!user?.walletBalance || !!user?.poolBalance },
-    { key: "shield", title: "Wrap it into cUSDT", why: "Wrapping turns public USDT into private cUSDT, one for one. After this, nobody can see your amounts.", done: !!user?.walletBalance || !!user?.poolBalance },
-    { key: "deposit", title: "Make your first deposit", why: "Your amount is scrambled in your browser before it is sent. The pool never sees it.", done: !!user?.poolBalance },
-    { key: "unlock", title: "See your numbers", why: "One signature lets your wallet read your own balance. Nobody else can.", done: poolBal !== undefined },
-    { key: "draw", title: "Wait for the draw", why: "Every 10 minutes the pool picks winners in secret. If you win, the prize waits until you collect it. Your money is never at risk.", done: eligible && !!user?.wonInDraw },
+    { key: "faucet", title: "Get 1,000 test USDT", why: "Free play money from Zama's official test token on Sepolia. Nothing here is real money.", done: fresh ? !!fresh.faucet : (user?.tusdBalance ?? 0n) > 0n || !!user?.walletBalance || !!user?.poolBalance },
+    { key: "shield", title: "Wrap it into cUSDT", why: "Wrapping turns public USDT into private cUSDT, one for one. After this, nobody can see your amounts.", done: fresh ? !!fresh.shield : !!user?.walletBalance || !!user?.poolBalance },
+    { key: "deposit", title: "Make your first deposit", why: "Your amount is scrambled in your browser before it is sent. The pool never sees it.", done: fresh ? !!fresh.deposit : !!user?.poolBalance },
+    { key: "unlock", title: "See your numbers", why: "One signature lets your wallet read your own balance. Nobody else can.", done: fresh ? !!fresh.unlock : poolBal !== undefined },
+    { key: "draw", title: "Wait for the draw", why: "Every 10 minutes the pool picks winners in secret. If you win, the prize waits until you collect it. Your money is never at risk.", done: fresh ? !!fresh.deposit && eligible && !!user?.wonInDraw : eligible && !!user?.wonInDraw },
   ];
   const current = Math.max(0, steps.findIndex((s) => !s.done));
   const allDone = steps.every((s) => s.done);
   const step = steps[Math.min(current, steps.length - 1)];
 
-  const doFaucet = () => flow.run(async (s) => { const before = user?.tusdBalance ?? 0n; await actions.faucet(s); celebrate(); s("Confirmed. Reading your new balance…"); await waitFor((u) => u.tusdBalance > before); }, { successMessage: "1,000 test USDT is in your wallet." });
-  const doShield = () => flow.run(async (s) => { const before = user?.walletBalance ?? null; await actions.shield(formatUnits(user?.tusdBalance ?? 0n, DECIMALS), s); celebrate(); s("Confirmed. Reading your new balance…"); await waitFor((u) => !!u.walletBalance && u.walletBalance !== before); }, { successMessage: "Wrapped. Your cUSDT is private now." });
-  const doDeposit = () => flow.run(async (s) => { const before = user?.poolBalance ?? null; await actions.deposit(amount, s); celebrate(); s("Confirmed. Reading your new balance…"); await Promise.all([waitFor((u) => !!u.poolBalance && u.poolBalance !== before), refetchPool()]); }, { successMessage: "Done. Your money is in the pool, scrambled." });
-  const doUnlock = () => flow.run(async (s) => { s("Waiting for your signature, then Zama's relayer decrypts for you…"); await reveal(POOL.address, user?.poolBalance ?? null, "pool"); await reveal(TOKEN.address, user?.walletBalance ?? null, "wallet"); await reveal(POOL.address, user?.claimable ?? null, "claim"); celebrate(); }, { successMessage: "Here they are. Only you can see these." });
+  const doFaucet = () => flow.run(async (s) => { const before = user?.tusdBalance ?? 0n; await actions.faucet(s); celebrate(); s("Confirmed. Reading your new balance…"); await waitFor((u) => u.tusdBalance > before); mark("faucet"); }, { successMessage: "1,000 test USDT is in your wallet." });
+  const doShield = () => flow.run(async (s) => { const before = user?.walletBalance ?? null; await actions.shield(formatUnits(user?.tusdBalance ?? 0n, DECIMALS), s); celebrate(); s("Confirmed. Reading your new balance…"); await waitFor((u) => !!u.walletBalance && u.walletBalance !== before); mark("shield"); }, { successMessage: "Wrapped. Your cUSDT is private now." });
+  const doDeposit = () => flow.run(async (s) => { const before = user?.poolBalance ?? null; await actions.deposit(amount, s); celebrate(); s("Confirmed. Reading your new balance…"); await Promise.all([waitFor((u) => !!u.poolBalance && u.poolBalance !== before), refetchPool()]); mark("deposit"); }, { successMessage: "Done. Your money is in the pool, scrambled." });
+  const doUnlock = () => flow.run(async (s) => { s("Waiting for your signature, then Zama's relayer decrypts for you…"); await reveal(POOL.address, user?.poolBalance ?? null, "pool"); await reveal(TOKEN.address, user?.walletBalance ?? null, "wallet"); await reveal(POOL.address, user?.claimable ?? null, "claim"); celebrate(); mark("unlock"); }, { successMessage: "Here they are. Only you can see these." });
 
   return (
     <div>
@@ -70,7 +85,10 @@ export function Wizard({ onSkip }: { onSkip?: () => void } = {}) {
       <div>
         <div className="flex items-center justify-between">
           <div className="label">{allDone ? "All done" : `Step ${current + 1} of ${steps.length}`}</div>
-          {onSkip && <button className="text-[11px] text-ink-faint underline-offset-4 hover:text-ink hover:underline" onClick={onSkip}>I know this, skip the guide</button>}
+          <span className="flex items-center gap-3 text-[11px]">
+            {isConnected && (fresh ? current > 0 || allDone : current > 0) && <button className="text-ink-faint underline-offset-4 hover:text-ink hover:underline" onClick={startOver}>Start over</button>}
+            {onSkip && <button className="text-ink-faint underline-offset-4 hover:text-ink hover:underline" onClick={onSkip}>I know this, skip the guide</button>}
+          </span>
         </div>
         <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
           <motion.div className="h-full rounded-full bg-[linear-gradient(90deg,#8B9CFF,#FFD600)]" initial={false} animate={{ width: `${(steps.filter((x) => x.done).length / steps.length) * 100}%` }} transition={{ type: "spring", stiffness: 120, damping: 20 }} />

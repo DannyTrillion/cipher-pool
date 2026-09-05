@@ -5,9 +5,9 @@ Runs 2:58, under the bounty's 3:00 cap. Real person on camera at the start and e
 ## Before you press record
 
 - Browser at 1440 × 900, bookmarks bar hidden, dark theme.
-- Rabby has both accounts. **A** = deployer `0xB3Bf…7A58` (runs draws). **B** = demo `0x6E4b…38e4` (claims and withdraws). Both are already savers.
-- **B has 3.96 cUSDT waiting from draw 9, staged in advance. Do not collect it before recording.** That is the guaranteed claim scene.
-- Money put in during a round counts from the next round, so the on-camera deposit is not in the on-camera draw. The existing positions are.
+- One wallet only: the owner `0xB3Bf…7A58`. The pool is brand new (`0x2E91…DeF5`); nobody else is in it.
+- **Prep round first, about 12 minutes:** connect, press Start over in the guide, do Get USDT, Wrap, Put in 300, Show my numbers. When the countdown hits zero, hold the button once (draw #1, you win it all). Do not collect. Press Start over again.
+- Money put in during a round counts from the next round, so the on-camera deposit is not in draw #2. Your prep deposit is. The prize from draw #1 is the guaranteed claim.
 - Start the screen part when the countdown reads about 1:20. The first scenes take ~75 s and land you at the button as it turns yellow. If it already reads RUN DRAW, that is fine too.
 - Tabs open: the app, the pool on Etherscan, the Sourcify page (optional).
 - Keep the whole cut under 3:00 including the camera parts. No speed-ups.
@@ -39,14 +39,14 @@ Runs 2:58, under the bounty's 3:00 cap. Real person on camera at the start and e
 
 ## 0:30 – 0:50 · Screen · Connect, get test money, wrap it
 
-**Shot:** Scroll to the Play section. Keep "New here" selected so the guided steps stay visible. Account A.
+**Shot:** Scroll to the Play section. "New here" is selected and the guide sits at Step 1 (you pressed Start over in the prep).
 
 ![Play panel beside the draw chamber](storyboard/03_play_chamber.png)
 
 **Do, in order:**
 
-1. Click **Connect** top right, pick account **A** in Rabby.
-   *On screen:* Header shows your identicon. The wizard jumps to Step 2.
+1. Click **Connect** top right, pick the owner wallet in Rabby.
+   *On screen:* Header shows your identicon. The wizard moves to Step 2.
 2. Press **Get 1,000 test USDT**. Confirm.
    *On screen:* "Minting 1,000 test USDT from Zama's official mock…", then the tick. Step 3 opens by itself.
 3. Press **Wrap 1,000 USDT into cUSDT**. Confirm the approval, then the wrap.
@@ -60,14 +60,14 @@ Runs 2:58, under the bounty's 3:00 cap. Real person on camera at the start and e
 
 ## 0:50 – 1:15 · Screen · Deposit, then decrypt your pool balance
 
-**Shot:** Still account A, still the guided steps.
+**Shot:** Still the guided steps.
 
 **Do, in order:**
 
 1. Step 4: type **300**, press **Put in 300 cUSDT**. Confirm the one-time approval, then the deposit.
    *On screen:* "Encrypting with Zama's FHE key…", "Sending your encrypted deposit to the pool on Zama FHEVM…", then "Done. Your money is in the pool, scrambled." Coins fly into the sphere. Step 5.
 2. Step 5: press **Show my numbers**. Sign the one message in Rabby.
-   *On screen:* The asterisks unscramble everywhere on the page: savings 600 (300 from before plus this 300), wallet cUSDT 700. Point at the savings figure.
+   *On screen:* The asterisks unscramble everywhere on the page: savings 600 (300 from the prep round plus this 300). Point at the savings figure.
 
 **Say:**
 
@@ -77,14 +77,14 @@ Runs 2:58, under the bounty's 3:00 cap. Real person on camera at the start and e
 
 ## 1:15 – 1:50 · Screen · Trigger the draw
 
-**Shot:** The draw chamber. The status bar reads "Draw ready. Press the button to run it" and the button is lit yellow. Account A.
+**Shot:** The draw chamber. The status bar reads "Draw ready. Press the button to run it" and the button is lit yellow.
 
 **Do, in order:**
 
 1. Press and **hold** the big button for one second. Confirm "startDraw", then each "advanceDraw" batch as Rabby asks (two or three).
    *On screen:* Drum spins, balls tumble. Status: "Zama's coprocessor is drawing the encrypted random seeds…", then "Selecting the winner over encrypted balances", then "Crediting the prize to the encrypted winner". Prize balls drop into the tray.
 2. Scroll to **Your results**, press **Did I win?**
-   *On screen:* The reel lands on a prize or "Not this time". Either is fine; the claim comes from account B in the next scene.
+   *On screen:* You are the only saver, so the reel lands on a prize.
 
 ![Your results: see if you won, odds, next draw, live activity](storyboard/04_results.png)
 
@@ -96,31 +96,31 @@ Runs 2:58, under the bounty's 3:00 cap. Real person on camera at the start and e
 
 ## 1:50 – 2:10 · Screen · Claim a prize
 
-**Shot:** Switch Rabby to account B. B has a prize waiting from draw 9, staged before recording.
+**Shot:** Same wallet. The prize from draw #1 (your prep round) is waiting, plus whatever draw #2 just paid.
 
 **Do, in order:**
 
-1. In Rabby switch to **B**. In **Your results** press **Did I win?**. Sign once.
-   *On screen:* A banner appears: "3.96 cUSDT is waiting for you" with **Collect to wallet**.
+1. After the reel lands, look just above it.
+   *On screen:* A banner: "… cUSDT is waiting for you" with **Collect to wallet**. It holds the draw #1 prize plus this draw's.
 2. Press **Collect to wallet**. Confirm.
    *On screen:* "Sending your prize by confidential transfer on Zama FHEVM…", then "Collected. Your prize is in your wallet as cUSDT."
 
 **Say:**
 
-> My second account won last round. The prize sits in an encrypted pot until I collect it, and collecting is a confidential transfer, so even the payout stays hidden. A non-winner who claims just moves an encrypted zero, so claiming reveals nothing.
+> Prizes sit in an encrypted pot until I collect them, and collecting is a confidential transfer, so even the payout stays hidden. A non-winner who claims just moves an encrypted zero, so the act of claiming reveals nothing.
 
 ---
 
 ## 2:10 – 2:30 · Screen · Withdraw principal
 
-**Shot:** Stay on account B. In Play, click Experienced.
+**Shot:** Same wallet. In Play, click Experienced.
 
 **Do, in order:**
 
-1. Click **Experienced**. Press **Show all** in the balance strip if the numbers are still masked.
-   *On screen:* Savings 200, wallet cUSDT, prizes to collect 0.
+1. Click **Experienced**. The balance strip already shows your numbers from the earlier signature.
+   *On screen:* Savings 600, wallet cUSDT, prizes to collect 0.
 2. Tab **Withdraw**: type **100**, press **Withdraw 100 cUSDT**. Confirm.
-   *On screen:* "Withdrawing through Zama FHEVM, amount stays encrypted…", then "Done. It is back in your wallet as cUSDT." Savings drop to 100, wallet goes up by 100.
+   *On screen:* "Withdrawing through Zama FHEVM, amount stays encrypted…", then "Done. It is back in your wallet as cUSDT." Savings drop to 500, wallet goes up by 100.
 
 **Say:**
 
@@ -161,5 +161,5 @@ Runs 2:58, under the bounty's 3:00 cap. Real person on camera at the start and e
 
 - Live app: https://cipher-pool-beta.vercel.app
 - Source: https://github.com/DannyTrillion/cipher-pool
-- Verified pool contract: https://repo.sourcify.dev/11155111/0x22663590018DcBD33c8F51326FF44b0Bb47Fd424
-- Pool on Etherscan: https://sepolia.etherscan.io/address/0x22663590018DcBD33c8F51326FF44b0Bb47Fd424
+- Verified pool contract: https://repo.sourcify.dev/11155111/0x2E91CbcD154cffA4ac31f5BfDF186E536A9aDeF5
+- Pool on Etherscan: https://sepolia.etherscan.io/address/0x2E91CbcD154cffA4ac31f5BfDF186E536A9aDeF5

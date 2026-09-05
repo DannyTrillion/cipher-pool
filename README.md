@@ -68,8 +68,8 @@ The pool uses **Zama's official Sepolia mock tokens**, not tokens of our own, so
 
 | Contract | Address |
 |---|---|
-| ConfidentialPrizePool (ours) | [`0x22663590018DcBD33c8F51326FF44b0Bb47Fd424`](https://sepolia.etherscan.io/address/0x22663590018DcBD33c8F51326FF44b0Bb47Fd424) |
-| MockYieldSource, prize drip (ours) | [`0x5A63fb14f01d1eDfA70aa6dCF580c10B0c87C39E`](https://sepolia.etherscan.io/address/0x5A63fb14f01d1eDfA70aa6dCF580c10B0c87C39E) |
+| ConfidentialPrizePool (ours) | [`0x2E91CbcD154cffA4ac31f5BfDF186E536A9aDeF5`](https://sepolia.etherscan.io/address/0x2E91CbcD154cffA4ac31f5BfDF186E536A9aDeF5) |
+| MockYieldSource, prize drip (ours) | [`0x86706136F477D3bE74a6F9d0dCd04a86A1Ef9b60`](https://sepolia.etherscan.io/address/0x86706136F477D3bE74a6F9d0dCd04a86A1Ef9b60) |
 | cUSDTMock, Zama official ERC-7984 wrapper | [`0x4E7B06D78965594eB5EF5414c357ca21E1554491`](https://sepolia.etherscan.io/address/0x4E7B06D78965594eB5EF5414c357ca21E1554491) |
 | USDTMock, Zama official test ERC-20 (public `mint`) | [`0xa7dA08FafDC9097Cc0E7D4f113A61e31d7e8e9b0`](https://sepolia.etherscan.io/address/0xa7dA08FafDC9097Cc0E7D4f113A61e31d7e8e9b0) |
 
@@ -77,8 +77,8 @@ The pool uses **Zama's official Sepolia mock tokens**, not tokens of our own, so
 Draw period 10 minutes · prize drip ≈ 10 cUSDT/hour · faucet 1,000 USDT per hour per address.
 
 Both of our contracts are **source-verified on Sourcify** (exact match, creation and runtime bytecode):
-[ConfidentialPrizePool](https://repo.sourcify.dev/11155111/0x22663590018DcBD33c8F51326FF44b0Bb47Fd424) ·
-[MockYieldSource](https://repo.sourcify.dev/11155111/0x5A63fb14f01d1eDfA70aa6dCF580c10B0c87C39E).
+[ConfidentialPrizePool](https://repo.sourcify.dev/11155111/0x2E91CbcD154cffA4ac31f5BfDF186E536A9aDeF5) ·
+[MockYieldSource](https://repo.sourcify.dev/11155111/0x86706136F477D3bE74a6F9d0dCd04a86A1Ef9b60).
 
 ## Evidence that this runs on Zama FHE
 

@@ -1,7 +1,7 @@
 {
   "chainId": 11155111,
   "network": "sepolia",
-  "deployedAt": "2026-09-05T00:39:38.480Z",
+  "deployedAt": "2026-09-05T19:13:37.444Z",
   "deployer": "0xB3Bf0C0b8CC83c4e5aE2f102a370070f629c7A58",
   "drawPeriod": 600,
   "dripPerSecond": "2777",
@@ -1173,7 +1173,7 @@
       "note": "Zama official cUSDTMock (Sepolia), OpenZeppelin ERC7984ERC20Wrapper behind a proxy"
     },
     "MockYieldSource": {
-      "address": "0x5A63fb14f01d1eDfA70aa6dCF580c10B0c87C39E",
+      "address": "0x86706136F477D3bE74a6F9d0dCd04a86A1Ef9b60",
       "abi": [
         {
           "inputs": [
@@ -1455,7 +1455,7 @@
       ]
     },
     "ConfidentialPrizePool": {
-      "address": "0x22663590018DcBD33c8F51326FF44b0Bb47Fd424",
+      "address": "0x2E91CbcD154cffA4ac31f5BfDF186E536A9aDeF5",
       "abi": [
         {
           "inputs": [
