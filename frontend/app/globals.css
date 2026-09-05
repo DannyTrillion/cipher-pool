@@ -216,6 +216,9 @@ body::before {
 :root[data-theme="light"] .masked { color: rgb(var(--cipher)); }
 @keyframes maskBreath { 0%, 100% { opacity: 0.75; } 50% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .masked { animation: none; } }
+/* A public number still being read: a blurred dash, never mistaken for a secret. */
+.reading { font-family: var(--font-mono), ui-monospace, monospace; letter-spacing: 0.05em; color: rgb(var(--ink) / 0.35); filter: blur(1.1px); user-select: none; animation: maskBreath 2.2s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .reading { animation: none; } }
 
 /* --- controls: one button family, sharing the arcade cap's material --- */
 .btn {

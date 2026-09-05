@@ -6,6 +6,7 @@ import { usePoolState, Phase } from "@/lib/hooks/usePoolData";
 import { usePublicReveal } from "@/lib/hooks/useReveal";
 import { useNow, formatDuration } from "@/components/ui/Countdown";
 import { formatAmount } from "@/lib/format";
+import { Reading } from "@/components/ui/Reading";
 import { DECIMALS, SYMBOL } from "@/lib/contracts";
 import { cn } from "@/lib/cn";
 import { PlayPanel } from "@/components/pool/PlayPanel";
@@ -41,7 +42,7 @@ export function GrandSlam() {
           </div>
           <div className="flex items-center gap-4 font-mono text-xs text-ink-muted">
             <span>{n} saver{n === 1 ? "" : "s"}</span>
-            <span className="text-ink">{prize !== undefined ? `${formatAmount(prize, DECIMALS, { maxFractionDigits: 2 })} ${SYMBOL} in the prize` : "…"}</span>
+            <span className="text-ink">{prize !== undefined ? `${formatAmount(prize, DECIMALS, { maxFractionDigits: 2 })} ${SYMBOL} in the prize` : <Reading />}</span>
             <span className="hidden sm:inline">{state?.winnerSlots ?? 5} prizes per draw</span>
           </div>
         </div>

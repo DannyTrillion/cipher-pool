@@ -16,6 +16,7 @@ import { EncryptedValue } from "@/components/ui/EncryptedValue";
 import { FlowStatus } from "@/components/ui/FlowStatus";
 import { useNow, formatDuration } from "@/components/ui/Countdown";
 import { truncateAddress, sameAddress, formatAmount } from "@/lib/format";
+import { Reading } from "@/components/ui/Reading";
 import { POOL, TOKEN, TUSD, DECIMALS, SYMBOL, UNDERLYING_SYMBOL, etherscanAddr, etherscanTx } from "@/lib/contracts";
 import { getSessionInfo } from "@/lib/fhevm/useDecryptSession";
 import { sfx } from "@/lib/sound";
@@ -170,7 +171,7 @@ export function WalletView() {
           <ul className="mt-4 divide-y divide-line text-sm">
             {done.slice(0, 8).map((d, i) => { const h = credits[i] ?? null; const v = h ? get(h) : undefined; const prize = pub.values[d.prize]; return (
               <li key={d.epoch.toString()} className="flex items-center justify-between gap-3 py-2.5">
-                <span className="flex items-center gap-3"><span className="font-mono text-xs text-ink-muted">#{d.epoch.toString()}</span><span className="font-mono text-xs">{prize !== undefined ? `${formatAmount(prize, DECIMALS, { maxFractionDigits: 2 })} ${SYMBOL}` : "…"}</span></span>
+                <span className="flex items-center gap-3"><span className="font-mono text-xs text-ink-muted">#{d.epoch.toString()}</span><span className="font-mono text-xs">{prize !== undefined ? `${formatAmount(prize, DECIMALS, { maxFractionDigits: 2 })} ${SYMBOL}` : <Reading />}</span></span>
                 <span>{!h ? <span className="text-[11px] text-ink-faint">not in</span> : v === undefined ? <button className="btn-glass btn-sm" disabled={!!busy} onClick={() => reveal(POOL.address, h, `d-${d.epoch}`)}>Check</button> : v > 0n ? <span className="rounded-full bg-accent-soft px-2 py-0.5 font-mono text-xs text-accent">+{formatAmount(v, DECIMALS, { maxFractionDigits: 2 })}</span> : <span className="text-[11px] text-ink-faint">no prize</span>}</span>
               </li>
             ); })}

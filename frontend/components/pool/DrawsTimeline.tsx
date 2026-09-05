@@ -12,6 +12,7 @@ import { useNow, formatDuration } from "@/components/ui/Countdown";
 import { ReelReveal, facesFor } from "@/components/fx/ReelReveal";
 import { FlowStatus } from "@/components/ui/FlowStatus";
 import { formatAmount } from "@/lib/format";
+import { Reading } from "@/components/ui/Reading";
 import { DECIMALS, POOL, SYMBOL, etherscanAddr } from "@/lib/contracts";
 import { slotAmounts } from "@/lib/tiers";
 import { fire } from "@/lib/scene";
@@ -27,7 +28,7 @@ function Stat({ label, value, suffix }: { label: string; value: bigint | number 
     <div className="glass p-5">
       <div className="label">{label}</div>
       <div className="mt-2 flex items-baseline gap-2">
-        <span className="display text-4xl tabular">{v === undefined ? "…" : suffix ? formatAmount(v, DECIMALS, { maxFractionDigits: 2 }) : v.toString()}</span>
+        <span className="display text-4xl tabular">{v === undefined ? <Reading className="display text-4xl" /> : suffix ? formatAmount(v, DECIMALS, { maxFractionDigits: 2 }) : v.toString()}</span>
         {suffix && <span className="font-mono text-sm text-ink-muted">{suffix}</span>}
       </div>
     </div>
@@ -65,7 +66,7 @@ export function DrawsTimeline() {
         <div>
           <div className="label">Prize building up now</div>
           <div className="mt-2 flex items-baseline gap-3">
-            {building !== undefined ? <span className="display prize-glow text-5xl tabular sm:text-6xl">{formatAmount(building, DECIMALS, { maxFractionDigits: 2 })}</span> : <span className="masked display text-5xl sm:text-6xl">*****</span>}
+            {building !== undefined ? <span className="display prize-glow text-5xl tabular sm:text-6xl">{formatAmount(building, DECIMALS, { maxFractionDigits: 2 })}</span> : <Reading className="display text-5xl sm:text-6xl" width={4} />}
             <span className="font-mono text-lg text-ink-muted">{SYMBOL}</span>
           </div>
           <div className="mt-2 text-sm text-ink-muted">Split between {state?.winnerSlots ?? 5} winners at the next draw. Grows from interest (simulated on testnet) and sponsors. Nobody's money is at risk.</div>
@@ -154,7 +155,7 @@ function DrawCard({ draw, credit, prize, index, live }: { draw: DrawRecord; cred
           </div>
           <div className="text-right">
             <div className="label">Prize</div>
-            <div className="display text-3xl tabular">{shownPrize !== undefined ? formatAmount(shownPrize, DECIMALS, { maxFractionDigits: 2 }) : <span className="masked display text-3xl">*****</span>} <span className="font-mono text-sm text-ink-muted">{SYMBOL}</span></div>
+            <div className="display text-3xl tabular">{shownPrize !== undefined ? formatAmount(shownPrize, DECIMALS, { maxFractionDigits: 2 }) : <Reading className="display text-3xl" width={4} />} <span className="font-mono text-sm text-ink-muted">{SYMBOL}</span></div>
           </div>
         </div>
 
@@ -207,7 +208,7 @@ function DrawCard({ draw, credit, prize, index, live }: { draw: DrawRecord; cred
                 <div className="mb-2 text-ink-faint">One random number per prize, published when the draw started. Winners were picked from these numbers. Nobody learned who.</div>
                 <ul className="space-y-1">
                   {seeds.map((h, i) => (
-                    <li key={h} className="flex gap-3"><span className="w-20 shrink-0 text-ink-faint">{slots[i] !== undefined ? `${formatAmount(slots[i], DECIMALS, { maxFractionDigits: 2 })} ${SYMBOL}` : `slot ${i + 1}`}</span><span className="truncate">{pub.values[h] !== undefined ? pub.values[h].toString() : <span className="masked">**********</span>}</span></li>
+                    <li key={h} className="flex gap-3"><span className="w-20 shrink-0 text-ink-faint">{slots[i] !== undefined ? `${formatAmount(slots[i], DECIMALS, { maxFractionDigits: 2 })} ${SYMBOL}` : `slot ${i + 1}`}</span><span className="truncate">{pub.values[h] !== undefined ? pub.values[h].toString() : <Reading width={8} />}</span></li>
                   ))}
                   {seeds.length === 0 && <li className="cipher-mask h-4 w-40" />}
                 </ul>

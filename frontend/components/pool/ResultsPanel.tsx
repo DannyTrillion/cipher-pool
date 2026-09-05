@@ -15,6 +15,7 @@ import { ReelReveal, facesFor } from "@/components/fx/ReelReveal";
 import { OddsMeter } from "@/components/pool/OddsMeter";
 import { ActivityFeed } from "@/components/pool/ActivityFeed";
 import { formatAmount } from "@/lib/format";
+import { Reading } from "@/components/ui/Reading";
 import { DECIMALS, POOL, SYMBOL, etherscanAddr } from "@/lib/contracts";
 import { slotAmounts } from "@/lib/tiers";
 import { fire } from "@/lib/scene";
@@ -140,7 +141,7 @@ export function ResultsPanel() {
             {situation === "check" && (
               <div>
                 <div className="flex items-center gap-2 text-sm text-accent"><span className="h-2 w-2 animate-pulse rounded-full bg-accent" />New result to check</div>
-                <div className="mt-1 text-lg font-semibold">Draw #{latest?.epoch.toString()} paid {latestPrize !== undefined ? `${formatAmount(latestPrize, DECIMALS, { maxFractionDigits: 2 })} ${SYMBOL}` : "…"} to {latest?.winnerSlots} winners.</div>
+                <div className="mt-1 text-lg font-semibold">Draw #{latest?.epoch.toString()} paid {latestPrize !== undefined ? `${formatAmount(latestPrize, DECIMALS, { maxFractionDigits: 2 })} ${SYMBOL}` : <Reading />} to {latest?.winnerSlots} winners.</div>
                 <div className="mt-4 flex flex-wrap items-center gap-4">
                   <ReelReveal spinning={spinning} size={56} />
                   <button className="btn-primary btn-lg shine" disabled={!!busy || spinning} onClick={() => latestCredit && check(latestCredit, "won")}>{spinning ? "Checking…" : "Did I win?"}</button>
@@ -241,7 +242,7 @@ export function ResultsPanel() {
                   <div className="mb-2 text-ink-faint">Each prize has its own random number, published when the draw starts. Winners are picked from these numbers.</div>
                   <ul className="space-y-1">
                     {seeds.map((h, i) => { const amt = latestPrize !== undefined ? slotAmounts(latestPrize, latest.tiers)[i] : undefined; return (
-                      <li key={h} className="flex gap-3"><span className="w-16 shrink-0 text-ink-faint">{amt !== undefined ? formatAmount(amt, DECIMALS, { maxFractionDigits: 2 }) : `prize ${i + 1}`}</span><span className="truncate">{pub.values[h] !== undefined ? pub.values[h].toString() : <span className="masked">**********</span>}</span></li>
+                      <li key={h} className="flex gap-3"><span className="w-16 shrink-0 text-ink-faint">{amt !== undefined ? formatAmount(amt, DECIMALS, { maxFractionDigits: 2 }) : `prize ${i + 1}`}</span><span className="truncate">{pub.values[h] !== undefined ? pub.values[h].toString() : <Reading width={8} />}</span></li>
                     ); })}
                   </ul>
                   <a className="mt-2 inline-block text-cipher underline" href={etherscanAddr(POOL.address)} target="_blank" rel="noreferrer">Pool contract on Etherscan ↗</a>
@@ -262,7 +263,7 @@ function HistoryRow({ d, h, prize, v, busy, onCheck }: { d: DrawRecord; h: `0x${
     <li className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm [&:not(:last-child)]:border-b [&:not(:last-child)]:border-line">
       <span className="flex items-center gap-3">
         <span className="font-mono text-xs text-ink-muted">#{d.epoch.toString()}</span>
-        <span className="font-mono text-xs">{prize !== undefined ? `${formatAmount(prize, DECIMALS, { maxFractionDigits: 2 })} ${SYMBOL}` : "…"}</span>
+        <span className="font-mono text-xs">{prize !== undefined ? `${formatAmount(prize, DECIMALS, { maxFractionDigits: 2 })} ${SYMBOL}` : <Reading />}</span>
         <span className="text-[11px] text-ink-faint">{d.winnerSlots} winners</span>
       </span>
       <span>

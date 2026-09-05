@@ -7,6 +7,7 @@ import { usePoolState, useUserState, useDraw, Phase } from "@/lib/hooks/usePoolD
 import { usePublicReveal, useReveal } from "@/lib/hooks/useReveal";
 import { EncryptedValue } from "@/components/ui/EncryptedValue";
 import { formatAmount, truncateAddress } from "@/lib/format";
+import { Reading } from "@/components/ui/Reading";
 import { DECIMALS, POOL, SYMBOL } from "@/lib/contracts";
 import { formatDuration, useNow } from "@/components/ui/Countdown";
 import { cn } from "@/lib/cn";
@@ -169,7 +170,7 @@ function DrawPane() {
           <div className="mt-4 rounded-xl border border-line px-3.5 py-3">
             <div className="text-[11px] text-ink-faint">Last draw #{draw.epoch.toString()}</div>
             <div className="mt-0.5 font-mono text-sm">
-              {prize !== undefined ? `${formatAmount(prize, DECIMALS, { maxFractionDigits: 2 })} ${SYMBOL}` : <span className="masked">*****</span>}
+              {prize !== undefined ? `${formatAmount(prize, DECIMALS, { maxFractionDigits: 2 })} ${SYMBOL}` : <Reading />}
               <span className="text-ink-faint"> shared by {draw.winnerSlots} winners · {draw.participants} savers took part</span>
             </div>
           </div>

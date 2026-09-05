@@ -12,6 +12,7 @@ import { DrawButton, type DrawButtonState } from "@/components/pool/DrawButton";
 import { FlowStatus } from "@/components/ui/FlowStatus";
 import { useNow, formatDuration } from "@/components/ui/Countdown";
 import { formatAmount, sameAddress } from "@/lib/format";
+import { Reading } from "@/components/ui/Reading";
 import { DECIMALS, SYMBOL, DRIP_PER_HOUR } from "@/lib/contracts";
 import { onScene } from "@/lib/scene";
 import { useReducedMotion } from "@/lib/hooks/useReducedMotion";
@@ -121,13 +122,12 @@ export function DrawChamber() {
   const { connect, connectors } = useConnect();
   const { state, refetch } = usePoolState();
   const { rows } = useSaversLedger(state?.participantCount, 40);
-  const { reveal, retry, values, errors } = usePublicReveal();
+  const { reveal, values } = usePublicReveal();
   const actions = usePoolActions();
   const flow = useActionFlow();
   const now = useNow();
   const h = state?.prizeReserveHandle;
   useEffect(() => { if (h) void reveal([h]); }, [h, reveal]);
-  useEffect(() => { if (!h || !errors[h]) return; const id = setTimeout(() => retry(h), 12_000); return () => clearTimeout(id); }, [h, errors, retry]);
   const prize = useCountUp(h ? values[h] : undefined);
   const drawing = !!state && state.phase !== Phase.Open;
   const due = !!state && !drawing && Number(state.nextDrawAt) <= now && Number(state.participantCount) > 0;
@@ -142,7 +142,7 @@ export function DrawChamber() {
         <div className="order-2 md:order-1">
           <div className="label">Prize this round</div>
           <div className="mt-2 flex items-baseline gap-3">
-            {prize !== undefined ? <span className="display prize-glow text-5xl tabular">{formatAmount(prize, DECIMALS, { maxFractionDigits: 2 })}</span> : <span className="masked display text-5xl" aria-label="Reading the prize" title="Reading the public prize figure from Zama's relayer">*****</span>}
+            {prize !== undefined ? <span className="display prize-glow text-5xl tabular">{formatAmount(prize, DECIMALS, { maxFractionDigits: 2 })}</span> : <Reading className="display text-5xl" width={4} />}
             <span className="font-mono text-lg text-ink-muted">{SYMBOL}</span>
           </div>
           <div className="mt-2 text-sm text-ink-muted">Split between <span className="text-ink">{state?.winnerSlots ?? 5} winners</span> every {state ? formatDuration(Number(state.drawPeriod)).replace(/^00:/, "") : "…"}. Grows about {formatAmount(state ? state.dripPerSecond * 3600n : DRIP_PER_HOUR, DECIMALS, { maxFractionDigits: 0 })} {SYMBOL} an hour from interest (simulated on testnet).</div>

@@ -48,8 +48,35 @@ export function useReveal() {
 const pubCache: Record<string, bigint> = {};
 const pubPending: Record<string, boolean> = {};
 const pubErrors: Record<string, string> = {};
+const pubAttempts: Record<string, number> = {};
 const pubSubs = new Set<() => void>();
 const notify = () => pubSubs.forEach((f) => f());
+const RETRY_MS = 8_000;
+const MAX_ATTEMPTS = 6;
+
+/** Ask the relayer for a batch; if the batch fails, fall back to one handle at a time so one bad handle never hides the rest. */
+async function fetchPublic(handles: string[]) {
+  handles.forEach((h) => { pubPending[h] = true; pubAttempts[h] = (pubAttempts[h] ?? 0) + 1; });
+  notify();
+  const failed: string[] = [];
+  let msg = "";
+  try {
+    Object.assign(pubCache, await publicDecrypt(handles));
+  } catch (e) {
+    msg = humanizeError(e);
+    if (handles.length > 1) {
+      for (const h of handles) {
+        try { Object.assign(pubCache, await publicDecrypt([h])); } catch (e2) { msg = humanizeError(e2); failed.push(h); }
+      }
+    } else failed.push(...handles);
+  }
+  handles.forEach((h) => { delete pubPending[h]; if (h in pubCache) delete pubErrors[h]; });
+  failed.forEach((h) => { pubErrors[h] = msg; });
+  notify();
+  // The relayer can lag a fresh handle by a few seconds: keep trying quietly, then give up and leave it to `retry`.
+  const again = failed.filter((h) => (pubAttempts[h] ?? 0) < MAX_ATTEMPTS);
+  if (again.length) setTimeout(() => { again.forEach((h) => delete pubErrors[h]); void fetchPublic(again); }, RETRY_MS);
+}
 
 export function usePublicReveal() {
   const [version, bump] = useState(0);
@@ -62,28 +89,15 @@ export function usePublicReveal() {
   const snap = useMemo(() => ({ values: { ...pubCache }, pending: { ...pubPending }, errors: { ...pubErrors } }), [version]);
 
   const reveal = useCallback(async (handles: (string | null | undefined)[]) => {
-    // Never auto-retry a handle that already failed (the relayer may still be
-    // processing it); callers use `retry` on a timer or a user action instead.
     const want = handles.filter((h): h is string => !!h && !(h in pubCache) && !pubPending[h] && !(h in pubErrors));
     if (want.length === 0) return;
-    want.forEach((h) => { pubPending[h] = true; });
-    notify();
-    try {
-      const res = await publicDecrypt(want);
-      Object.assign(pubCache, res);
-      want.forEach((h) => { delete pubErrors[h]; });
-    } catch (e) {
-      const msg = humanizeError(e);
-      want.forEach((h) => { pubErrors[h] = msg; });
-    } finally {
-      want.forEach((h) => { delete pubPending[h]; });
-      notify();
-    }
+    await fetchPublic(want);
   }, []);
 
   /** Clear a failed handle so the next `reveal` tries it again. */
   const retry = useCallback((handle: string) => {
     delete pubErrors[handle];
+    pubAttempts[handle] = 0;
     notify();
   }, []);
 
