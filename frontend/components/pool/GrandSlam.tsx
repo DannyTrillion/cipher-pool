@@ -46,15 +46,16 @@ export function GrandSlam() {
             <span className="hidden sm:inline">{state?.winnerSlots ?? 5} prizes per draw</span>
           </div>
         </div>
-        {/* the machine: feed → drum → tray, joined by a light rail */}
+        {/* the machine: Play beside the drum, the tray under the chute, Results centred beneath both */}
         <div className="relative mt-4 space-y-4 [&>*]:min-w-0">
-          <div className={cn("pointer-events-none absolute left-1/2 top-0 hidden h-full w-px -translate-x-1/2 md:block", drawing ? "bg-[linear-gradient(180deg,rgb(255_214_0/0.5),rgb(94_234_212/0.6))]" : "bg-[linear-gradient(180deg,rgb(255_214_0/0.25),rgb(139_156_255/0.15),transparent)]")} />
-          <PlayPanel />
-          <DrawChamber />
-          <div>
-            <PrizeTray slots={state?.winnerSlots ?? 5} live={drawing} />
-            <ResultsPanel />
+          <div className="grid gap-4 md:grid-cols-2 md:items-stretch">
+            <PlayPanel />
+            <div className="flex min-w-0 flex-col">
+              <DrawChamber />
+              <PrizeTray slots={state?.winnerSlots ?? 5} live={drawing} />
+            </div>
           </div>
+          <div className="mx-auto w-full max-w-4xl"><ResultsPanel /></div>
         </div>
       </div>
     </section>

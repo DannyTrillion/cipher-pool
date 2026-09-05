@@ -137,9 +137,22 @@ export function DrawChamber() {
   const run = () => flow.run(async (s) => { await actions.runDraw(s, () => void refetch()); await refetch(); }, { successMessage: "Draw complete. Check your results below." });
 
   return (
-    <section id="console" className="glass relative scroll-mt-24 overflow-hidden p-5 sm:p-7" aria-label="Draw chamber">
-      <div className="grid gap-6 md:grid-cols-[1fr_1.15fr_1fr] md:items-center md:gap-8">
-        <div className="order-2 md:order-1">
+    <section id="console" className="glass relative flex-1 scroll-mt-24 overflow-hidden p-5 sm:p-7" aria-label="Draw chamber">
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-col items-center">
+          <div className="relative h-[220px] w-full max-w-[360px] sm:h-[260px]">
+            <Drum savers={rows.map((r) => r.address)} you={address} drawing={drawing} slots={state?.winnerSlots ?? 5} />
+          </div>
+          <div className="-mt-2">
+            {state ? (
+              <DrawButton state={btn} start={Number(state.epochStart)} end={Number(state.nextDrawAt)} connected={isConnected} progress={progress} progressLabel={state.phase === Phase.Selecting ? "picking winners" : state.phase === Phase.Awarding ? "paying prizes" : undefined} onRun={run} onConnect={() => connectors[0] && connect({ connector: connectors[0] })} size={150} />
+            ) : <div className="h-[150px] w-[150px] rounded-full bg-white/5" />}
+          </div>
+          {drawing && isConnected && flow.state.status !== "pending" && <button className="btn-mint btn-sm mt-4" onClick={run}>Keep the draw going</button>}
+        </div>
+
+        <div className="grid gap-6 sm:grid-cols-2 sm:gap-8">
+        <div>
           <div className="label">Prize this round</div>
           <div className="mt-2 flex items-baseline gap-3">
             {prize !== undefined ? <span className="display prize-glow text-5xl tabular">{formatAmount(prize, DECIMALS, { maxFractionDigits: 2 })}</span> : <Reading className="display text-5xl" width={4} />}
@@ -151,20 +164,7 @@ export function DrawChamber() {
             <Link href="/draws" className="text-accent hover:underline">See all prizes →</Link>
           </div>
         </div>
-
-        <div className="order-1 flex flex-col items-center md:order-2">
-          <div className="relative h-[220px] w-full max-w-[360px] sm:h-[280px]">
-            <Drum savers={rows.map((r) => r.address)} you={address} drawing={drawing} slots={state?.winnerSlots ?? 5} />
-          </div>
-          <div className="-mt-2">
-            {state ? (
-              <DrawButton state={btn} start={Number(state.epochStart)} end={Number(state.nextDrawAt)} connected={isConnected} progress={progress} progressLabel={state.phase === Phase.Selecting ? "picking winners" : state.phase === Phase.Awarding ? "paying prizes" : undefined} onRun={run} onConnect={() => connectors[0] && connect({ connector: connectors[0] })} size={150} />
-            ) : <div className="h-[150px] w-[150px] rounded-full bg-white/5" />}
-          </div>
-          {drawing && isConnected && flow.state.status !== "pending" && <button className="btn-mint btn-sm mt-4" onClick={run}>Keep the draw going</button>}
-        </div>
-
-        <div className="order-3 w-full md:justify-self-end">
+        <div className="min-w-0">
           <div className="label">This draw</div>
           <dl className="mt-2 divide-y divide-line text-sm">
             <div className="flex items-center justify-between py-2.5"><dt className="text-ink-muted">Savers taking part</dt><dd className="display text-xl tabular">{state ? n : "…"}</dd></div>
@@ -184,6 +184,7 @@ export function DrawChamber() {
             </div>
             <div className="flex items-center justify-between py-2.5"><dt className="text-ink-muted">Draw number</dt><dd className="font-mono text-sm">#{state ? (state.epoch + 1n).toString() : "…"}</dd></div>
           </dl>
+        </div>
         </div>
       </div>
       <FlowStatus state={flow.state} className="mt-4" />

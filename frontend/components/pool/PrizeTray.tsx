@@ -10,7 +10,7 @@ export function PrizeTray({ slots, live }: { slots: number; live: boolean }) {
   useEffect(() => onScene((e) => { if (e.type === "drawDone") { setLanded(false); setTimeout(() => setLanded(true), 1100); } if (e.type === "drawStart") setLanded(false); }), []);
   const k = Math.max(1, Math.min(8, slots));
   return (
-    <div className="relative mx-auto -mt-2 mb-4 flex h-14 max-w-[360px] items-end justify-center gap-2" aria-hidden="true">
+    <div className="relative mx-auto -mt-2 flex h-14 w-full max-w-[360px] shrink-0 items-end justify-center gap-2" aria-hidden="true">
       <div className="absolute inset-x-6 bottom-0 h-3 rounded-b-xl border border-t-0 border-line bg-black/30" />
       {Array.from({ length: k }, (_, i) => (
         <div key={i} className="relative h-10 w-9 rounded-t-lg border border-b-0 border-line bg-black/25">
