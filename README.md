@@ -11,7 +11,7 @@ Built for the **Zama Developer Program — Mainnet Season 4 Bounty Track** (Conf
 
 | Step | What happens | Where |
 |---|---|---|
-| **Get test tokens** | `USDT` is a plain 6-decimal test ERC-20 with a public faucet (1,000 per hour per address). | `MockUSD.faucet()` — "Need test USDT?" in the app |
+| **Get test tokens** | Zama's official `USDTMock` on Sepolia has a public `mint(address,uint256)`. The app mints 1,000 for you. | "Need test USDT?" in the app |
 | **Shield** | `USDT.approve(cUSDT, amount)` → `cUSD.wrap(you, amount)`. `cUSDT` is an OpenZeppelin **ERC-7984 wrapper** over `USDT`; your cUSDT balance is an encrypted `euint64`, backed 1:1 by USDT locked in the wrapper. | Shield tab / wizard step 3 |
 | **Deposit** | One-time `cUSD.setOperator(pool)`, then the app encrypts your amount in the browser (bound to you and the pool) and calls `deposit(externalEuint64, proof)`. The pool pulls it with `confidentialTransferFrom` and adds it to your encrypted balance with `FHE.add`. Over-requests move zero and never revert (a revert would leak your balance). | Deposit tab |
 | **Hold a confidential balance** | `balanceOf(you)` is a ciphertext handle only you (and the pool) are allowed on. Not even the pool's total is readable. | "Unlock my numbers" (EIP-712 user decryption, one signature per session) |
@@ -58,18 +58,21 @@ Documented leakage:
 
 ## Yield-source mock, and how a real one plugs in
 
-`MockYieldSource` is an **admin-funded prize drip**: a public fixed rate of USDT per second (`ratePerSecond`, default 2,777 units ≈ 10 cUSDT/hour) is minted, wrapped into cUSDT and handed to the pool's encrypted prize reserve on every `harvest()` (called automatically at draw start; callable by anyone). It does *not* compute APY on the encrypted principal, because a plaintext mock cannot do that without leaking TVL. Every dripped cUSDT is backed by USDT held in the wrapper.
+`MockYieldSource` is an **admin-funded prize drip**: a public fixed rate of USDT per second (`ratePerSecond`, default 2,777 units ≈ 10 cUSDT/hour) is minted from Zama's official USDTMock (public mint), wrapped through the official cUSDTMock and handed to the pool's encrypted prize reserve on every `harvest()` (called automatically at draw start; callable by anyone). It does *not* compute APY on the encrypted principal, because a plaintext mock cannot do that without leaking TVL. Every dripped cUSDT is backed by USDT held in the wrapper.
 
 Production: implement `IYieldSource.harvest(euint64 principal, uint256 elapsed) → euint64` with an adapter that deposits the pool's underlying into an ERC-4626 vault and harvests realised yield into the wrapper, then point the pool at a registry-listed confidential token (e.g. cUSDT) via `setYieldSource`. The pool only depends on `IERC7984` and `IYieldSource`.
 
 ## Deployed contracts (Sepolia)
 
+The pool uses **Zama's official Sepolia mock tokens**, not tokens of our own, so every app built on the Zama Protocol shares the same test money:
+
 | Contract | Address |
 |---|---|
-| ConfidentialPrizePool | [`0xAE4a6f8c8e3F0B76F07968C34064BA65A5F0bc9b`](https://sepolia.etherscan.io/address/0xAE4a6f8c8e3F0B76F07968C34064BA65A5F0bc9b) |
-| ConfidentialUSD (cUSDT, ERC-7984 wrapper) | [`0xAb953cAC2DF2Fd46F8296cff6eE420f73733410F`](https://sepolia.etherscan.io/address/0xAb953cAC2DF2Fd46F8296cff6eE420f73733410F) |
-| MockUSD (USDT, test ERC-20) | [`0x4324b6425E1714C6a7cE5CDAEBf32aBa18AB6d0E`](https://sepolia.etherscan.io/address/0x4324b6425E1714C6a7cE5CDAEBf32aBa18AB6d0E) |
-| MockYieldSource (prize drip) | [`0xDa9DdC9e1577e1a287bba8506a889FDA3F2515CA`](https://sepolia.etherscan.io/address/0xDa9DdC9e1577e1a287bba8506a889FDA3F2515CA) |
+| ConfidentialPrizePool (ours) | [`0x22663590018DcBD33c8F51326FF44b0Bb47Fd424`](https://sepolia.etherscan.io/address/0x22663590018DcBD33c8F51326FF44b0Bb47Fd424) |
+| MockYieldSource, prize drip (ours) | [`0x5A63fb14f01d1eDfA70aa6dCF580c10B0c87C39E`](https://sepolia.etherscan.io/address/0x5A63fb14f01d1eDfA70aa6dCF580c10B0c87C39E) |
+| cUSDTMock, Zama official ERC-7984 wrapper | [`0x4E7B06D78965594eB5EF5414c357ca21E1554491`](https://sepolia.etherscan.io/address/0x4E7B06D78965594eB5EF5414c357ca21E1554491) |
+| USDTMock, Zama official test ERC-20 (public `mint`) | [`0xa7dA08FafDC9097Cc0E7D4f113A61e31d7e8e9b0`](https://sepolia.etherscan.io/address/0xa7dA08FafDC9097Cc0E7D4f113A61e31d7e8e9b0) |
+
 
 Draw period 10 minutes · prize drip ≈ 10 cUSDT/hour · faucet 1,000 USDT per hour per address.
 
@@ -78,8 +81,8 @@ Draw period 10 minutes · prize drip ≈ 10 cUSDT/hour · faucet 1,000 USDT per 
 ```
 contracts/
   contracts/ConfidentialPrizePool.sol   encrypted balances, lazy eligibility, tiered batched blind draw, claimable pots, proof-of-win
-  contracts/ConfidentialUSD.sol         ERC-7984 wrapper over USDT (OpenZeppelin ERC7984ERC20Wrapper)
-  contracts/MockUSD.sol                 test ERC-20 with faucet + minter role
+  contracts/ConfidentialUSD.sol         local ERC-7984 wrapper (tests only; Sepolia uses Zama's official cUSDTMock)
+  contracts/MockUSD.sol                 local test ERC-20 (tests only; Sepolia uses Zama's official USDTMock)
   contracts/MockYieldSource.sol         admin-funded prize drip behind IYieldSource
   contracts/interfaces/IYieldSource.sol adapter boundary for a real vault
   test/ConfidentialPrizePool.ts         17 FHEVM-mock tests (wrap, deposit/withdraw, privacy, draw correctness,
@@ -100,7 +103,8 @@ frontend/                               Next.js 14 · wagmi · @zama-fhe/relayer
 cd contracts && npm install
 npx hardhat test                                   # FHEVM mock
 cp .env.example .env                               # SEPOLIA_RPC_URL, DEPLOYER_PRIVATE_KEY
-DRAW_PERIOD=600 DRIP_PER_SEC=2777 npm run deploy:sepolia   # writes frontend/lib/contracts/deployment.json
+DRAW_PERIOD=600 DRIP_PER_SEC=2777 npm run deploy:sepolia   # pool + drip against Zama's official mocks; writes frontend/lib/contracts/deployment.json
+# npm run deploy:sepolia:own-tokens                       # alternative: deploy our own MockUSD + wrapper too (used by the test suite)
 npm run keeper:sepolia                             # optional: automate draws
 
 # Frontend
